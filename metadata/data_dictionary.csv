@@ -1,0 +1,19 @@
+field_name,human_name,definition,source,source_variables,geography,vintage,calculation,universe,type
+geoid,Block group GEOID,Census block-group identifier,Census TIGER/Line,GEOID,census_block_group,matched_geography,,all,official
+county_fips,County FIPS,Flathead County FIPS code,Census TIGER/Line,COUNTYFP,census_block_group,matched_geography,,all,official
+tract_geoid,Tract GEOID,Parent census tract GEOID,Census TIGER/Line,GEOID,census_block_group,matched_geography,,all,official
+block_group,Block group,Block-group suffix,Census TIGER/Line,BLKGRP,census_block_group,matched_geography,,all,official
+population,Total population,Total population estimate,ACS,B01001_001E,census_block_group,discovered,,total population,official
+median_hh_income,Median household income,Median household income,ACS,B19013_001E,census_block_group,discovered,,households,official
+mean_hh_income,Mean household income,Aggregate household income divided by households,ACS,B19025_001E;B11001_001E,census_block_group,discovered,B19025_001E/B11001_001E,households,calculated
+per_capita_income,Per-capita income,Per-capita income estimate,ACS,B19301_001E,census_block_group,discovered,,population,official
+poverty_count,Population below poverty,Count below poverty level,ACS,B17001_002E,census_block_group,discovered,,poverty universe,official
+poverty_rate,Poverty rate,Population below poverty divided by poverty universe,ACS,B17001_002E;B17001_001E,census_block_group,discovered,B17001_002E/B17001_001E,poverty universe,calculated
+labor_force,Civilian labor force,Civilian labor force count,ACS,B23025_003E,census_block_group,discovered,,civilian noninstitutionalized population age 16+,official
+employed,Employed,Employed civilian count,ACS,B23025_004E,census_block_group,discovered,,civilian labor force,official
+unemployed,Unemployed,Unemployed civilian count,ACS,B23025_005E,census_block_group,discovered,,civilian labor force,official
+employment_rate,Employment rate,Employed divided by civilian labor force,ACS,B23025_004E;B23025_003E,census_block_group,discovered,B23025_004E/B23025_003E,civilian labor force,calculated
+unemployment_rate,Unemployment rate,Unemployed divided by civilian labor force,ACS,B23025_005E;B23025_003E,census_block_group,discovered,B23025_005E/B23025_003E,civilian labor force,calculated
+rac_workers,Workers,LODES RAC workers/jobs represented,LODES RAC,S000,census_block_group,discovered,sum of blocks,LODES RAC universe,official
+wac_jobs,Jobs,LODES WAC jobs physically located in block group,LODES WAC,S000,census_block_group,discovered,sum of blocks,LODES WAC universe,official
+jobs_to_workers,Jobs-to-worker ratio,Jobs divided by workers,LODES RAC/WAC,wac_jobs;rac_workers,census_block_group,discovered,wac_jobs/rac_workers,LODES universes,calculated

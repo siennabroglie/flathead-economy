@@ -1,0 +1,65 @@
+project:
+  name: flathead-economic
+  state_fips: "30"
+  county_fips: "029"
+  county_name: Flathead County
+  state_abbr: MT
+  output_crs: EPSG:4326
+
+vintages:
+  acs: auto
+  lodes: auto
+  schools: latest_available
+  school_tax_value: latest_available
+  flathead_gis: current
+
+acs:
+  dataset: acs5
+  geography: block group
+  api_base: https://api.census.gov/data
+  tables:
+    population: B01001
+    income_median: B19013
+    income_aggregate: B19025
+    households: B11001
+    income_per_capita: B19301
+    poverty: B17001
+    education: B15003
+    employment: B23025
+
+lodes:
+  version: auto
+  vintage: auto
+  state: MT
+  geography: census_block
+  extraction_tool: https://ledextract.ces.census.gov/
+  detailed_extract_required: true
+  raw_dir: raw/lodes
+
+flathead_gis:
+  portal: https://maps.flatheadcounty.gov/portal
+  parcel_feature_service: https://maps.flatheadcounty.gov/server/rest/services/Hosted/Flathead_County_Parcels_Public_View/FeatureServer/0
+  boundaries_map_service: https://maps.flatheadcounty.gov/server/rest/services/IMA/Boundaries/MapServer
+  property_map_service: https://maps.flatheadcounty.gov/server/rest/services/IMA/Property/MapServer
+  subdivisions_map_service: https://maps.flatheadcounty.gov/server/rest/services/IMA/Subdivisions/MapServer
+
+schools:
+  provider: Montana State Library / Montana Office of Public Instruction
+  download_url: https://ftpgeoinfo.msl.mt.gov/Data/Spatial/NonMSDI/Shapefiles/MontanaSchools.zip
+  metadata_url: https://mslservices.mt.gov/Geographic_Information/Data/DataList/datalist_Details.aspx?did=%7BF7D51251-6A9C-49D4-900D-0E70D7125B0F%7D
+
+school_tax_value:
+  provider: Flathead County Superintendent of Schools
+  source_description: School Statistical Report
+  url: null
+  required: true
+
+census_geography:
+  county_block_groups_url: https://www2.census.gov/geo/tiger/TIGER2024/BG/tl_2024_30_bg.zip
+  county_blocks_url: https://www2.census.gov/geo/tiger/TIGER2024/TABBLOCK/tl_2024_30_tabblock.zip
+
+validation:
+  max_expected_block_group_loss_pct: 0.0
+  require_unique_geoid: true
+  require_lodes_county_total_check: true
+  require_acs_county_check: true

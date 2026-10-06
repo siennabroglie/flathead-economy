@@ -1,0 +1,42 @@
+acs:
+  agency: US Census Bureau
+  dataset: ACS 5-year
+  vintage: auto
+  geography: block_group
+  state: 30
+  county: 029
+  endpoint: https://api.census.gov/data/{vintage}/acs/acs5
+  official_documentation: https://www.census.gov/data/developers/data-sets/acs-5year.html
+
+lodes:
+  agency: US Census Bureau LEHD
+  dataset: LODES
+  version: auto
+  vintage: auto
+  geography: census_block
+  state: MT
+  rac: true
+  wac: true
+  extraction_tool: https://ledextract.ces.census.gov/
+  documentation: https://lehd.ces.census.gov/applications/help/led_extraction_tool.html
+
+flathead_gis:
+  agency: Flathead County
+  datasets:
+    parcels: https://maps.flatheadcounty.gov/server/rest/services/Hosted/Flathead_County_Parcels_Public_View/FeatureServer/0
+    boundaries: https://maps.flatheadcounty.gov/server/rest/services/IMA/Boundaries/MapServer
+    property: https://maps.flatheadcounty.gov/server/rest/services/IMA/Property/MapServer
+    subdivision: https://maps.flatheadcounty.gov/server/rest/services/IMA/Subdivisions/MapServer
+
+schools:
+  agency: Montana State Library / Montana Office of Public Instruction
+  dataset: Montana Schools
+  vintage: latest_available
+  endpoint: https://ftpgeoinfo.msl.mt.gov/Data/Spatial/NonMSDI/Shapefiles/MontanaSchools.zip
+  metadata: https://mslservices.mt.gov/Geographic_Information/Data/DataList/datalist_Details.aspx?did=%7BF7D51251-6A9C-49D4-900D-0E70D7125B0F%7D
+
+school_tax_value:
+  agency: Flathead County Superintendent of Schools
+  dataset: School Statistical Report
+  vintage: latest_available
+  endpoint: null
