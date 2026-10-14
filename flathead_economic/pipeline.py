@@ -30,19 +30,63 @@ class Pipeline:
             for chunk in iter(lambda: f.read(1024 * 1024), b""): h.update(chunk)
         return h.hexdigest()
 
+    
     def discover(self):
-        # Census ACS: identify the newest 5-year dataset advertised by the API catalog.
+        """Discover the latest available ACS 5-year vintage."""
         api = "https://api.census.gov/data.json"
-        data = self._get(api).json()
+        catalog = self._get(api).json()
+
         years = []
-        for ds in data.get("dataset", []):
-            ident = ds.get("identifier", "")
-            if "/acs/acs5" in ident:
-                m = re.search(r"/data/(20\d{2})/", ident)
-                if m: years.append(int(m.group(1)))
-        acs_year = max(years) if years else None
-        # LODES latest release is deliberately discovered from the official index page;
-        # detailed extraction still goes through LED Extraction Tool/raw official export.
+
+        for ds in catalog.get("dataset", []):
+            # Census catalog entries can identify datasets through
+            # c_dataset/c_vintage rather than an identifier URL.
+            datasets = ds.get("c_dataset", [])
+            if isinstance(datasets, str):
+                datasets = [datasets]
+
+            is_acs5 = (
+                "acs" in datasets
+                and "acs5" in datasets
+                and "pums" not in datasets
+            )
+
+            if is_acs5:
+                vintage = ds.get("c_vintage")
+                if vintage is not None:
+                    try:
+                        years.append(int(vintage))
+                    except (TypeError, ValueError):
+                        pass
+
+            # Fallback for catalog entries that expose the vintage in a URL.
+            if not is_acs5:
+                identifier = ds.get("identifier", "")
+                match = re.search(
+                    r"/data/(20\d{2})/acs/acs5(?:/|$)",
+                    identifier
+                )
+                if match:
+                    years.append(int(match.group(1)))
+
+        # Confirm the candidate endpoint exists before selecting it.
+        acs_year = None
+        for year in sorted(set(years), reverse=True):
+            try:
+                self._get(
+                    f"https://api.census.gov/data/{year}/acs/acs5/variables.json"
+                )
+                acs_year = year
+                break
+            except requests.RequestException:
+                continue
+
+        if acs_year is None:
+            raise RuntimeError(
+                "Could not identify an available ACS 5-year vintage "
+                "from the Census API catalog."
+            )
+
         out = {
             "checked_at": datetime.now(timezone.utc).isoformat(),
             "acs_latest_detected": acs_year,
@@ -55,8 +99,10 @@ class Pipeline:
                 "schools": self.cfg["schools"]["download_url"],
             },
         }
+
         print(json.dumps(out, indent=2))
         return out
+
 
     def fetch(self):
         # Discover current ACS vintage and download the required block-group tables.
