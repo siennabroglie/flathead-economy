@@ -104,36 +104,170 @@ class Pipeline:
         return out
 
 
+    
     def fetch(self):
-        # Discover current ACS vintage and download the required block-group tables.
+        """Download ACS estimates in batches, then fetch supporting source files."""
         disc = self.discover()
         year = disc["acs_latest_detected"]
-        if not year: raise RuntimeError("Could not discover an ACS 5-year vintage")
+        if not year:
+            raise RuntimeError("Could not discover an ACS 5-year vintage")
+
         api = f"{self.cfg['acs']['api_base']}/{year}/acs/acs5"
         tables = self.cfg["acs"]["tables"]
         groups = list(dict.fromkeys(tables.values()))
-        # API keys are now required by Census. Keep the key out of source control.
+
         key = os.getenv("CENSUS_API_KEY")
-        if not key: raise RuntimeError("CENSUS_API_KEY is required for Census API requests")
-        get = ["NAME"] + [f"group({g})" for g in groups]
-        params = {"get": ",".join(get), "for": "block group:*", "in": f"state:{self.cfg['project']['state_fips']} county:{self.cfg['project']['county_fips']}", "key": key}
-        r = self._get(api, params)
-        out = self.raw / "acs" / f"acs5_{year}_flathead_block_groups.json"
-        out.parent.mkdir(parents=True, exist_ok=True); out.write_text(r.text)
-        # Official TIGER/Line block-group geometry.
-        tiger = self.cfg["census_geography"]["county_block_groups_url"]
+        if not key:
+            raise RuntimeError(
+                "CENSUS_API_KEY is required for Census API requests"
+            )
+
+        # Census API requests are limited to 50 requested variables.
+        # Fetch estimate variables in batches of 40, plus NAME.
+        geo_cols = ["state", "county", "tract", "block group"]
+        merged = {}
+        all_variables = []
+
+        for group in groups:
+            print(f"Fetching ACS variable definitions: {group}")
+
+            group_url = f"{api}/groups/{group}.json"
+            group_data = self._get(group_url).json()
+            variable_metadata = group_data.get("variables", {})
+
+            variables = sorted(
+                name
+                for name in variable_metadata
+                if name.startswith(f"{group}_") and name.endswith("E")
+            )
+
+            if not variables:
+                raise RuntimeError(
+                    f"No ACS estimate variables found for group {group}"
+                )
+
+            all_variables.extend(variables)
+
+            for start in range(0, len(variables), 40):
+                batch = variables[start:start + 40]
+                print(
+                    f"  Requesting {group}: "
+                    f"{start + 1}-{start + len(batch)} "
+                    f"of {len(variables)} variables"
+                )
+
+                params = {
+                    "get": ",".join(["NAME"] + batch),
+                    "for": "block group:*",
+                    "in": (
+                        f"state:{self.cfg['project']['state_fips']} "
+                        f"county:{self.cfg['project']['county_fips']}"
+                    ),
+                    "key": key,
+                }
+
+                response = self._get(api, params)
+                result = response.json()
+
+                if len(result) < 2:
+                    raise RuntimeError(
+                        f"ACS returned no block-group rows for {group}"
+                    )
+
+                headers = result[0]
+                positions = {
+                    name: index for index, name in enumerate(headers)
+                }
+
+                missing_geo = [
+                    name for name in geo_cols if name not in positions
+                ]
+                if missing_geo:
+                    raise RuntimeError(
+                        f"ACS response missing geography columns: "
+                        f"{missing_geo}"
+                    )
+
+                for values in result[1:]:
+                    geoid = tuple(
+                        values[positions[col]] for col in geo_cols
+                    )
+
+                    if geoid not in merged:
+                        merged[geoid] = {
+                            col: values[positions[col]]
+                            for col in geo_cols
+                        }
+                        merged[geoid]["NAME"] = values[
+                            positions["NAME"]
+                        ]
+
+                    row = merged[geoid]
+                    for variable in batch:
+                        row[variable] = values[
+                            positions[variable]
+                        ]
+
+        # Save one combined ACS file in standard Census JSON-array format.
+        all_variables = list(dict.fromkeys(all_variables))
+        output_columns = ["NAME"] + all_variables + geo_cols
+
+        output_rows = [
+            [row.get(col, "") for col in output_columns]
+            for _, row in sorted(merged.items())
+        ]
+
+        out = (
+            self.raw
+            / "acs"
+            / f"acs5_{year}_flathead_block_groups.json"
+        )
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(
+                [output_columns] + output_rows,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        print(
+            f"Saved {len(output_rows)} block groups and "
+            f"{len(all_variables)} ACS estimate variables to {out}"
+        )
+
+        # Download official TIGER/Line block-group boundaries.
+        tiger = self.cfg["census_geography"][
+            "county_block_groups_url"
+        ]
         zpath = self.raw / "census" / Path(tiger).name
         zpath.parent.mkdir(parents=True, exist_ok=True)
         zpath.write_bytes(self._get(tiger).content)
-        # Montana Schools.
+
+        # Download Montana Schools source ZIP.
         school = self.cfg["schools"]["download_url"]
         spath = self.raw / "schools" / Path(school).name
-        spath.parent.mkdir(parents=True, exist_ok=True); spath.write_bytes(self._get(school).content)
-        # Flathead parcel service schema; geometry download is paginated and handled separately.
-        parcel_meta = self._get(self.cfg["flathead_gis"]["parcel_feature_service"], {"f":"json"}).json()
+        spath.parent.mkdir(parents=True, exist_ok=True)
+        spath.write_bytes(self._get(school).content)
+
+        # Save Flathead County parcel-service metadata.
+        parcel_url = self.cfg["flathead_gis"][
+            "parcel_feature_service"
+        ]
+        parcel_meta = self._get(
+            parcel_url, {"f": "json"}
+        ).json()
+
         pmeta = self.raw / "flathead_gis" / "parcel_service.json"
-        pmeta.parent.mkdir(parents=True, exist_ok=True); pmeta.write_text(json.dumps(parcel_meta, indent=2))
+        pmeta.parent.mkdir(parents=True, exist_ok=True)
+        pmeta.write_text(
+            json.dumps(parcel_meta, indent=2),
+            encoding="utf-8",
+        )
+
         self._write_manifest()
+        print("Fetch completed.")
+
 
     def _write_manifest(self):
         files=[]
