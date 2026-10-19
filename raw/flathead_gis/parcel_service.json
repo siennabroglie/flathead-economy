@@ -1,0 +1,408 @@
+{
+  "isCoGoEnabled": false,
+  "extent": {
+    "ymin": 378115.9706999995,
+    "xmin": 189315.7778000012,
+    "ymax": 540671.5588999987,
+    "xmax": 347948.47569999844,
+    "spatialReference": {
+      "falseM": -100000,
+      "xyTolerance": 0.001,
+      "mUnits": 10000,
+      "zUnits": 10000,
+      "latestWkid": 2818,
+      "zTolerance": 0.001,
+      "wkid": 102300,
+      "xyUnits": 10000,
+      "mTolerance": 0.001,
+      "falseX": -35666000,
+      "falseY": -30006900,
+      "falseZ": -100000
+    }
+  },
+  "isDataBranchVersioned": false,
+  "supportsApplyEditsWithGlobalIds": false,
+  "maxRecordCount": 1000,
+  "datesInUnknownTimezone": false,
+  "type": "Feature Layer",
+  "onlyAllowTrueCurveUpdatesByTrueCurveClients": true,
+  "syncEnabled": false,
+  "supportsAttachmentsByUploadId": true,
+  "editingInfo": {},
+  "relationships": [],
+  "supportsAttachmentsResizing": true,
+  "cimVersion": "3.2.0",
+  "isDataArchived": false,
+  "id": 0,
+  "spatialReference": {
+    "falseM": -100000,
+    "xyTolerance": 0.001,
+    "mUnits": 10000,
+    "zUnits": 10000,
+    "latestWkid": 2818,
+    "zTolerance": 0.001,
+    "wkid": 102300,
+    "xyUnits": 10000,
+    "mTolerance": 0.001,
+    "falseX": -35666000,
+    "falseY": -30006900,
+    "falseZ": -100000
+  },
+  "supportsSubtypeEditing": true,
+  "supportsStatistics": true,
+  "supportedExportFormats": "sqlite,filegdb,shapefile,csv,geojson",
+  "standardMaxRecordCount": 2000,
+  "isDataVersioned": false,
+  "templates": [
+    {
+      "name": "Flathead County Parcels",
+      "description": "",
+      "drawingTool": "esriFeatureEditToolPolygon",
+      "prototype": {
+        "attributes": {
+          "polygontyp": null,
+          "assrno": null,
+          "tract_id_merged": null,
+          "tract_id": null,
+          "geocode": " ",
+          "type": null
+        }
+      }
+    }
+  ],
+  "hasGeometryProperties": true,
+  "supportsAdvancedQueries": true,
+  "parentLayer": null,
+  "currentVersion": 11.5,
+  "canScaleSymbols": false,
+  "hasZ": false,
+  "advancedEditingCapabilities": {
+    "supportsAsyncApplyEdits": true,
+    "supportsApplyEditsbyUploadID": true,
+    "supportsReturnEditResults": true,
+    "supportedSqlFormatsInCalculate": [
+      "standard"
+    ],
+    "supportedApplyEditsUploadIDFormats": "JSON,PBF"
+  },
+  "objectIdField": "objectid",
+  "supportsQuantizationEditMode": true,
+  "hasContingentValuesDefinition": false,
+  "viewSourceHasAttachments": false,
+  "name": "Flathead County Parcels",
+  "allowTrueCurvesUpdates": false,
+  "displayField": "tract_id",
+  "supportsCalculate": true,
+  "fields": [
+    {
+      "nullable": false,
+      "defaultValue": null,
+      "editable": false,
+      "length": 4,
+      "type": "esriFieldTypeOID",
+      "modelName": "OBJECTID",
+      "domain": null,
+      "name": "objectid",
+      "alias": "OBJECTID"
+    },
+    {
+      "nullable": true,
+      "editable": true,
+      "defaultValue": null,
+      "length": 50,
+      "type": "esriFieldTypeString",
+      "modelName": "TRACT_ID",
+      "domain": null,
+      "name": "tract_id",
+      "alias": "TRACT_ID"
+    },
+    {
+      "nullable": true,
+      "editable": true,
+      "defaultValue": null,
+      "length": 10,
+      "type": "esriFieldTypeString",
+      "modelName": "ASSRNO",
+      "domain": null,
+      "name": "assrno",
+      "alias": "ASSRNO"
+    },
+    {
+      "nullable": true,
+      "editable": true,
+      "defaultValue": null,
+      "length": 30,
+      "type": "esriFieldTypeString",
+      "modelName": "POLYGONTYP",
+      "domain": null,
+      "name": "polygontyp",
+      "alias": "POLYGONTYP"
+    },
+    {
+      "nullable": true,
+      "editable": true,
+      "defaultValue": null,
+      "length": 50,
+      "type": "esriFieldTypeString",
+      "modelName": "Tract_ID_Merged",
+      "domain": null,
+      "name": "tract_id_merged",
+      "alias": "Tract_ID_Merged"
+    },
+    {
+      "nullable": false,
+      "editable": true,
+      "defaultValue": null,
+      "length": 17,
+      "type": "esriFieldTypeString",
+      "modelName": "GEOCODE",
+      "domain": null,
+      "name": "geocode",
+      "alias": "GEOCODE"
+    },
+    {
+      "nullable": true,
+      "editable": true,
+      "defaultValue": null,
+      "length": 20,
+      "type": "esriFieldTypeString",
+      "modelName": "TYPE",
+      "domain": null,
+      "name": "type",
+      "alias": "ParcelType"
+    },
+    {
+      "nullable": false,
+      "editable": false,
+      "defaultValue": null,
+      "domain": null,
+      "name": "globalid",
+      "length": 38,
+      "alias": "globalid",
+      "type": "esriFieldTypeGlobalID"
+    }
+  ],
+  "maxRecordCountFactor": 1,
+  "dateFieldsTimeReference": {
+    "timeZoneIANA": "Etc/UTC",
+    "respectsDaylightSaving": false,
+    "timeZone": "UTC"
+  },
+  "supportsFieldDescriptionProperty": true,
+  "hasM": false,
+  "allowGeometryUpdates": true,
+  "isView": true,
+  "useStandardizedQueries": true,
+  "globalIdField": "globalid",
+  "sourceSpatialReference": {
+    "wkt": "PROJCS[\"NAD_1983_HARN_StatePlane_Montana_FIPS_2500\",GEOGCS[\"GCS_North_American_1983_HARN\",DATUM[\"D_North_American_1983_HARN\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Lambert_Conformal_Conic\"],PARAMETER[\"False_Easting\",600000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-109.5],PARAMETER[\"Standard_Parallel_1\",45.0],PARAMETER[\"Standard_Parallel_2\",49.0],PARAMETER[\"Latitude_Of_Origin\",44.25],UNIT[\"Meter\",1.0]]",
+    "falseM": -100000,
+    "mUnits": 10000,
+    "zUnits": 10000,
+    "zTolerance": 0.001,
+    "wkid": 2818,
+    "xyUnits": 10000,
+    "mTolerance": 0.001,
+    "falseX": -35666000,
+    "falseY": -30006900,
+    "falseZ": -100000
+  },
+  "description": "The Flathead County Parcel Polygon data is comprised of taxable parcels (fee land) and public land (exempt property). It is broken down into individual lots.Each parcel contains an attribute called TRACT_ID that is the parcel identifier. It relates to the historical creation of the tract information assigned by the Flathead County Plat Room.Data is built upon the Flathead County Base Map (FCBM). The FCBM is a complex measurement management system that uses a least squares adjustment of existing survey data to come up with a digital representation of the Public Land Survey System (PLSS). Accuracy varies between townships and it is important to note that the accuracy of the parcel data can not be any more accurate than the FCBM.",
+  "syncCanReturnChanges": true,
+  "supportsAsyncDelete": true,
+  "isUpdatableView": true,
+  "supportedSpatialRelationships": [
+    "esriSpatialRelIntersects",
+    "esriSpatialRelContains",
+    "esriSpatialRelCrosses",
+    "esriSpatialRelEnvelopeIntersects",
+    "esriSpatialRelOverlaps",
+    "esriSpatialRelTouches",
+    "esriSpatialRelWithin"
+  ],
+  "geometryProperties": {
+    "shapeAreaFieldName": "SHAPE__Area",
+    "shapeLengthFieldName": "SHAPE__Length",
+    "units": "esriMeters"
+  },
+  "supportsRollbackOnFailureParameter": true,
+  "viewDefinitionQuery": null,
+  "isDataReplicaTracked": false,
+  "standardMaxRecordCountNoGeometry": 16000,
+  "supportsTruncate": false,
+  "indexes": [
+    {
+      "name": "i4948tract_id",
+      "isUnique": false,
+      "description": "",
+      "fields": "tract_id",
+      "isAscending": true
+    },
+    {
+      "name": "r415_sde_rowid_uk",
+      "isUnique": true,
+      "description": "",
+      "fields": "objectid",
+      "isAscending": true
+    },
+    {
+      "name": "a255_ix1",
+      "isUnique": false,
+      "description": "",
+      "fields": "shape",
+      "isAscending": true
+    },
+    {
+      "name": "uuid_415",
+      "isUnique": false,
+      "description": "",
+      "fields": "globalid",
+      "isAscending": true
+    }
+  ],
+  "supportedAppendSourceFilterFormats": "featureService",
+  "htmlPopupType": "esriServerHTMLPopupTypeAsHTMLText",
+  "GUIDFormat": "O",
+  "minScale": 0,
+  "hasAttachments": false,
+  "queryBinsCapabilities": {
+    "supportsFirstDayOfWeek": false,
+    "supportedNormalizationTypes": [
+      "boxCox",
+      "field",
+      "inverse",
+      "log",
+      "naturalLog",
+      "percentOfTotal",
+      "squareRoot"
+    ],
+    "supportedStatisticTypes": [
+      "count",
+      "sum",
+      "min",
+      "max",
+      "avg",
+      "stddev",
+      "var",
+      "percentile_cont",
+      "percentile_disc"
+    ],
+    "supportsNormalization": true,
+    "supportsSnapToData": true,
+    "supportsFixedIntervalBin": true,
+    "supportsStackBy": true,
+    "supportsAutoIntervalBin": true,
+    "supportsFixedBoundariesBin": true,
+    "supportsDateBin": true,
+    "supportsSplitBy": true,
+    "supportsReturnFullIntervalBin": true
+  },
+  "advancedQueryCapabilities": {
+    "supportsSqlExpression": true,
+    "supportsQueryWithResultType": true,
+    "supportsQueryRelatedPagination": true,
+    "supportsQueryWithCacheHint": false,
+    "supportsQueryWithDatumTransformation": true,
+    "supportsCurrentUserQueries": true,
+    "supportsQueryAttachmentsWithReturnUrl": true,
+    "fullTextSearchCapabilities": {
+      "supportsOperator": true,
+      "supportsSearchOperator": true
+    },
+    "supportsDefaultSR": true,
+    "supportsQueryDateBins": false,
+    "supportsQueryWithLodSR": true,
+    "supportsPaginationOnAggregatedQueries": true,
+    "supportsPagination": true,
+    "supportsMaxRecordCountFactor": true,
+    "fullTextSearchableFields": [],
+    "supportsStatistics": true,
+    "supportsOrderBy": true,
+    "supportsReturningGeometryProperties": true,
+    "supportsFullTextSearch": true,
+    "supportsQueryWithDistance": true,
+    "supportsLod": true,
+    "supportsSpatialAggregationStatistics": false,
+    "supportsCountDistinct": true,
+    "supportsAdvancedQueryRelated": true,
+    "supportsQueryAttachments": true,
+    "supportsReturningQueryExtent": true,
+    "supportsQueryAttachmentsCountOnly": true,
+    "supportsOrderByOnlyOnLayerFields": false,
+    "supportsOutFieldSqlExpression": true,
+    "supportsTopFeaturesQuery": true,
+    "supportsReturningGeometryEnvelope": true,
+    "supportsDistinct": true,
+    "supportsReturningGeometryCentroid": true,
+    "supportsQueryAnalytic": true,
+    "supportsPercentileStatistics": true,
+    "supportsHavingClause": true
+  },
+  "subtypeField": "",
+  "supportsValidateSQL": true,
+  "enableZDefaults": true,
+  "serviceItemId": "e4911518fc32430697dae67ba8bef6c4",
+  "allowUpdateWithoutMValues": true,
+  "supportsCoordinatesQuantization": true,
+  "types": [],
+  "capabilities": "Query",
+  "maxScale": 0,
+  "supportsAppend": true,
+  "supportsExceedsLimitStatistics": true,
+  "sourceSchemaChangesAllowed": true,
+  "defaultVisibility": true,
+  "advancedQueryAnalyticCapabilities": {
+    "supportsAsync": true,
+    "supportsLinearRegression": true,
+    "supportsPercentileAnalytic": false
+  },
+  "hasMetadata": true,
+  "supportedAppendFormats": "csv,excel,featureCollection,featureService,geojson,imageCollection,jsonl,pbf,shapefile",
+  "tileMaxRecordCount": 2000,
+  "typeIdField": "",
+  "supportsASyncCalculate": true,
+  "supportedQueryFormats": "JSON, geoJSON, PBF",
+  "sqlParserVersion": "PG_11.4.0",
+  "drawingInfo": {
+    "renderer": {
+      "symbol": {
+        "outline": {
+          "color": [
+            110,
+            110,
+            110,
+            255
+          ],
+          "width": 0.7,
+          "style": "esriSLSSolid",
+          "type": "esriSLS"
+        },
+        "color": [
+          214,
+          252,
+          217,
+          0
+        ],
+        "style": "esriSFSSolid",
+        "type": "esriSFS"
+      },
+      "type": "simple"
+    },
+    "scaleSymbols": true,
+    "transparency": 0,
+    "labelingInfo": null
+  },
+  "geometryField": {
+    "sqlType": "sqlTypeOther",
+    "nullable": true,
+    "editable": true,
+    "name": "shape",
+    "typeName": "st_geometry",
+    "length": 2147483647,
+    "type": "esriFieldTypeGeometry"
+  },
+  "copyrightText": "Credit given to Flathead County GIS would be appreciated when deriving products from this data.",
+  "zDefault": 0,
+  "geometryType": "esriGeometryPolygon",
+  "supportsLayerOverrides": true
+}
