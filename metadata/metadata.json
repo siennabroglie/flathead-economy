@@ -1,5 +1,5 @@
 {
-  "build_timestamp": "2026-10-15T15:19:46.660299+00:00",
+  "build_timestamp": "2026-10-20T21:02:37.808959+00:00",
   "config": "config/config.yaml",
   "files": [
     {
@@ -34,8 +34,8 @@
     },
     {
       "path": "raw/lodes/wac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
-      "sha256": "d0f3172cc1d2bfa69a6a2cab2acdded792d2f7282147f576c6c42e36606b1473",
-      "bytes": 3075288
+      "sha256": "abf5ebe7f8927de1b76f4bd57c186a2390d71daf188c27f24b9eeda47114b4d0",
+      "bytes": 3075268
     }
   ]
 }

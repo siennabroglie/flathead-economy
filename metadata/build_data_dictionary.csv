@@ -1,0 +1,4 @@
+field,description,source
+GEOID,12-digit Census block-group identifier,TIGER/Line
+rac_jobs,"LODES C000 total jobs by worker residence, aggregated to block group",rac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv
+wac_jobs,"LODES C000 total jobs by workplace, aggregated to block group",wac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv

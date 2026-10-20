@@ -1,0 +1,19 @@
+{
+  "build_year": 2023,
+  "county": "Flathead County, Montana",
+  "block_groups": 85,
+  "rac_block_groups_with_data": 85,
+  "wac_block_groups_with_data": 84,
+  "rac_2023_total_from_source": 49427,
+  "wac_2023_total_from_source": 49504,
+  "acs_source": "acs5_2024_flathead_block_groups.json",
+  "tiger_source": "tl_2024_30_bg.zip",
+  "rac_source": "rac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
+  "wac_source": "wac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
+  "notes": [
+    "LODES source totals are aggregated from census blocks to block groups.",
+    "RAC represents jobs by worker residence; WAC represents jobs by workplace.",
+    "Null LODES values indicate no matched source record, not necessarily zero.",
+    "ACS values retain their source variable names and units."
+  ]
+}

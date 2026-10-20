@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 import pandas as pd
+import geopandas as gpd
 import requests
 import yaml
 
@@ -291,10 +292,217 @@ class Pipeline:
         print(json.dumps(report, indent=2))
 
     def build(self):
-        self.fetch()
+        """Build 2023 Flathead County block-group employment outputs."""
+        import json
+        import zipfile
+        import geopandas as gpd
+
+        year = 2023
         self.validate()
-        # The full spatial materialization is intentionally gated on validated detailed LODES input.
-        # This prevents a partial build from masquerading as the authoritative dataset.
-        if not list((self.raw/"lodes").glob("*.csv")):
-            raise RuntimeError("Build stopped: detailed LODES extract is required. Export the required RAC/WAC characteristics from the official LED Extraction Tool into raw/lodes/ and rerun build.")
-        raise NotImplementedError("Spatial materialization stage is scaffolded but not enabled until the exact LED Extraction Tool export schema is validated against the current source release.")
+
+        lodes_dir = self.raw / "lodes"
+        rac_files = [
+            p for p in lodes_dir.glob("rac_*.csv")
+            if not p.name.endswith(".bak")
+        ]
+        wac_files = [
+            p for p in lodes_dir.glob("wac_*.csv")
+            if not p.name.endswith(".bak")
+        ]
+
+        if len(rac_files) != 1 or len(wac_files) != 1:
+            raise RuntimeError(
+                "Expected exactly one RAC CSV and one WAC CSV under raw/lodes/. "
+                f"Found RAC={len(rac_files)}, WAC={len(wac_files)}."
+            )
+
+        # Load the TIGER block-group boundaries.
+        tiger_files = sorted((self.raw / "census").glob("*_bg.zip"))
+        if not tiger_files:
+            raise FileNotFoundError(
+                "No TIGER block-group ZIP found under raw/census/."
+            )
+
+        with zipfile.ZipFile(tiger_files[0]) as z:
+            shp_names = [
+                n for n in z.namelist()
+                if n.lower().endswith(".shp")
+            ]
+            if len(shp_names) != 1:
+                raise RuntimeError(
+                    f"Expected one shapefile in {tiger_files[0].name}; "
+                    f"found {len(shp_names)}."
+                )
+
+        boundaries = gpd.read_file(
+            f"zip://{tiger_files[0].resolve()}!{shp_names[0]}"
+        )
+
+        required_geo_cols = {"GEOID", "STATEFP", "COUNTYFP"}
+        missing_geo = required_geo_cols - set(boundaries.columns)
+        if missing_geo:
+            raise RuntimeError(
+                f"TIGER boundaries are missing required fields: "
+                f"{sorted(missing_geo)}"
+            )
+
+        boundaries["GEOID"] = boundaries["GEOID"].astype(str).str.zfill(12)
+        county = boundaries[
+            (boundaries["STATEFP"].astype(str).str.zfill(2) == "30")
+            & (boundaries["COUNTYFP"].astype(str).str.zfill(3) == "029")
+        ].copy()
+
+        if county.empty:
+            raise RuntimeError(
+                "No Flathead County block groups found in the TIGER file."
+            )
+        if county["GEOID"].duplicated().any():
+            raise RuntimeError("Duplicate block-group GEOIDs in TIGER boundaries.")
+
+        # Load and validate the 2023 LODES rows, aggregating block records
+        # to block groups using the first 12 digits of each 15-digit GEOID.
+        def aggregate_lodes(path, geo_col, prefix):
+            header = pd.read_csv(path, nrows=0).columns.tolist()
+            required = {geo_col, "year", "C000"}
+            missing = required - set(header)
+            if missing:
+                raise RuntimeError(
+                    f"{path.name} is missing required columns: {sorted(missing)}"
+                )
+
+            frames = []
+            for chunk in pd.read_csv(
+                path,
+                usecols=[geo_col, "year", "C000"],
+                dtype={geo_col: "string"},
+                chunksize=200_000,
+            ):
+                chunk = chunk[chunk["year"] == year].copy()
+                if chunk.empty:
+                    continue
+
+                chunk[geo_col] = chunk[geo_col].str.zfill(15)
+                if not chunk[geo_col].str.fullmatch(r"30\d{13}").all():
+                    raise RuntimeError(
+                        f"Unexpected Census block GEOID in {path.name}."
+                    )
+
+                chunk["GEOID"] = chunk[geo_col].str[:12]
+                chunk["C000"] = pd.to_numeric(chunk["C000"], errors="raise")
+                frames.append(chunk[["GEOID", "C000"]])
+
+            if not frames:
+                raise RuntimeError(
+                    f"No {year} records found in {path.name}."
+                )
+
+            rows = pd.concat(frames, ignore_index=True)
+            result = rows.groupby("GEOID", as_index=False)["C000"].sum()
+            result = result.rename(columns={"C000": f"{prefix}_jobs"})
+            return result
+
+        rac = aggregate_lodes(rac_files[0], "h_geocode", "rac")
+        wac = aggregate_lodes(wac_files[0], "w_geocode", "wac")
+
+        # Load the matching ACS raw extract.
+        acs_files = sorted(
+            (self.raw / "acs").glob(f"acs5_*_flathead_block_groups.json")
+        )
+        if not acs_files:
+            raise FileNotFoundError("No ACS block-group JSON found under raw/acs/.")
+
+        acs_path = acs_files[-1]
+        acs_raw = json.loads(acs_path.read_text(encoding="utf-8"))
+        if len(acs_raw) < 2:
+            raise RuntimeError(f"ACS extract is empty: {acs_path.name}")
+
+        acs = pd.DataFrame(acs_raw[1:], columns=acs_raw[0])
+        acs_id_cols = ["state", "county", "tract", "block group"]
+        missing_ids = set(acs_id_cols) - set(acs.columns)
+        if missing_ids:
+            raise RuntimeError(
+                f"ACS extract is missing geographic fields: {sorted(missing_ids)}"
+            )
+
+        acs["GEOID"] = (
+            acs["state"].astype(str).str.zfill(2)
+            + acs["county"].astype(str).str.zfill(3)
+            + acs["tract"].astype(str).str.zfill(6)
+            + acs["block group"].astype(str).str.zfill(1)
+        )
+        acs = acs.drop(columns=acs_id_cols, errors="ignore")
+
+        if acs["GEOID"].duplicated().any():
+            raise RuntimeError("Duplicate GEOIDs in ACS extract.")
+
+        # Join data onto the TIGER polygons.
+        result = county.merge(acs, on="GEOID", how="left", validate="one_to_one")
+        result = result.merge(rac, on="GEOID", how="left", validate="one_to_one")
+        result = result.merge(wac, on="GEOID", how="left", validate="one_to_one")
+
+        if result.empty:
+            raise RuntimeError("Spatial output unexpectedly contains no block groups.")
+
+        # Missing LODES matches are not automatically zero: preserve as null
+        # and report their coverage so users can distinguish missing from zero.
+        summary = {
+            "build_year": year,
+            "county": "Flathead County, Montana",
+            "block_groups": int(len(result)),
+            "rac_block_groups_with_data": int(result["rac_jobs"].notna().sum()),
+            "wac_block_groups_with_data": int(result["wac_jobs"].notna().sum()),
+            "rac_2023_total_from_source": int(rac["rac_jobs"].sum()),
+            "wac_2023_total_from_source": int(wac["wac_jobs"].sum()),
+            "acs_source": acs_path.name,
+            "tiger_source": tiger_files[0].name,
+            "rac_source": rac_files[0].name,
+            "wac_source": wac_files[0].name,
+            "notes": [
+                "LODES source totals are aggregated from census blocks to block groups.",
+                "RAC represents jobs by worker residence; WAC represents jobs by workplace.",
+                "Null LODES values indicate no matched source record, not necessarily zero.",
+                "ACS values retain their source variable names and units.",
+            ],
+        }
+
+        out_dir = self.data / str(year)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save tabular and geospatial formats.
+        csv_path = out_dir / "flathead_block_groups_2023.csv"
+        gpkg_path = out_dir / "flathead_economic_2023.gpkg"
+        geojson_path = out_dir / "flathead_economic_2023.geojson"
+
+        result.drop(columns="geometry").to_csv(csv_path, index=False)
+        result.to_file(gpkg_path, layer="block_groups", driver="GPKG")
+        result.to_crs("EPSG:4326").to_file(
+            geojson_path, driver="GeoJSON"
+        )
+
+        summary_path = out_dir / "build_summary.json"
+        summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+        dictionary = pd.DataFrame([
+            {"field": "GEOID", "description": "12-digit Census block-group identifier", "source": "TIGER/Line"},
+            {"field": "rac_jobs", "description": "LODES C000 total jobs by worker residence, aggregated to block group", "source": rac_files[0].name},
+            {"field": "wac_jobs", "description": "LODES C000 total jobs by workplace, aggregated to block group", "source": wac_files[0].name},
+        ])
+        dictionary_path = self.meta / "build_data_dictionary.csv"
+        dictionary.to_csv(dictionary_path, index=False)
+
+        # Record hashes of source and generated files in the metadata manifest.
+        self._write_manifest()
+
+        print(json.dumps({
+            "status": "built",
+            "year": year,
+            "outputs": [
+                str(csv_path),
+                str(gpkg_path),
+                str(geojson_path),
+                str(summary_path),
+                str(dictionary_path),
+            ],
+            "summary": summary,
+        }, indent=2))
+
