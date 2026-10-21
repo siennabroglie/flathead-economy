@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore Flathead County economic data by census block group and year.">
+  <title>Flathead County Economic Data</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-heading">
+      <p class="eyebrow">Flathead County, Montana</p>
+      <h1>Economic Atlas</h1>
+    </div>
+    <p class="header-note">A place-based view of local economic patterns</p>
+  </header>
+
+  <main class="app-shell">
+    <aside class="control-panel" aria-label="Map controls">
+      <section class="panel-section">
+        <p class="section-kicker">Explore the data</p>
+        <h2>Map settings</h2>
+        <label for="year-select">Data year</label>
+        <select id="year-select"></select>
+        <label for="metric-select">Measure</label>
+        <select id="metric-select">
+          <option value="rac_jobs">Jobs by worker residence</option>
+          <option value="wac_jobs">Jobs by workplace</option>
+        </select>
+        <p class="control-help">Choose a year and measure to update the map. Values represent total jobs, not job rates.</p>
+      </section>
+
+      <section class="panel-section summary-section" aria-live="polite">
+        <p class="section-kicker">Selected area</p>
+        <h2 id="selected-area">Choose a block group</h2>
+        <dl class="stat-list">
+          <div><dt>Jobs</dt><dd id="selected-value">—</dd></div>
+          <div><dt>Block group ID</dt><dd id="selected-geoid">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel-section legend-section">
+        <p class="section-kicker">Map key</p>
+        <h2>Job count</h2>
+        <div id="map-legend" class="map-legend"><span>Loading legend…</span></div>
+        <p class="data-note">Blank values indicate missing data; they are not treated as zero.</p>
+      </section>
+
+      <footer class="panel-footer">
+        <p id="data-status" role="status">Loading data…</p>
+        <p>Sources: U.S. Census Bureau ACS and LEHD LODES. Data vintages and coverage vary by measure.</p>
+      </footer>
+    </aside>
+
+    <section class="map-panel" aria-label="Interactive map">
+      <div class="map-toolbar">
+        <div>
+          <p class="section-kicker">Geographic unit</p>
+          <strong>Census block groups</strong>
+        </div>
+        <button id="reset-map" class="text-button" type="button">Reset view</button>
+      </div>
+      <div id="map" role="region" aria-label="Map of Flathead County block groups"></div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
