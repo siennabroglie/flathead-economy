@@ -73,9 +73,9 @@ class LodesHistoryUpdater:
         temporary.write_bytes(payload)
         temporary.replace(destination)
 
-    def _aggregate(self, path: Path, geo_column: str) -> pd.DataFrame:
+    def _aggregate(self, path: Path, geo_column: str, expected_year: int) -> pd.DataFrame:
         header = pd.read_csv(path, compression="gzip", nrows=0).columns.tolist()
-        required = {geo_column, "C000"}
+        required = {geo_column, "year", "C000"}
         missing = required - set(header)
         if missing:
             raise RuntimeError(f"{path.name} is missing columns: {sorted(missing)}")
@@ -84,7 +84,7 @@ class LodesHistoryUpdater:
         for chunk in pd.read_csv(
             path,
             compression="gzip",
-            usecols=[geo_column, "C000"],
+            usecols=[geo_column, "year", "C000"],
             dtype={geo_column: "string"},
             chunksize=CHUNK_SIZE,
         ):
