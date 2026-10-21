@@ -33,6 +33,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Check Python syntax
+        run: python -m compileall -q flathead_economic
+
+      - name: Test LODES aggregation
+        run: python -m unittest discover -s tests -p "test_lodes_history.py" -v
+
       - name: Download official LODES releases and build annual history
         run: |
           if [ "${{ inputs.rebuild_existing }}" = "true" ]; then
