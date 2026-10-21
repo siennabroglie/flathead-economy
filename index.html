@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore Flathead County, Montana economic and demographic data by census block group.">
+  <title>Flathead County Economic Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="assets/css/map.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-heading">
+      <p class="eyebrow">FLATHEAD COUNTY · MONTANA</p>
+      <h1>Economic Atlas</h1>
+      <p class="site-subtitle">Explore local economic and demographic patterns by census block group.</p>
+    </div>
+    <div class="header-meta"><span class="status-dot"></span> Data-driven map prototype</div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="control-panel" aria-label="Map controls">
+      <section class="control-section">
+        <p class="section-kicker">EXPLORE THE DATA</p>
+        <h2>Map settings</h2>
+        <label for="dataset-select">Data collection</label>
+        <select id="dataset-select">
+          <option value="jobs">Employment · LODES</option>
+          <option value="acs">Population &amp; economy · ACS</option>
+        </select>
+
+        <label for="measure-select">Measure</label>
+        <select id="measure-select">
+          <option value="wac_jobs">Jobs by workplace</option>
+          <option value="rac_jobs">Jobs by worker residence</option>
+        </select>
+
+        <div id="year-control">
+          <label for="year-select">Employment year</label>
+          <select id="year-select" aria-describedby="year-note"></select>
+          <p id="year-note" class="field-note">LODES annual data currently available from 2002–2023.</p>
+        </div>
+
+        <div id="acs-control" hidden>
+          <label for="acs-measure-select">ACS measure</label>
+          <select id="acs-measure-select">
+            <option value="B01001_001E">Total population</option>
+            <option value="B19013_001E">Median household income</option>
+            <option value="B19301_001E">Per capita income</option>
+            <option value="B17001_002E">Population below poverty level</option>
+            <option value="B23025_004E">Employed population</option>
+          </select>
+          <p class="field-note">ACS values use 2024 five-year estimates; they are not annual observations.</p>
+        </div>
+      </section>
+
+      <section class="legend-section">
+        <p class="section-kicker">MAP KEY</p>
+        <h2 id="legend-title">Jobs by workplace</h2>
+        <div id="legend" class="legend" aria-live="polite"></div>
+        <p id="map-status" class="map-status" role="status">Loading block-group geography…</p>
+      </section>
+
+      <section class="about-section">
+        <h3>How to use this map</h3>
+        <p>Select a measure, then choose a block group to inspect its values. Use the map controls to zoom and pan.</p>
+        <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
+      </section>
+    </aside>
+
+    <section class="map-panel" aria-label="Interactive map">
+      <div class="map-toolbar">
+        <div>
+          <p class="map-overline">GEOGRAPHIC VIEW</p>
+          <h2>Flathead County block groups</h2>
+        </div>
+        <span id="map-period" class="period-chip">LODES · 2023</span>
+      </div>
+      <div id="map" role="application" aria-label="Interactive choropleth map of Flathead County"></div>
+      <footer class="map-footer">
+        <span>Click a shaded area for details</span>
+        <span>Geography: Census block groups</span>
+      </footer>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="assets/js/map.js"></script>
+</body>
+</html>
