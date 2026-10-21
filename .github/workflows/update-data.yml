@@ -6,7 +6,7 @@ on:
     - cron: "17 12 1 * *"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   update-data:
@@ -40,6 +40,21 @@ jobs:
 
       - name: Build economic data products
         run: python -m flathead_economic.cli build
+
+      - name: Publish generated data to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/2023/ data/county/
+          git add metadata/metadata.json metadata/validation_report.json metadata/build_data_dictionary.csv
+
+          if git diff --cached --quiet; then
+            echo "No generated data changes to commit."
+          else
+            git commit -m "Update generated economic data"
+            git push
+          fi
 
       - name: Upload data products and reports
         if: always()
