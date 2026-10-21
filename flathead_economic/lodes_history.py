@@ -88,6 +88,11 @@ class LodesHistoryUpdater:
             dtype={geo_column: "string"},
             chunksize=CHUNK_SIZE,
         ):
+            years_in_file = pd.to_numeric(chunk["year"], errors="raise")
+            if not years_in_file.eq(expected_year).all():
+                raise RuntimeError(
+                    f"Expected only {expected_year} rows in {path.name}; found years {sorted(years_in_file.unique().tolist())}"
+                )
             geocodes = chunk[geo_column].str.zfill(15)
             county_mask = geocodes.str.startswith(COUNTY_GEOID_PREFIX)
             chunk = chunk.loc[county_mask, [geo_column, "C000"]].copy()
@@ -177,6 +182,12 @@ class LodesHistoryUpdater:
             frame = frame.merge(wac, on="GEOID", how="left", validate="one_to_one")
             frame["year"] = year
             frame = frame[["year", "GEOID", "rac_jobs", "wac_jobs"]]
+            if len(frame) != len(geoids) or frame["GEOID"].duplicated().any():
+                raise RuntimeError(f"Invalid block-group row count or duplicate GEOIDs for {year}")
+            if not frame["GEOID"].str.fullmatch(r"30029\d{7}").all():
+                raise RuntimeError(f"Unexpected block-group GEOID in {year} output")
+            if frame["rac_jobs"].notna().sum() == 0 or frame["wac_jobs"].notna().sum() == 0:
+                raise RuntimeError(f"LODES {year} output has no matched RAC or WAC values")
 
             year_dir.mkdir(parents=True, exist_ok=True)
             frame.to_csv(csv_path, index=False)
