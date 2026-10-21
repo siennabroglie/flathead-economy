@@ -75,24 +75,30 @@ class LodesHistoryUpdater:
 
     def _aggregate(self, path: Path, geo_column: str, expected_year: int) -> pd.DataFrame:
         header = pd.read_csv(path, compression="gzip", nrows=0).columns.tolist()
-        required = {geo_column, "year", "C000"}
+        required = {geo_column, "C000"}
         missing = required - set(header)
         if missing:
             raise RuntimeError(f"{path.name} is missing columns: {sorted(missing)}")
+
+        # Some early LODES releases omit the year column; their year is
+        # authoritative in the official annual filename discovered upstream.
+        has_year_column = "year" in header
+        usecols = [geo_column, "C000"] + (["year"] if has_year_column else [])
 
         chunks: list[pd.DataFrame] = []
         for chunk in pd.read_csv(
             path,
             compression="gzip",
-            usecols=[geo_column, "year", "C000"],
+            usecols=usecols,
             dtype={geo_column: "string"},
             chunksize=CHUNK_SIZE,
         ):
-            years_in_file = pd.to_numeric(chunk["year"], errors="raise")
-            if not years_in_file.eq(expected_year).all():
-                raise RuntimeError(
-                    f"Expected only {expected_year} rows in {path.name}; found years {sorted(years_in_file.unique().tolist())}"
-                )
+            if has_year_column:
+                years_in_file = pd.to_numeric(chunk["year"], errors="raise")
+                if not years_in_file.eq(expected_year).all():
+                    raise RuntimeError(
+                        f"Expected only {expected_year} rows in {path.name}; found years {sorted(years_in_file.unique().tolist())}"
+                    )
             geocodes = chunk[geo_column].str.zfill(15)
             county_mask = geocodes.str.startswith(COUNTY_GEOID_PREFIX)
             chunk = chunk.loc[county_mask, [geo_column, "C000"]].copy()
