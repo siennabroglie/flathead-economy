@@ -170,8 +170,8 @@ class LodesHistoryUpdater:
             self._download(rac_url, rac_path)
             self._download(wac_url, wac_path)
 
-            rac = self._aggregate(rac_path, "h_geocode").rename(columns={"jobs": "rac_jobs"})
-            wac = self._aggregate(wac_path, "w_geocode").rename(columns={"jobs": "wac_jobs"})
+            rac = self._aggregate(rac_path, "h_geocode", year).rename(columns={"jobs": "rac_jobs"})
+            wac = self._aggregate(wac_path, "w_geocode", year).rename(columns={"jobs": "wac_jobs"})
             frame = pd.DataFrame({"GEOID": geoids})
             frame = frame.merge(rac, on="GEOID", how="left", validate="one_to_one")
             frame = frame.merge(wac, on="GEOID", how="left", validate="one_to_one")
@@ -228,3 +228,25 @@ class LodesHistoryUpdater:
         result = {"status": "complete", "available_years": years, "created_years": created, "skipped_existing_years": skipped, "manifest": str(manifest_path.relative_to(self.root))}
         print(json.dumps(result, indent=2))
         return result
+
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Download official Montana LODES data and build immutable Flathead County annual history."
+    )
+    parser.add_argument("--config", default="config/config.yaml")
+    parser.add_argument(
+        "--rebuild-existing",
+        action="store_true",
+        help="Intentionally rebuild already published annual LODES outputs.",
+    )
+    args = parser.parse_args()
+    updater = LodesHistoryUpdater(Path(args.config))
+    updater.run(rebuild_existing=args.rebuild_existing)
+
+
+if __name__ == "__main__":
+    main()
