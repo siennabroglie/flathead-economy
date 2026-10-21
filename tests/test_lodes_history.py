@@ -34,6 +34,20 @@ class LodesAggregateTests(unittest.TestCase):
 
         self.assertEqual(result.to_dict("records"), [{"GEOID": "300290001001", "jobs": 17}])
 
+    def test_aggregates_early_release_without_year_column(self) -> None:
+        source = pd.DataFrame(
+            {
+                "h_geocode": ["300290001001001", "300290001001002"],
+                "C000": [4, 6],
+            }
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = self._write_gzip(temp_dir, source)
+            updater = LodesHistoryUpdater.__new__(LodesHistoryUpdater)
+            result = updater._aggregate(path, "h_geocode", 2002)
+
+        self.assertEqual(result.to_dict("records"), [{"GEOID": "300290001001", "jobs": 10}])
+
     def test_rejects_wrong_year(self) -> None:
         source = pd.DataFrame(
             {
