@@ -57,3 +57,28 @@ flathead-economic/
 ```
 
 The GeoPackage is the authoritative spatial output.
+
+
+## Automated official LODES history
+
+The separate **Update LODES Historical Data** GitHub Actions workflow reads the official Census Bureau LEHD LODES 8 Montana RAC and WAC directories and discovers years for which both files are available. It downloads the all-jobs selection (`S000/JT00`), filters the 15-digit Census block GEOIDs to Flathead County (state/county prefix `30029`), aggregates `C000` to 12-digit block groups, and creates annual CSVs.
+
+Outputs are stored separately from the existing 2023 map products:
+
+```text
+data/lodes/
+├── 2002/
+│   ├── flathead_lodes_jobs_by_block_group.csv
+│   └── build_summary.json
+├── 2003/
+└── ...
+metadata/lodes_history_manifest.json
+```
+
+Each annual summary records official source URLs, SHA-256 hashes, job totals, coverage, and the build year. Routine runs never overwrite a complete annual output. The workflow can be run manually from **Actions → Update LODES Historical Data → Run workflow**. Leave `rebuild_existing` false for routine updates; set it true only when intentionally rebuilding historical years.
+
+The LODES history output is a standalone annual jobs table. It does not replace the existing `data/2023/` spatial products or silently merge a new LODES year with a different ACS vintage. Those steps remain separate so historical outputs and methodology stay explicit.
+
+Official source directories:
+- RAC: https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/
+- WAC: https://lehd.ces.census.gov/data/lodes/LODES8/mt/wac/
