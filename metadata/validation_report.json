@@ -1,6 +1,32 @@
 {
-  "timestamp": "2026-10-20T21:02:36.402953+00:00",
+  "timestamp": "2026-10-21T17:35:07.034885+00:00",
   "errors": [],
   "warnings": [],
+  "checks": {
+    "acs_vintage": {
+      "block_groups": "2024",
+      "county": "2024",
+      "match": true
+    },
+    "acs_variables": {
+      "block_group_count": 152,
+      "county_count": 152,
+      "match": true
+    },
+    "acs_rows": {
+      "block_groups": 85,
+      "county": 1
+    },
+    "acs_county_identity": {
+      "name": "Flathead County, Montana",
+      "state_fips": "30",
+      "county_fips": "029",
+      "valid": true
+    },
+    "acs_files": {
+      "block_groups": "raw/acs/acs5_2024_flathead_block_groups.json",
+      "county": "raw/acs/acs5_2024_flathead_county.json"
+    }
+  },
   "status": "passed"
 }

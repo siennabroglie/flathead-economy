@@ -1,0 +1,56 @@
+name: Update Flathead County Economic Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 12 1 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Discover available sources
+        run: python -m flathead_economic.cli discover
+
+      - name: Fetch source data
+        run: python -m flathead_economic.cli fetch
+        env:
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+
+      - name: Validate source data
+        run: python -m flathead_economic.cli validate
+
+      - name: Build economic data products
+        run: python -m flathead_economic.cli build
+
+      - name: Upload data products and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flathead-economic-data-${{ github.run_number }}
+          if-no-files-found: warn
+          path: |
+            data/2023/
+            data/county/
+            raw/acs/*.json
+            metadata/metadata.json
+            metadata/validation_report.json
+            metadata/build_data_dictionary.csv

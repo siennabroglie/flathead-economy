@@ -1,5 +1,5 @@
 {
-  "build_timestamp": "2026-10-20T21:02:37.808959+00:00",
+  "build_timestamp": "2026-10-21T17:35:08.008687+00:00",
   "config": "config/config.yaml",
   "files": [
     {
@@ -16,6 +16,11 @@
       "path": "raw/schools/MontanaSchools.zip",
       "sha256": "efd2c1c11fb3e772109c262f6080583521334846b84b9779c37a08c015aa44df",
       "bytes": 56928
+    },
+    {
+      "path": "raw/acs/acs5_2024_flathead_county.json",
+      "sha256": "9b7f182282f70ac2c803fa9861788c02dc5f0e6e9b3c8e479b5ed542e1e7198a",
+      "bytes": 3528
     },
     {
       "path": "raw/acs/acs5_2024_flathead_block_groups.json",

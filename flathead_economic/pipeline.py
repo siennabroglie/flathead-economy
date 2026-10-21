@@ -237,6 +237,89 @@ class Pipeline:
             f"{len(all_variables)} ACS estimate variables to {out}"
         )
 
+        # Save source-published county-level ACS estimates.
+        # These are retrieved directly from the Census API, not calculated
+        # by aggregating block-group estimates.
+        county_merged = {}
+
+        county_geo_cols = ["state", "county"]
+        for start in range(0, len(all_variables), 40):
+            batch = all_variables[start:start + 40]
+            print(
+                f"  Requesting county ACS variables "
+                f"{start + 1}-{start + len(batch)} "
+                f"of {len(all_variables)}"
+            )
+
+            params = {
+                "get": ",".join(["NAME"] + batch),
+                "for": f"county:{self.cfg['project']['county_fips']}",
+                "in": f"state:{self.cfg['project']['state_fips']}",
+                "key": key,
+            }
+
+            result = self._get(api, params).json()
+            if len(result) != 2:
+                raise RuntimeError(
+                    "Expected exactly one county-level ACS result row; "
+                    f"received {max(0, len(result) - 1)}."
+                )
+
+            headers = result[0]
+            values = result[1]
+            positions = {name: index for index, name in enumerate(headers)}
+
+            required_cols = ["NAME"] + batch + county_geo_cols
+            missing = [col for col in required_cols if col not in positions]
+            if missing:
+                raise RuntimeError(
+                    f"County ACS response is missing columns: {missing}"
+                )
+
+            state_value = values[positions["state"]].zfill(2)
+            county_value = values[positions["county"]].zfill(3)
+
+            if (
+                state_value != self.cfg["project"]["state_fips"].zfill(2)
+                or county_value != self.cfg["project"]["county_fips"].zfill(3)
+            ):
+                raise RuntimeError(
+                    "County ACS response returned unexpected state/county FIPS: "
+                    f"{state_value}/{county_value}"
+                )
+
+            if not county_merged:
+                county_merged = {
+                    "NAME": values[positions["NAME"]],
+                    "state": state_value,
+                    "county": county_value,
+                }
+
+            for variable in batch:
+                county_merged[variable] = values[positions[variable]]
+
+        county_columns = ["NAME"] + all_variables + county_geo_cols
+        county_row = [county_merged.get(col, "") for col in county_columns]
+
+        county_out = (
+            self.raw
+            / "acs"
+            / f"acs5_{year}_flathead_county.json"
+        )
+        county_out.parent.mkdir(parents=True, exist_ok=True)
+        county_out.write_text(
+            json.dumps(
+                [county_columns, county_row],
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        print(
+            f"Saved source-published county ACS estimates "
+            f"({year}) to {county_out}"
+        )
+
         # Download official TIGER/Line block-group boundaries.
         tiger = self.cfg["census_geography"][
             "county_block_groups_url"
@@ -278,17 +361,169 @@ class Pipeline:
         (self.meta/"metadata.json").write_text(json.dumps(manifest, indent=2))
 
     def validate(self):
-        errors=[]; warnings=[]
-        acs_files=list((self.raw/"acs").glob("*.json"))
-        if not acs_files: errors.append("No ACS raw extract found")
-        school=list((self.raw/"schools").glob("*.zip"))
-        if not school: warnings.append("Montana Schools download not present")
-        lodes=list((self.raw/"lodes").glob("*.csv"))
+        errors = []
+        warnings = []
+        checks = {}
+
+        import json
+
+        acs_dir = self.raw / "acs"
+        bg_files = sorted(
+            acs_dir.glob("acs5_*_flathead_block_groups.json")
+        )
+        county_files = sorted(
+            acs_dir.glob("acs5_*_flathead_county.json")
+        )
+
+        if len(bg_files) != 1:
+            errors.append(
+                f"Expected exactly one block-group ACS file; found {len(bg_files)}"
+            )
+
+        if len(county_files) != 1:
+            errors.append(
+                f"Expected exactly one county ACS file; found {len(county_files)}"
+            )
+
+        if len(bg_files) == 1 and len(county_files) == 1:
+            bg_path = bg_files[0]
+            county_path = county_files[0]
+
+            bg_year = bg_path.name.split("_")[1]
+            county_year = county_path.name.split("_")[1]
+            checks["acs_vintage"] = {
+                "block_groups": bg_year,
+                "county": county_year,
+                "match": bg_year == county_year,
+            }
+
+            if bg_year != county_year:
+                errors.append(
+                    f"ACS vintage mismatch: block groups={bg_year}, county={county_year}"
+                )
+
+            try:
+                bg_data = json.loads(bg_path.read_text(encoding="utf-8"))
+                county_data = json.loads(
+                    county_path.read_text(encoding="utf-8")
+                )
+
+                if not bg_data or not county_data:
+                    raise ValueError("ACS JSON is empty")
+
+                bg_header, *bg_rows = bg_data
+                county_header, *county_rows = county_data
+
+                bg_geo = {
+                    "NAME", "state", "county", "tract", "block group"
+                }
+                county_geo = {"NAME", "state", "county"}
+
+                bg_vars = set(bg_header) - bg_geo
+                county_vars = set(county_header) - county_geo
+
+                checks["acs_variables"] = {
+                    "block_group_count": len(bg_vars),
+                    "county_count": len(county_vars),
+                    "match": bg_vars == county_vars,
+                }
+
+                if bg_vars != county_vars:
+                    errors.append(
+                        "County and block-group ACS variable sets do not match"
+                    )
+
+                checks["acs_rows"] = {
+                    "block_groups": len(bg_rows),
+                    "county": len(county_rows),
+                }
+
+                if not bg_rows:
+                    errors.append("Block-group ACS file contains no data rows")
+
+                if len(county_rows) != 1:
+                    errors.append(
+                        f"Expected one county ACS row; found {len(county_rows)}"
+                    )
+
+                if len(county_rows) == 1:
+                    row = dict(zip(county_header, county_rows[0]))
+                    state = str(row.get("state", "")).zfill(2)
+                    county = str(row.get("county", "")).zfill(3)
+                    expected_state = str(
+                        self.cfg["project"]["state_fips"]
+                    ).zfill(2)
+                    expected_county = str(
+                        self.cfg["project"]["county_fips"]
+                    ).zfill(3)
+
+                    checks["acs_county_identity"] = {
+                        "name": row.get("NAME"),
+                        "state_fips": state,
+                        "county_fips": county,
+                        "valid": (
+                            state == expected_state
+                            and county == expected_county
+                        ),
+                    }
+
+                    if state != expected_state or county != expected_county:
+                        errors.append(
+                            "County ACS file has unexpected state/county FIPS: "
+                            f"{state}/{county}"
+                        )
+
+                    if not str(row.get("NAME", "")).startswith(
+                        self.cfg["project"]["county_name"]
+                    ):
+                        errors.append(
+                            "County ACS NAME does not match configured county name"
+                        )
+
+                checks["acs_files"] = {
+                    "block_groups": str(bg_path.relative_to(self.root)),
+                    "county": str(county_path.relative_to(self.root)),
+                }
+
+            except (OSError, ValueError, TypeError, KeyError) as exc:
+                errors.append(f"Could not validate ACS files: {exc}")
+
+        school = list((self.raw / "schools").glob("*.zip"))
+        if not school:
+            warnings.append("Montana Schools download not present")
+
+        lodes = [
+            p for p in (self.raw / "lodes").glob("*.csv")
+            if not p.name.endswith(".bak")
+        ]
         if self.cfg["lodes"]["detailed_extract_required"] and not lodes:
-            warnings.append("No official LED Extraction Tool LODES CSV found under raw/lodes; RAC/WAC detailed build cannot complete")
-        report={"timestamp":datetime.now(timezone.utc).isoformat(),"errors":errors,"warnings":warnings,"status":"failed" if errors else "passed_with_warnings" if warnings else "passed"}
-        (self.meta/"validation_report.json").write_text(json.dumps(report, indent=2))
-        if errors: raise RuntimeError("Validation failed: " + "; ".join(errors))
+            warnings.append(
+                "No official LED Extraction Tool LODES CSV found under raw/lodes; "
+                "RAC/WAC detailed build cannot complete"
+            )
+
+        report = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "errors": errors,
+            "warnings": warnings,
+            "checks": checks,
+            "status": (
+                "failed" if errors
+                else "passed_with_warnings" if warnings
+                else "passed"
+            ),
+        }
+
+        (self.meta / "validation_report.json").write_text(
+            json.dumps(report, indent=2),
+            encoding="utf-8",
+        )
+
+        if errors:
+            raise RuntimeError(
+                "Validation failed: " + "; ".join(errors)
+            )
+
         print(json.dumps(report, indent=2))
 
     def build(self):
@@ -299,6 +534,37 @@ class Pipeline:
 
         year = 2023
         self.validate()
+
+        # Export source-published county ACS estimates as a standalone CSV.
+        county_acs_files = sorted(
+            (self.raw / "acs").glob("acs5_*_flathead_county.json")
+        )
+        if not county_acs_files:
+            raise FileNotFoundError(
+                "No county-level ACS JSON found under raw/acs/."
+            )
+
+        county_acs_path = county_acs_files[-1]
+        county_acs_raw = json.loads(
+            county_acs_path.read_text(encoding="utf-8")
+        )
+        if len(county_acs_raw) != 2:
+            raise RuntimeError(
+                f"Expected one county row in {county_acs_path.name}."
+            )
+
+        county_acs_df = pd.DataFrame(
+            county_acs_raw[1:],
+            columns=county_acs_raw[0],
+        )
+        county_acs_out_dir = self.data / "county"
+        county_acs_out_dir.mkdir(parents=True, exist_ok=True)
+        county_acs_csv = (
+            county_acs_out_dir
+            / county_acs_path.name.replace(".json", ".csv")
+        )
+        county_acs_df.to_csv(county_acs_csv, index=False)
+        print(f"Saved county ACS CSV to {county_acs_csv}")
 
         lodes_dir = self.raw / "lodes"
         rac_files = [
@@ -454,6 +720,25 @@ class Pipeline:
             "rac_2023_total_from_source": int(rac["rac_jobs"].sum()),
             "wac_2023_total_from_source": int(wac["wac_jobs"].sum()),
             "acs_source": acs_path.name,
+            "acs_vintage": acs_path.name.split("_")[1],
+            "acs_county_source": (
+                sorted(
+                    (self.raw / "acs").glob(
+                        "acs5_*_flathead_county.json"
+                    )
+                )[-1].name
+            ),
+            "acs_county_source_type": "Census API county-level ACS 5-year estimates",
+            "acs_county_geography": "Flathead County, Montana",
+            "acs_county_variable_count": len(
+                json.loads(
+                    sorted(
+                        (self.raw / "acs").glob(
+                            "acs5_*_flathead_county.json"
+                        )
+                    )[-1].read_text(encoding="utf-8")
+                )[0]
+            ) - 3,
             "tiger_source": tiger_files[0].name,
             "rac_source": rac_files[0].name,
             "wac_source": wac_files[0].name,
