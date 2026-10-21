@@ -1,5 +1,5 @@
 {
-  "build_timestamp": "2026-10-21T17:35:08.008687+00:00",
+  "build_timestamp": "2026-10-21T18:08:59.880682+00:00",
   "config": "config/config.yaml",
   "files": [
     {
@@ -13,24 +13,14 @@
       "bytes": 12017
     },
     {
-      "path": "raw/schools/MontanaSchools.zip",
-      "sha256": "efd2c1c11fb3e772109c262f6080583521334846b84b9779c37a08c015aa44df",
-      "bytes": 56928
-    },
-    {
-      "path": "raw/acs/acs5_2024_flathead_county.json",
-      "sha256": "9b7f182282f70ac2c803fa9861788c02dc5f0e6e9b3c8e479b5ed542e1e7198a",
-      "bytes": 3528
-    },
-    {
-      "path": "raw/acs/acs5_2024_flathead_block_groups.json",
-      "sha256": "48896f1309fb49cdf5f0261651755758e85a6f3b34cb0361bca33268d8f7ed0f",
-      "bytes": 87569
-    },
-    {
       "path": "raw/census/tl_2024_30_bg.zip",
       "sha256": "a37f13b32a20756fffe20fbb351d7b98adb1c4348fa1cc0eb7d8d5e2ed6bca7d",
       "bytes": 10656575
+    },
+    {
+      "path": "raw/schools/MontanaSchools.zip",
+      "sha256": "efd2c1c11fb3e772109c262f6080583521334846b84b9779c37a08c015aa44df",
+      "bytes": 56928
     },
     {
       "path": "raw/lodes/rac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
@@ -41,6 +31,16 @@
       "path": "raw/lodes/wac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
       "sha256": "abf5ebe7f8927de1b76f4bd57c186a2390d71daf188c27f24b9eeda47114b4d0",
       "bytes": 3075268
+    },
+    {
+      "path": "raw/acs/acs5_2024_flathead_block_groups.json",
+      "sha256": "48896f1309fb49cdf5f0261651755758e85a6f3b34cb0361bca33268d8f7ed0f",
+      "bytes": 87569
+    },
+    {
+      "path": "raw/acs/acs5_2024_flathead_county.json",
+      "sha256": "9b7f182282f70ac2c803fa9861788c02dc5f0e6e9b3c8e479b5ed542e1e7198a",
+      "bytes": 3528
     }
   ]
 }
