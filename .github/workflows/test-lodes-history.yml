@@ -1,0 +1,37 @@
+name: Test LODES History Updater
+
+on:
+  pull_request:
+    paths:
+      - "flathead_economic/lodes_history.py"
+      - "tests/test_lodes_history.py"
+      - ".github/workflows/update-lodes-history.yml"
+      - ".github/workflows/test-lodes-history.yml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  test-lodes-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check Python syntax
+        run: python -m compileall -q flathead_economic
+
+      - name: Test LODES aggregation
+        run: python -m unittest discover -s tests -p "test_lodes_history.py" -v
