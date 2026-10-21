@@ -1,0 +1,26 @@
+{
+  "year": 2002,
+  "county": "Flathead County, Montana",
+  "source": "U.S. Census Bureau LEHD LODES 8",
+  "source_urls": {
+    "rac": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2002.csv.gz",
+    "wac": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/wac/mt_wac_S000_JT00_2002.csv.gz"
+  },
+  "source_sha256": {
+    "rac": "7806eb49b0739c8229beafa748e158b9be918266250988cd4eff644d7b7f4e07",
+    "wac": "2a2a01d009911d44939a450a08e4eab083b1bb2b070ff39108c61c943f9887a7"
+  },
+  "output": "data/lodes/2002/flathead_lodes_jobs_by_block_group.csv",
+  "block_groups": 85,
+  "rac_block_groups_with_data": 85,
+  "wac_block_groups_with_data": 84,
+  "rac_jobs_total": 33516,
+  "wac_jobs_total": 32407,
+  "notes": [
+    "C000 is total jobs for the S000/JT00 LODES selection.",
+    "RAC is jobs by worker residence; WAC is jobs by workplace.",
+    "Census block records are aggregated to 12-digit block-group GEOIDs.",
+    "Missing block-group matches remain null and are not converted to zero.",
+    "Published year outputs are immutable during routine runs; use --rebuild-existing only for an intentional rebuild."
+  ]
+}
