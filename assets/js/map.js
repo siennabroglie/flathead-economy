@@ -223,7 +223,7 @@
   function getSingleValue(feature) {
     const p = feature.properties || {};
     if (activeMode === "acs") {
-      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      const fields = selectedAcsFields(activeAcsCategory);
       if (!fields.length) return null;
       const values = fields.map((field) => numeric(p[field]));
       if (values.some((value) => value === null)) return null;
