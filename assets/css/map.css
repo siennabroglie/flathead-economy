@@ -275,3 +275,34 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 .map-mode-controls .field-note { margin: 2px 0 0; }
 #primary-measure:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Map-mode / equation window overlays the map; keep visual tuning in this stylesheet. */
+.map-stage { position: relative; }
+.map-equation-window {
+  position: absolute;
+  z-index: 800;
+  top: 14px;
+  right: 14px;
+  width: min(285px, calc(100% - 28px));
+  margin: 0;
+  padding: 12px 14px;
+  gap: 5px;
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgb(20 30 22 / 18%);
+}
+.equation-window-title {
+  margin: 0 0 3px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.map-equation-window label { margin: 2px 0 0; }
+.map-equation-window select { min-height: 34px; padding: 6px 9px; font-size: 11px; }
+.map-equation-window .field-note { font-size: 10px; }
+#map { position: relative; }
+.measure-option.with-select select[data-acs-selector] { min-height: 72px; }
+.measure-option.with-select select[data-acs-selector]:disabled { opacity: .45; cursor: not-allowed; background: var(--surface-muted); }
+@media (max-width: 600px) {
+  .map-equation-window { top: 10px; right: 10px; width: min(250px, calc(100% - 20px)); }
+}
