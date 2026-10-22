@@ -23,47 +23,170 @@
       <section class="control-section">
         <p class="section-kicker">EXPLORE THE DATA</p>
         <h2>Map settings</h2>
-        <label for="dataset-select">Data collection</label>
-        <select id="dataset-select">
-          <option value="jobs">Employment · LODES</option>
-          <option value="acs">Population &amp; economy · ACS</option>
-        </select>
 
-        <label for="measure-select">Measure</label>
-        <select id="measure-select">
-          <option value="wac_jobs">Jobs by workplace</option>
-          <option value="rac_jobs">Jobs by worker residence</option>
-        </select>
+        <section class="data-group" aria-labelledby="employment-heading">
+          <div class="group-heading">
+            <h3 id="employment-heading">Employment Data</h3>
+            <span class="source-tag">LODES</span>
+          </div>
+          <label for="lodes-year">Employment year</label>
+          <select id="lodes-year"></select>
+          <p class="field-note">Annual job counts and worker/job characteristics by block group.</p>
 
-        <div id="year-control">
-          <label for="year-select">Employment year</label>
-          <select id="year-select" aria-describedby="year-note"></select>
-          <p id="year-note" class="field-note">LODES annual data currently available from 2002–2023.</p>
-        </div>
+          <fieldset class="basis-toggle">
+            <legend>Based on worker:</legend>
+            <label><input type="radio" name="lodes-basis" value="rac" checked> Residence</label>
+            <label><input type="radio" name="lodes-basis" value="wac"> Workplace</label>
+          </fieldset>
 
-        <div id="acs-control" hidden>
-          <label for="acs-measure-select">ACS measure</label>
-          <select id="acs-measure-select">
-            <option value="B01001_001E">Total population</option>
-            <option value="B19013_001E">Median household income</option>
-            <option value="B19301_001E">Per capita income</option>
-            <option value="B17001_002E">Population below poverty level</option>
-            <option value="B23025_004E">Employed population</option>
+          <div class="measure-list" id="lodes-measures">
+            <label class="measure-option"><input type="checkbox" data-category="total" checked> <span>Total Jobs</span></label>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="industry"> <span>Industry Groups</span></label>
+              <select data-selector="industry" aria-label="Industry group" disabled>
+                <option value="CNS01">Agriculture, forestry, fishing and hunting</option>
+                <option value="CNS02">Mining, quarrying, and oil and gas extraction</option>
+                <option value="CNS03">Utilities</option>
+                <option value="CNS04">Construction</option>
+                <option value="CNS05">Manufacturing</option>
+                <option value="CNS06">Wholesale trade</option>
+                <option value="CNS07">Retail trade</option>
+                <option value="CNS08">Transportation and warehousing</option>
+                <option value="CNS09">Information</option>
+                <option value="CNS10">Finance and insurance</option>
+                <option value="CNS11">Real estate and rental and leasing</option>
+                <option value="CNS12">Professional, scientific and technical services</option>
+                <option value="CNS13">Management of companies and enterprises</option>
+                <option value="CNS14">Administrative and support services</option>
+                <option value="CNS15">Educational services</option>
+                <option value="CNS16">Health care and social assistance</option>
+                <option value="CNS17">Arts, entertainment and recreation</option>
+                <option value="CNS18">Accommodation and food services</option>
+                <option value="CNS19">Other services</option>
+                <option value="CNS20">Public administration</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="earnings"> <span>Worker Earnings</span></label>
+              <select data-selector="earnings" aria-label="Worker earnings" disabled>
+                <option value="CE01">$1,250 per month or less</option>
+                <option value="CE02">$1,251–$3,333 per month</option>
+                <option value="CE03">More than $3,333 per month</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="education"> <span>Worker Education</span></label>
+              <select data-selector="education" aria-label="Worker education" disabled>
+                <option value="CD01">Less than high school</option>
+                <option value="CD02">High school or equivalent, no college</option>
+                <option value="CD03">Some college or associate degree</option>
+                <option value="CD04">Bachelor's degree or advanced degree</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="age"> <span>Worker Age</span></label>
+              <select data-selector="age" aria-label="Worker age" disabled>
+                <option value="CA01">Youngest age group</option>
+                <option value="CA02">Age 30–54</option>
+                <option value="CA03">Oldest age group</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="raceethnicity"> <span>Worker Race &amp; Ethnicity</span></label>
+              <select data-selector="raceethnicity" aria-label="Worker race and ethnicity" disabled>
+                <optgroup label="Race">
+                  <option value="CR01">White alone</option>
+                  <option value="CR02">Black or African American alone</option>
+                  <option value="CR03">American Indian or Alaska Native alone</option>
+                  <option value="CR04">Asian alone</option>
+                  <option value="CR05">Native Hawaiian or Other Pacific Islander alone</option>
+                  <option value="CR07">Two or more race groups</option>
+                </optgroup>
+                <optgroup label="Ethnicity">
+                  <option value="CT01">Not Hispanic or Latino</option>
+                  <option value="CT02">Hispanic or Latino</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="sex"> <span>Worker Sex</span></label>
+              <select data-selector="sex" aria-label="Worker sex" disabled>
+                <option value="CS01">Male</option>
+                <option value="CS02">Female</option>
+              </select>
+            </div>
+          </div>
+          <p id="lodes-availability-note" class="field-note">Race, ethnicity, education and sex data are unavailable before 2009.</p>
+        </section>
+
+        <section class="data-group" aria-labelledby="population-heading">
+          <div class="group-heading">
+            <h3 id="population-heading">Population Data</h3>
+            <span class="source-tag">ACS</span>
+          </div>
+          <label for="acs-year">ACS estimate period</label>
+          <select id="acs-year">
+            <option value="2024">2024 five-year estimates</option>
           </select>
-          <p class="field-note">ACS values use 2024 five-year estimates; they are not annual observations.</p>
-        </div>
+          <p class="field-note">ACS five-year estimates are period estimates, not single-year counts.</p>
+          <div class="measure-list" id="acs-measures">
+            <label class="measure-option"><input type="checkbox" data-category="population" checked> <span>Population &amp; Age</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="median-income"> <span>Median Household Income</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="aggregate-income"> <span>Aggregate Household Income</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="households"> <span>Household Composition</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="per-capita"> <span>Per-capita Income</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="poverty"> <span>Poverty Status</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="education"> <span>Education Level</span></label>
+            <label class="measure-option"><input type="checkbox" data-category="employment"> <span>Employment Status</span></label>
+          </div>
+          <label for="acs-detail">Population measure</label>
+          <select id="acs-detail">
+            <optgroup label="Population & Age">
+              <option value="B01001_001E">Total population</option>
+              <option value="B01001_003E">Male under 5</option>
+              <option value="B01001_020E">Male 65–66</option>
+              <option value="B01001_027E">Female under 5</option>
+              <option value="B01001_044E">Female 65–66</option>
+            </optgroup>
+            <optgroup label="Income">
+              <option value="B19013_001E">Median household income</option>
+              <option value="B19025_001E">Aggregate household income</option>
+              <option value="B19301_001E">Per-capita income</option>
+            </optgroup>
+            <optgroup label="Household Composition">
+              <option value="B11001_001E">Total households</option>
+              <option value="B11001_002E">Family households</option>
+              <option value="B11001_007E">Nonfamily households</option>
+            </optgroup>
+            <optgroup label="Poverty Status">
+              <option value="B17001_002E">Below poverty level</option>
+            </optgroup>
+            <optgroup label="Education Level">
+              <option value="B15003_017E">High school graduate</option>
+              <option value="B15003_021E">Bachelor's degree</option>
+              <option value="B15003_022E">Master's degree</option>
+              <option value="B15003_023E">Professional school degree</option>
+              <option value="B15003_024E">Doctorate degree</option>
+            </optgroup>
+            <optgroup label="Employment Status">
+              <option value="B23025_003E">Civilian labor force</option>
+              <option value="B23025_004E">Employed</option>
+              <option value="B23025_005E">Unemployed</option>
+            </optgroup>
+          </select>
+        </section>
       </section>
 
       <section class="legend-section">
         <p class="section-kicker">MAP KEY</p>
-        <h2 id="legend-title">Jobs by workplace</h2>
+        <h2 id="legend-title">Total Jobs</h2>
         <div id="legend" class="legend" aria-live="polite"></div>
         <p id="map-status" class="map-status" role="status">Loading block-group geography…</p>
       </section>
 
       <section class="about-section">
         <h3>How to use this map</h3>
-        <p>Select a measure, then choose a block group to inspect its values. Use the map controls to zoom and pan.</p>
+        <p>Choose a data category and measure, then select a block group to inspect its value. Shading shows relative values across block groups.</p>
         <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
       </section>
     </aside>
