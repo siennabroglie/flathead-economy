@@ -351,36 +351,6 @@
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legend.replaceChildren();
-    if (isDominantMode() && mapMode === "legacy") {
-      const selected = selectedLodesCodes();
-      const ordered = (DOMINANT_ORDER[activeLodesCategory] || []).filter((code) => selected.includes(code));
-      if (!ordered.length) {
-        els.legend.textContent = "Select one or more subcategories to map.";
-        return;
-      }
-      ordered.forEach((code, index) => {
-        const row = document.createElement("div");
-        row.className = "legend-row";
-        const swatch = document.createElement("span");
-        swatch.className = "legend-swatch";
-        const paletteIndex = ordered.length <= 1 ? 0 : Math.round((index / (ordered.length - 1)) * (COLORS.length - 1));
-        swatch.style.backgroundColor = COLORS[COLORS.length - 1 - paletteIndex];
-        const label = document.createElement("span");
-        label.textContent = DETAIL_LABELS[code] || code;
-        row.append(swatch, label, document.createElement("span"));
-        els.legend.appendChild(row);
-      });
-      const missing = document.createElement("div");
-      missing.className = "legend-row";
-      const swatch = document.createElement("span");
-      swatch.className = "legend-swatch";
-      swatch.style.backgroundColor = "#d8dcd8";
-      const label = document.createElement("span");
-      label.textContent = "No data";
-      missing.append(swatch, label, document.createElement("span"));
-      els.legend.appendChild(missing);
-      return;
-    }
     if (!currentBreaks.length) {
       els.legend.textContent = "No values available for this selection.";
       return;
