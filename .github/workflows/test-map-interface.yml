@@ -1,0 +1,30 @@
+name: Test Map Interface
+
+on:
+  pull_request:
+    paths:
+      - "index.html"
+      - "assets/js/map.js"
+      - "assets/css/map.css"
+      - ".github/workflows/test-map-interface.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check-map-interface:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check JavaScript syntax
+        run: node --check assets/js/map.js
+
+      - name: Check whitespace errors
+        run: git diff --check origin/main...HEAD
