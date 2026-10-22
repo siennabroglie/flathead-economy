@@ -161,7 +161,7 @@
   const selectedBasis = () => (els.basis.find((item) => item.checked) || {}).value || "rac";
   const selectedLodesCodes = (category = activeLodesCategory) => {
     const selector = document.querySelector('[data-selector="' + category + '"]');
-    return selector ? Array.from(selector.selectedOptions).map((option) => option.value) : [];
+    return selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]:checked')).map((input) => input.value) : [];
   };
   const DOMINANT_ORDER = {
     earnings: ["CE03", "CE02", "CE01"],
@@ -186,7 +186,7 @@
     const counts = ordered.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]) }));
     if (counts.some((item) => item.count === null)) return null;
     const selector = document.querySelector('[data-selector="' + category + '"]');
-    let allCodes = selector ? Array.from(selector.options).map((option) => option.value) : ordered;
+    let allCodes = selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]')).map((input) => input.value) : ordered;
     if (category === "raceethnicity") {
       allCodes = allCodes.filter((code) => ordered[0].startsWith("CR") ? code.startsWith("CR") : code.startsWith("CT"));
     }
@@ -339,9 +339,9 @@
   }
   function optionLabel(code) {
     const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
-    const option = selector && Array.from(selector.options).find((item) => item.value === code);
+    const option = selector && selector.querySelector('input[type="checkbox"][value="' + code + '"]');
     if (option) return option.textContent;
-    const acsOption = Array.from(document.querySelectorAll("[data-acs-selector] option")).find((item) => item.value === code);
+    const acsOption = Array.from(document.querySelectorAll("[data-acs-selector] input[type=checkbox]")).find((item) => item.value === code);
     return acsOption ? acsOption.textContent : code;
   }
   function onEachFeature(feature, layer) {
@@ -436,11 +436,11 @@
   }
   function selectedAcsFields(category = activeAcsCategory) {
     const selector = acsSelector(category);
-    return selector ? Array.from(selector.selectedOptions).map((option) => option.value) : [];
+    return selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]:checked')).map((input) => input.value) : [];
   }
   function setAcsFields(category, fields) {
     const selector = acsSelector(category);
-    if (selector) Array.from(selector.options).forEach((option) => { option.selected = fields.includes(option.value); });
+    if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = fields.includes(input.value); });
     acsSelections[category] = fields.slice();
     Array.from(els.acsDetail.options).forEach((option) => { option.selected = fields.includes(option.value); });
   }
@@ -530,7 +530,7 @@
       input.disabled = unavailable;
       const category = input.dataset.category;
       const selector = document.querySelector('[data-selector="' + category + '"]');
-      if (selector) selector.disabled = unavailable || !input.checked;
+      if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = unavailable || !input.checked; });
       if (unavailable && input.checked) input.checked = false;
     });
     if (unavailable && ["raceethnicity", "education", "sex"].includes(activeLodesCategory)) {
@@ -548,7 +548,7 @@
   function syncLodesSelectors() {
     document.querySelectorAll("[data-selector]").forEach((selector) => {
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
-      selector.disabled = !input || !input.checked || input.disabled;
+      selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = !input || !input.checked || input.disabled; });
     });
   }
   function activateLodesCategory(category) {
@@ -591,7 +591,7 @@
     input.addEventListener("change", () => {
       if (input.checked) {
         const selector = document.querySelector('[data-selector="' + input.dataset.category + '"]');
-        if (selector) Array.from(selector.options).forEach((option) => { option.selected = true; });
+        if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = true; });
       }
       updatePrimaryOptions();
       setPrimaryContext(els.primaryMeasure.value);
@@ -616,7 +616,7 @@
     input.addEventListener("change", () => {
       const category = input.dataset.category;
       const selector = acsSelector(category);
-      if (selector) selector.disabled = !input.checked;
+      if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = !input.checked; });
       if (input.checked) activateAcsCategory(category);
       updatePrimaryOptions();
       setPrimaryContext(els.primaryMeasure.value);
@@ -625,7 +625,7 @@
   });
   els.acsSelectors.forEach((selector) => {
     const category = selector.dataset.acsSelector;
-    selector.disabled = !document.querySelector('[data-category="' + category + '"]').checked;
+    selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = !document.querySelector('[data-category="' + category + '"]').checked; });
     selector.addEventListener("change", () => {
       let selected = selectedAcsFields(category);
       const parentTotals = {
@@ -663,8 +663,8 @@
 
   els.acsSelectors.forEach((selector) => {
     const category = selector.dataset.acsSelector;
-    acsSelections[category] = Array.from(selector.selectedOptions).map((option) => option.value);
-    selector.disabled = !document.querySelector('[data-category="' + category + '"]').checked;
+    acsSelections[category] = Array.from(selector.querySelectorAll('input[type="checkbox"]:checked')).map((input) => input.value);
+    selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = !document.querySelector('[data-category="' + category + '"]').checked; });
   });
   updatePrimaryOptions();
   setPrimaryContext(els.primaryMeasure.value);

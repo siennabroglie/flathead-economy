@@ -43,77 +43,77 @@
             <label class="measure-option"><input type="checkbox" data-category="total" checked> <span>Total Jobs</span></label>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="industry"> <span>Industry Groups</span></label>
-              <select data-selector="industry" aria-label="Industry groups" multiple size="5" disabled>
-                <option value="CNS01" selected>Agriculture, forestry, fishing and hunting</option>
-                <option value="CNS02" selected>Mining, quarrying, and oil and gas extraction</option>
-                <option value="CNS03" selected>Utilities</option>
-                <option value="CNS04" selected>Construction</option>
-                <option value="CNS05" selected>Manufacturing</option>
-                <option value="CNS06" selected>Wholesale trade</option>
-                <option value="CNS07" selected>Retail trade</option>
-                <option value="CNS08" selected>Transportation and warehousing</option>
-                <option value="CNS09" selected>Information</option>
-                <option value="CNS10" selected>Finance and insurance</option>
-                <option value="CNS11" selected>Real estate and rental and leasing</option>
-                <option value="CNS12" selected>Professional, scientific and technical services</option>
-                <option value="CNS13" selected>Management of companies and enterprises</option>
-                <option value="CNS14" selected>Administrative and support services</option>
-                <option value="CNS15" selected>Educational services</option>
-                <option value="CNS16" selected>Health care and social assistance</option>
-                <option value="CNS17" selected>Arts, entertainment and recreation</option>
-                <option value="CNS18" selected>Accommodation and food services</option>
-                <option value="CNS19" selected>Other services</option>
-                <option value="CNS20" selected>Public administration</option>
-              </select>
+              <div data-selector="industry" class="subcategory-list" role="group" aria-label="Industry groups">
+                <label class="subcategory-choice"><input type="checkbox" value="CNS01" checked><span>Agriculture, forestry, fishing and hunting</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS02" checked><span>Mining, quarrying, and oil and gas extraction</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS03" checked><span>Utilities</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS04" checked><span>Construction</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS05" checked><span>Manufacturing</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS06" checked><span>Wholesale trade</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS07" checked><span>Retail trade</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS08" checked><span>Transportation and warehousing</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS09" checked><span>Information</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS10" checked><span>Finance and insurance</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS11" checked><span>Real estate and rental and leasing</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS12" checked><span>Professional, scientific and technical services</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS13" checked><span>Management of companies and enterprises</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS14" checked><span>Administrative and support services</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS15" checked><span>Educational services</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS16" checked><span>Health care and social assistance</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS17" checked><span>Arts, entertainment and recreation</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS18" checked><span>Accommodation and food services</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS19" checked><span>Other services</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CNS20" checked><span>Public administration</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="earnings"> <span>Worker Earnings</span></label>
-              <select data-selector="earnings" aria-label="Worker earnings groups" multiple size="3" disabled>
-                <option value="CE01" selected>$1,250 per month or less</option>
-                <option value="CE02" selected>$1,251–$3,333 per month</option>
-                <option value="CE03" selected>More than $3,333 per month</option>
-              </select>
+              <div data-selector="earnings" class="subcategory-list" role="group" aria-label="Worker earnings groups">
+                <label class="subcategory-choice"><input type="checkbox" value="CE01" checked><span>$1,250 per month or less</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CE02" checked><span>$1,251–$3,333 per month</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CE03" checked><span>More than $3,333 per month</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="education"> <span>Worker Education</span></label>
-              <select data-selector="education" aria-label="Worker education groups" multiple size="4" disabled>
-                <option value="CD01" selected>Less than high school</option>
-                <option value="CD02" selected>High school or equivalent, no college</option>
-                <option value="CD03" selected>Some college or associate degree</option>
-                <option value="CD04" selected>Bachelor's degree or advanced degree</option>
-              </select>
+              <div data-selector="education" class="subcategory-list" role="group" aria-label="Worker education groups">
+                <label class="subcategory-choice"><input type="checkbox" value="CD01" checked><span>Less than high school</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CD02" checked><span>High school or equivalent, no college</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CD03" checked><span>Some college or associate degree</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CD04" checked><span>Bachelor's degree or advanced degree</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="age"> <span>Worker Age</span></label>
-              <select data-selector="age" aria-label="Worker age groups" multiple size="3" disabled>
-                <option value="CA01" selected>Youngest age group</option>
-                <option value="CA02" selected>Age 30–54</option>
-                <option value="CA03" selected>Oldest age group</option>
-              </select>
+              <div data-selector="age" class="subcategory-list" role="group" aria-label="Worker age groups">
+                <label class="subcategory-choice"><input type="checkbox" value="CA01" checked><span>Youngest age group</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CA02" checked><span>Age 30–54</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CA03" checked><span>Oldest age group</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="raceethnicity"> <span>Worker Race &amp; Ethnicity</span></label>
-              <select data-selector="raceethnicity" aria-label="Worker race and ethnicity groups" multiple size="6" disabled>
-                <optgroup label="Race">
-                  <option value="CR01" selected>White alone</option>
-                  <option value="CR02" selected>Black or African American alone</option>
-                  <option value="CR03" selected>American Indian or Alaska Native alone</option>
-                  <option value="CR04" selected>Asian alone</option>
-                  <option value="CR05" selected>Native Hawaiian or Other Pacific Islander alone</option>
-                  <option value="CR07" selected>Two or more race groups</option>
-                </optgroup>
-                <optgroup label="Ethnicity">
-                  <option value="CT01" selected>Not Hispanic or Latino</option>
-                  <option value="CT02" selected>Hispanic or Latino</option>
-                </optgroup>
-              </select>
+              <div data-selector="raceethnicity" class="subcategory-list" role="group" aria-label="Worker race and ethnicity groups">
+                <p class="subcategory-group-title">Race</p>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR01" checked><span>White alone</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR02" checked><span>Black or African American alone</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR03" checked><span>American Indian or Alaska Native alone</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR04" checked><span>Asian alone</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR05" checked><span>Native Hawaiian or Other Pacific Islander alone</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CR07" checked><span>Two or more race groups</span></label>
+
+                <p class="subcategory-group-title">Ethnicity</p>
+                  <label class="subcategory-choice"><input type="checkbox" value="CT01" checked><span>Not Hispanic or Latino</span></label>
+                  <label class="subcategory-choice"><input type="checkbox" value="CT02" checked><span>Hispanic or Latino</span></label>
+
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="sex"> <span>Worker Sex</span></label>
-              <select data-selector="sex" aria-label="Worker sex groups" multiple size="2" disabled>
-                <option value="CS01" selected>Male</option>
-                <option value="CS02" selected>Female</option>
-              </select>
+              <div data-selector="sex" class="subcategory-list" role="group" aria-label="Worker sex groups">
+                <label class="subcategory-choice"><input type="checkbox" value="CS01" checked><span>Male</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="CS02" checked><span>Female</span></label>
+              </div>
             </div>
           </div>
           <p id="lodes-availability-note" class="field-note">Race, ethnicity, education and sex data are unavailable before 2009.</p>
@@ -132,66 +132,66 @@
           <div class="measure-list" id="acs-measures">
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="population" checked> <span>Population &amp; Age</span></label>
-              <select data-acs-selector="population" multiple size="5" aria-label="Population and age subcategories">
-                <option value="B01001_001E" selected>Total population</option>
-                <option value="B01001_003E">Male under 5</option>
-                <option value="B01001_020E">Male 65–66</option>
-                <option value="B01001_027E">Female under 5</option>
-                <option value="B01001_044E">Female 65–66</option>
-              </select>
+              <div data-acs-selector="population" class="subcategory-list" role="group" aria-label="Population and age subcategories">
+                <label class="subcategory-choice"><input type="checkbox" value="B01001_001E" checked><span>Total population</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B01001_003E"><span>Male under 5</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B01001_020E"><span>Male 65–66</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B01001_027E"><span>Female under 5</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B01001_044E"><span>Female 65–66</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="median-income"> <span>Median Household Income</span></label>
-              <select data-acs-selector="median-income" multiple size="2" aria-label="Median household income measures">
-                <option value="B19013_001E" selected>Median household income</option>
-              </select>
+              <div data-acs-selector="median-income" class="subcategory-list" role="group" aria-label="Median household income measures">
+                <label class="subcategory-choice"><input type="checkbox" value="B19013_001E" checked><span>Median household income</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="aggregate-income"> <span>Aggregate Household Income</span></label>
-              <select data-acs-selector="aggregate-income" multiple size="2" aria-label="Aggregate household income measures">
-                <option value="B19025_001E" selected>Aggregate household income</option>
-              </select>
+              <div data-acs-selector="aggregate-income" class="subcategory-list" role="group" aria-label="Aggregate household income measures">
+                <label class="subcategory-choice"><input type="checkbox" value="B19025_001E" checked><span>Aggregate household income</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="households"> <span>Household Composition</span></label>
-              <select data-acs-selector="households" multiple size="3" aria-label="Household composition subcategories">
-                <option value="B11001_001E">Total households</option>
-                <option value="B11001_002E" selected>Family households</option>
-                <option value="B11001_007E" selected>Nonfamily households</option>
-              </select>
+              <div data-acs-selector="households" class="subcategory-list" role="group" aria-label="Household composition subcategories">
+                <label class="subcategory-choice"><input type="checkbox" value="B11001_001E"><span>Total households</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B11001_002E" checked><span>Family households</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B11001_007E" checked><span>Nonfamily households</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="per-capita"> <span>Per-capita Income</span></label>
-              <select data-acs-selector="per-capita" multiple size="2" aria-label="Per-capita income measures">
-                <option value="B19301_001E" selected>Per-capita income</option>
-              </select>
+              <div data-acs-selector="per-capita" class="subcategory-list" role="group" aria-label="Per-capita income measures">
+                <label class="subcategory-choice"><input type="checkbox" value="B19301_001E" checked><span>Per-capita income</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="poverty"> <span>Poverty Status</span></label>
-              <select data-acs-selector="poverty" multiple size="2" aria-label="Poverty status subcategories">
-                <option value="B17001_002E" selected>Below poverty level</option>
-              </select>
+              <div data-acs-selector="poverty" class="subcategory-list" role="group" aria-label="Poverty status subcategories">
+                <label class="subcategory-choice"><input type="checkbox" value="B17001_002E" checked><span>Below poverty level</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="education"> <span>Education Level</span></label>
-              <select data-acs-selector="education" multiple size="6" aria-label="Education level subcategories">
-                <option value="B15003_017E">High school graduate</option>
-                <option value="B15003_018E">GED or alternative credential</option>
-                <option value="B15003_019E">Some college, less than one year</option>
-                <option value="B15003_020E">Some college, one or more years, no degree</option>
-                <option value="B15003_021E" selected>Bachelor's degree</option>
-                <option value="B15003_022E">Master's degree</option>
-                <option value="B15003_023E">Professional school degree</option>
-                <option value="B15003_024E">Doctorate degree</option>
-              </select>
+              <div data-acs-selector="education" class="subcategory-list" role="group" aria-label="Education level subcategories">
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_017E"><span>High school graduate</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_018E"><span>GED or alternative credential</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_019E"><span>Some college, less than one year</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_020E"><span>Some college, one or more years, no degree</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_021E" checked><span>Bachelor's degree</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_022E"><span>Master's degree</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_023E"><span>Professional school degree</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B15003_024E"><span>Doctorate degree</span></label>
+              </div>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="employment"> <span>Employment Status</span></label>
-              <select data-acs-selector="employment" multiple size="3" aria-label="Employment status subcategories">
-                <option value="B23025_003E">Civilian labor force</option>
-                <option value="B23025_004E" selected>Employed</option>
-                <option value="B23025_005E">Unemployed</option>
-              </select>
+              <div data-acs-selector="employment" class="subcategory-list" role="group" aria-label="Employment status subcategories">
+                <label class="subcategory-choice"><input type="checkbox" value="B23025_003E"><span>Civilian labor force</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B23025_004E" checked><span>Employed</span></label>
+                <label class="subcategory-choice"><input type="checkbox" value="B23025_005E"><span>Unemployed</span></label>
+              </div>
             </div>
           </div>
           <select id="acs-detail" multiple hidden aria-hidden="true" tabindex="-1"></select>
