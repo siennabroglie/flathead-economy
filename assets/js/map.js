@@ -143,41 +143,69 @@
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
   };
   const selectedBasis = () => (els.basis.find((item) => item.checked) || {}).value || "rac";
-  const selectedLodesField = () => {
-    if (activeLodesCategory === "total") return selectedBasis() + "_jobs";
+  const selectedLodesCodes = () => {
     const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
-    return selectedBasis() + "_" + (selector ? selector.value : "");
+    return selector ? Array.from(selector.selectedOptions).map((option) => option.value) : [];
   };
+  const DOMINANT_ORDER = {
+    earnings: ["CE03", "CE02", "CE01"],
+    education: ["CD04", "CD03", "CD02", "CD01"],
+    age: ["CA03", "CA02", "CA01"],
+    sex: ["CS01", "CS02"],
+    raceethnicity: ["CR01", "CR02", "CR03", "CR04", "CR05", "CR07", "CT01", "CT02"]
+  };
+  function dominantCategory(feature) {
+    const row = selectedYearData.get(String((feature.properties || {}).GEOID ?? (feature.properties || {}).GEOIDFQ ?? ""));
+    if (!row) return null;
+    const selected = selectedLodesCodes();
+    const ordered = (DOMINANT_ORDER[activeLodesCategory] || []).filter((code) => selected.includes(code));
+    if (!ordered.length) return null;
+    const counts = ordered.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]) }));
+    if (counts.some((item) => item.count === null)) return null;
+    const selectedTotal = counts.reduce((sum, item) => sum + item.count, 0);
+    const rowTotal = numeric(row[selectedBasis() + "_jobs"]);
+    const denominator = activeLodesCategory === "raceethnicity" ? rowTotal : selectedTotal;
+    if (!denominator) return null;
+    const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
+    return { ...winner, share: winner.count / denominator, rank: ordered.indexOf(winner.code), ordered };
+  }
+  const isDominantMode = () => activeMode === "jobs" && !["total", "industry"].includes(activeLodesCategory);
   function activeMeta() {
     if (activeMode === "acs") {
-      const field = els.acsDetail.value;
+      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      if (fields.length > 1) return { label: "Combined selected ACS subcategories", format: "number" };
+      const field = fields[0] || "B01001_001E";
       return ACS_FIELDS[field] || { label: "ACS measure", format: "number" };
     }
-    if (activeLodesCategory === "industry" && document.querySelector('[data-display="industry"]').value === "percent") {
-      return { label: (INDUSTRY_LABELS[document.querySelector('[data-selector="industry"]').value] || "Industry jobs") + " (% of total jobs)", format: "percent" };
+    if (activeLodesCategory === "industry") {
+      return { label: "Combined jobs in selected industries", format: "number" };
     }
-    if (activeLodesCategory === "industry") return {
-      label: INDUSTRY_LABELS[document.querySelector('[data-selector="industry"]').value] || "Industry jobs", format: "number"
-    };
-    if (activeLodesCategory !== "total") {
-      const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
-      return { label: DETAIL_LABELS[selector.value] || LODES_META[activeLodesCategory].label, format: "number" };
+    if (isDominantMode()) {
+      return { label: "Dominant " + LODES_META[activeLodesCategory].label.replace(/^Jobs by worker /, "worker ") + " category", format: "number", dominant: true };
     }
     return LODES_META.total;
   }
   function getValue(feature) {
     const p = feature.properties || {};
-    if (activeMode === "acs") return numeric(p[els.acsDetail.value]);
+    if (activeMode === "acs") {
+      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      if (!fields.length) return null;
+      const values = fields.map((field) => numeric(p[field]));
+      if (values.some((value) => value === null)) return null;
+      return values.reduce((sum, value) => sum + value, 0);
+    }
     const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
     if (!row) return null;
-    const field = selectedLodesField();
-    const value = numeric(row[field]);
-    if (value === null) return null;
-    if (activeLodesCategory === "industry" && document.querySelector('[data-display="industry"]').value === "percent") {
-      const total = numeric(row[selectedBasis() + "_jobs"]);
-      return total ? value / total : null;
+    if (activeLodesCategory === "total") return numeric(row[selectedBasis() + "_jobs"]);
+    if (activeLodesCategory === "industry") {
+      const codes = selectedLodesCodes();
+      if (!codes.length) return null;
+      const values = codes.map((code) => numeric(row[selectedBasis() + "_" + code]));
+      if (values.some((value) => value === null)) return null;
+      return values.reduce((sum, value) => sum + value, 0);
     }
-    return value;
+    const dominant = dominantCategory(feature);
+    return dominant ? dominant.rank : null;
   }
   const quantileBreaks = (values) => {
     const sorted = values.slice().sort((a, b) => a - b);
@@ -190,10 +218,17 @@
     return COLORS[index < 0 ? COLORS.length - 1 : index + 1];
   };
   function styleFeature(feature) {
-    return {
-      fillColor: colorFor(getValue(feature), currentBreaks),
-      weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.82
-    };
+    let fillColor = colorFor(getValue(feature), currentBreaks);
+    if (isDominantMode()) {
+      const dominant = dominantCategory(feature);
+      if (!dominant) fillColor = "#d8dcd8";
+      else {
+        const paletteIndex = dominant.ordered.length <= 1 ? 0 :
+          Math.round((dominant.rank / (dominant.ordered.length - 1)) * (COLORS.length - 1));
+        fillColor = COLORS[COLORS.length - 1 - paletteIndex];
+      }
+    }
+    return { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.82 };
   }
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => ({
@@ -204,13 +239,38 @@
     const p = feature.properties || {};
     const title = p.NAMELSAD || p.NAME || p.GEOID || "Census block group";
     const meta = activeMeta();
-    const lines = [
-      [meta.label, formatValue(getValue(feature), meta.format)],
-      ["Geographic ID", p.GEOID || "Not available"]
-    ];
+    const lines = [];
     if (activeMode === "jobs") {
-      const row = selectedYearData.get(String(p.GEOID || ""));
+      const row = selectedYearData.get(String(p.GEOID || p.GEOIDFQ || ""));
       if (row) {
+        if (isDominantMode()) {
+          const dominant = dominantCategory(feature);
+          const totalJobs = numeric(row[selectedBasis() + "_jobs"]);
+          const selectedGroupTotal = selectedLodesCodes().reduce((sum, code) => {
+            const value = numeric(row[selectedBasis() + "_" + code]);
+            return sum + (value === null ? 0 : value);
+          }, 0);
+          lines.push(["Total jobs in block group", formatValue(totalJobs)]);
+          lines.push(["Jobs across selected subcategories", formatValue(selectedGroupTotal)]);
+          lines.push(["Dominant category", dominant ? (DETAIL_LABELS[dominant.code] || dominant.code) : "No data"]);
+          lines.push([activeLodesCategory === "raceethnicity" ? "Dominant category share of all jobs" : "Dominant category share of selected subcategories", dominant ? formatValue(dominant.share, "percent") : "No data"]);
+          lines.push(["Jobs in dominant category", dominant ? formatValue(dominant.count) : "No data"]);
+          lines.push(["Selected subcategory counts", ""]);
+          selectedLodesCodes().forEach((code) => {
+            const count = numeric(row[selectedBasis() + "_" + code]);
+            lines.push([DETAIL_LABELS[code] || optionLabel(code), formatValue(count)]);
+          });
+        } else if (activeLodesCategory === "industry") {
+          const total = getValue(feature);
+          lines.push(["Combined jobs in selected industries", formatValue(total)]);
+          lines.push(["Total jobs in block group", formatValue(numeric(row[selectedBasis() + "_jobs"]))]);
+          selectedLodesCodes().forEach((code) => {
+            lines.push([optionLabel(code), formatValue(numeric(row[selectedBasis() + "_" + code]))]);
+          });
+        } else {
+          lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
+          lines.push(["Total jobs in block group", formatValue(numeric(row[selectedBasis() + "_jobs"]))]);
+        }
         lines.push(["Jobs by workplace", formatValue(numeric(row.wac_jobs))]);
         lines.push(["Jobs by worker residence", formatValue(numeric(row.rac_jobs))]);
       }
@@ -219,11 +279,27 @@
         lines.push(["Availability", "Not published for this year"]);
       }
     } else {
+      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
+      lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
+      if (values.length > 1) lines.push(["Selected subcategory counts", ""]);
+      values.forEach(({ field, value }) => {
+        const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
+        lines.push([label, formatValue(value, (ACS_FIELDS[field] || {}).format || "number")]);
+      });
+      lines.push(["Geographic ID", p.GEOID || "Not available"]);
       lines.push(["Source", "ACS " + els.acsYear.value + " five-year estimates"]);
     }
     return '<div class="popup-card"><h3 class="popup-title">' + escapeHtml(title) + '</h3>' +
       lines.map(([label, value]) => '<div class="popup-row"><span>' + escapeHtml(label) +
         '</span><strong>' + escapeHtml(value) + '</strong></div>').join("") + '</div>';
+  }
+  function optionLabel(code) {
+    const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
+    const option = selector && Array.from(selector.options).find((item) => item.value === code);
+    if (option) return option.textContent;
+    const acsOption = Array.from(els.acsDetail.options).find((item) => item.value === code);
+    return acsOption ? acsOption.textContent : code;
   }
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
@@ -236,6 +312,36 @@
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legend.replaceChildren();
+    if (isDominantMode()) {
+      const selected = selectedLodesCodes();
+      const ordered = (DOMINANT_ORDER[activeLodesCategory] || []).filter((code) => selected.includes(code));
+      if (!ordered.length) {
+        els.legend.textContent = "Select one or more subcategories to map.";
+        return;
+      }
+      ordered.forEach((code, index) => {
+        const row = document.createElement("div");
+        row.className = "legend-row";
+        const swatch = document.createElement("span");
+        swatch.className = "legend-swatch";
+        const paletteIndex = ordered.length <= 1 ? 0 : Math.round((index / (ordered.length - 1)) * (COLORS.length - 1));
+        swatch.style.backgroundColor = COLORS[COLORS.length - 1 - paletteIndex];
+        const label = document.createElement("span");
+        label.textContent = DETAIL_LABELS[code] || code;
+        row.append(swatch, label, document.createElement("span"));
+        els.legend.appendChild(row);
+      });
+      const missing = document.createElement("div");
+      missing.className = "legend-row";
+      const swatch = document.createElement("span");
+      swatch.className = "legend-swatch";
+      swatch.style.backgroundColor = "#d8dcd8";
+      const label = document.createElement("span");
+      label.textContent = "No data";
+      missing.append(swatch, label, document.createElement("span"));
+      els.legend.appendChild(missing);
+      return;
+    }
     if (!currentBreaks.length) {
       els.legend.textContent = "No values available for this selection.";
       return;
@@ -309,22 +415,36 @@
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
       selector.disabled = !input || !input.checked || input.disabled;
     });
-    const industryDisplay = document.querySelector('[data-display="industry"]');
-    const industryInput = document.querySelector('[data-category="industry"]');
-    industryDisplay.disabled = !industryInput.checked || industryInput.disabled;
   }
   function activateLodesCategory(category) {
     activeMode = "jobs";
     activeLodesCategory = category;
+    els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === category;
+    });
+    syncLodesSelectors();
     refreshMap();
   }
   function activateAcsCategory(category) {
     activeMode = "acs";
     activeAcsCategory = category;
-    const field = ACS_CATEGORY_DEFAULTS[category];
-    if (field) els.acsDetail.value = field;
-    const selectedInput = els.acsMeasures.querySelector('[data-category="' + category + '"]');
-    if (selectedInput) selectedInput.checked = true;
+    const fieldsByCategory = {
+      population: ["B01001_001E"],
+      "median-income": ["B19013_001E"],
+      "aggregate-income": ["B19025_001E"],
+      households: ["B11001_002E", "B11001_007E"],
+      "per-capita": ["B19301_001E"],
+      poverty: ["B17001_002E"],
+      education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+      employment: ["B23025_004E", "B23025_005E"]
+    };
+    const fields = fieldsByCategory[category] || [ACS_CATEGORY_DEFAULTS[category]];
+    Array.from(els.acsDetail.options).forEach((option) => {
+      option.selected = fields.includes(option.value);
+    });
+    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === category;
+    });
     refreshMap();
   }
   function categoryForAcsField(field) {
@@ -341,10 +461,12 @@
     return Object.keys(groups).find((key) => groups[key].includes(field)) || "population";
   }
   function syncAcsActiveCategory() {
-    const selectedCategory = categoryForAcsField(els.acsDetail.value);
+    const selected = Array.from(els.acsDetail.selectedOptions);
+    const selectedCategory = selected.length ? categoryForAcsField(selected[0].value) : "population";
     activeAcsCategory = selectedCategory;
-    const selectedInput = els.acsMeasures.querySelector('[data-category="' + selectedCategory + '"]');
-    if (selectedInput) selectedInput.checked = true;
+    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === selectedCategory;
+    });
   }
   function showError(error) {
     console.error(error);
@@ -353,15 +475,13 @@
 
   els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
-      const category = input.dataset.category;
       if (input.checked) {
-        activateLodesCategory(category);
-      } else if (activeLodesCategory === category) {
-        const fallback = els.lodesMeasures.querySelector('input[type="checkbox"]:checked');
-        activateLodesCategory(fallback ? fallback.dataset.category : "total");
-        if (!fallback) els.lodesMeasures.querySelector('[data-category="total"]').checked = true;
+        const selector = document.querySelector('[data-selector="' + input.dataset.category + '"]');
+        if (selector) Array.from(selector.options).forEach((option) => { option.selected = true; });
+        activateLodesCategory(input.dataset.category);
+      } else if (activeLodesCategory === input.dataset.category) {
+        activateLodesCategory("total");
       }
-      syncLodesSelectors();
     });
   });
   document.querySelectorAll("[data-selector]").forEach((selector) => {
@@ -369,14 +489,10 @@
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
       if (input && !input.checked) input.checked = true;
       activateLodesCategory(selector.dataset.selector);
-      syncLodesSelectors();
     });
   });
-  document.querySelector('[data-display="industry"]').addEventListener("change", () => {
-    activateLodesCategory("industry");
-  });
   els.basis.forEach((radio) => radio.addEventListener("change", () => {
-    activateLodesCategory(activeLodesCategory);
+    refreshMap();
   }));
   els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
@@ -384,16 +500,23 @@
       if (input.checked) {
         activateAcsCategory(input.dataset.category);
       } else if (activeAcsCategory === input.dataset.category) {
-        const fallback = els.acsMeasures.querySelector('input[type="checkbox"]:checked');
-        if (fallback) activateAcsCategory(fallback.dataset.category);
-        else {
-          input.checked = true;
-          activateAcsCategory(input.dataset.category);
-        }
+        input.checked = true;
       }
     });
   });
   els.acsDetail.addEventListener("change", () => {
+    let selected = Array.from(els.acsDetail.selectedOptions);
+    if (selected.length > 1) {
+      const category = categoryForAcsField(selected[0].value);
+      selected.forEach((option) => {
+        if (categoryForAcsField(option.value) !== category) option.selected = false;
+      });
+      selected = Array.from(els.acsDetail.selectedOptions);
+      if (category === "population" && selected.length > 1) {
+        const total = selected.find((option) => option.value === "B01001_001E");
+        if (total) total.selected = false;
+      }
+    }
     syncAcsActiveCategory();
     activeMode = "acs";
     refreshMap();

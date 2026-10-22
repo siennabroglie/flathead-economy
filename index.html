@@ -43,80 +43,76 @@
             <label class="measure-option"><input type="checkbox" data-category="total" checked> <span>Total Jobs</span></label>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="industry"> <span>Industry Groups</span></label>
-              <select data-selector="industry" aria-label="Industry group" disabled>
-                <option value="CNS01">Agriculture, forestry, fishing and hunting</option>
-                <option value="CNS02">Mining, quarrying, and oil and gas extraction</option>
-                <option value="CNS03">Utilities</option>
-                <option value="CNS04">Construction</option>
-                <option value="CNS05">Manufacturing</option>
-                <option value="CNS06">Wholesale trade</option>
-                <option value="CNS07">Retail trade</option>
-                <option value="CNS08">Transportation and warehousing</option>
-                <option value="CNS09">Information</option>
-                <option value="CNS10">Finance and insurance</option>
-                <option value="CNS11">Real estate and rental and leasing</option>
-                <option value="CNS12">Professional, scientific and technical services</option>
-                <option value="CNS13">Management of companies and enterprises</option>
-                <option value="CNS14">Administrative and support services</option>
-                <option value="CNS15">Educational services</option>
-                <option value="CNS16">Health care and social assistance</option>
-                <option value="CNS17">Arts, entertainment and recreation</option>
-                <option value="CNS18">Accommodation and food services</option>
-                <option value="CNS19">Other services</option>
-                <option value="CNS20">Public administration</option>
-              </select>
-              <select data-display="industry" aria-label="Industry display" disabled>
-                <option value="count">Number of jobs</option>
-                <option value="percent">Percent of all jobs</option>
+              <select data-selector="industry" aria-label="Industry groups" multiple size="5" disabled>
+                <option value="CNS01" selected>Agriculture, forestry, fishing and hunting</option>
+                <option value="CNS02" selected>Mining, quarrying, and oil and gas extraction</option>
+                <option value="CNS03" selected>Utilities</option>
+                <option value="CNS04" selected>Construction</option>
+                <option value="CNS05" selected>Manufacturing</option>
+                <option value="CNS06" selected>Wholesale trade</option>
+                <option value="CNS07" selected>Retail trade</option>
+                <option value="CNS08" selected>Transportation and warehousing</option>
+                <option value="CNS09" selected>Information</option>
+                <option value="CNS10" selected>Finance and insurance</option>
+                <option value="CNS11" selected>Real estate and rental and leasing</option>
+                <option value="CNS12" selected>Professional, scientific and technical services</option>
+                <option value="CNS13" selected>Management of companies and enterprises</option>
+                <option value="CNS14" selected>Administrative and support services</option>
+                <option value="CNS15" selected>Educational services</option>
+                <option value="CNS16" selected>Health care and social assistance</option>
+                <option value="CNS17" selected>Arts, entertainment and recreation</option>
+                <option value="CNS18" selected>Accommodation and food services</option>
+                <option value="CNS19" selected>Other services</option>
+                <option value="CNS20" selected>Public administration</option>
               </select>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="earnings"> <span>Worker Earnings</span></label>
-              <select data-selector="earnings" aria-label="Worker earnings" disabled>
-                <option value="CE01">$1,250 per month or less</option>
-                <option value="CE02">$1,251–$3,333 per month</option>
-                <option value="CE03">More than $3,333 per month</option>
+              <select data-selector="earnings" aria-label="Worker earnings groups" multiple size="3" disabled>
+                <option value="CE01" selected>$1,250 per month or less</option>
+                <option value="CE02" selected>$1,251–$3,333 per month</option>
+                <option value="CE03" selected>More than $3,333 per month</option>
               </select>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="education"> <span>Worker Education</span></label>
-              <select data-selector="education" aria-label="Worker education" disabled>
-                <option value="CD01">Less than high school</option>
-                <option value="CD02">High school or equivalent, no college</option>
-                <option value="CD03">Some college or associate degree</option>
-                <option value="CD04">Bachelor's degree or advanced degree</option>
+              <select data-selector="education" aria-label="Worker education groups" multiple size="4" disabled>
+                <option value="CD01" selected>Less than high school</option>
+                <option value="CD02" selected>High school or equivalent, no college</option>
+                <option value="CD03" selected>Some college or associate degree</option>
+                <option value="CD04" selected>Bachelor's degree or advanced degree</option>
               </select>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="age"> <span>Worker Age</span></label>
-              <select data-selector="age" aria-label="Worker age" disabled>
-                <option value="CA01">Youngest age group</option>
-                <option value="CA02">Age 30–54</option>
-                <option value="CA03">Oldest age group</option>
+              <select data-selector="age" aria-label="Worker age groups" multiple size="3" disabled>
+                <option value="CA01" selected>Youngest age group</option>
+                <option value="CA02" selected>Age 30–54</option>
+                <option value="CA03" selected>Oldest age group</option>
               </select>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="raceethnicity"> <span>Worker Race &amp; Ethnicity</span></label>
-              <select data-selector="raceethnicity" aria-label="Worker race and ethnicity" disabled>
+              <select data-selector="raceethnicity" aria-label="Worker race and ethnicity groups" multiple size="6" disabled>
                 <optgroup label="Race">
-                  <option value="CR01">White alone</option>
-                  <option value="CR02">Black or African American alone</option>
-                  <option value="CR03">American Indian or Alaska Native alone</option>
-                  <option value="CR04">Asian alone</option>
-                  <option value="CR05">Native Hawaiian or Other Pacific Islander alone</option>
-                  <option value="CR07">Two or more race groups</option>
+                  <option value="CR01" selected>White alone</option>
+                  <option value="CR02" selected>Black or African American alone</option>
+                  <option value="CR03" selected>American Indian or Alaska Native alone</option>
+                  <option value="CR04" selected>Asian alone</option>
+                  <option value="CR05" selected>Native Hawaiian or Other Pacific Islander alone</option>
+                  <option value="CR07" selected>Two or more race groups</option>
                 </optgroup>
                 <optgroup label="Ethnicity">
-                  <option value="CT01">Not Hispanic or Latino</option>
-                  <option value="CT02">Hispanic or Latino</option>
+                  <option value="CT01" selected>Not Hispanic or Latino</option>
+                  <option value="CT02" selected>Hispanic or Latino</option>
                 </optgroup>
               </select>
             </div>
             <div class="measure-option with-select">
               <label><input type="checkbox" data-category="sex"> <span>Worker Sex</span></label>
-              <select data-selector="sex" aria-label="Worker sex" disabled>
-                <option value="CS01">Male</option>
-                <option value="CS02">Female</option>
+              <select data-selector="sex" aria-label="Worker sex groups" multiple size="2" disabled>
+                <option value="CS01" selected>Male</option>
+                <option value="CS02" selected>Female</option>
               </select>
             </div>
           </div>
@@ -144,7 +140,7 @@
             <label class="measure-option"><input type="checkbox" data-category="employment"> <span>Employment Status</span></label>
           </div>
           <label for="acs-detail">Population measure</label>
-          <select id="acs-detail">
+          <select id="acs-detail" multiple size="5" aria-label="Population subcategories">
             <optgroup label="Population & Age">
               <option value="B01001_001E">Total population</option>
               <option value="B01001_003E">Male under 5</option>
@@ -190,7 +186,7 @@
 
       <section class="about-section">
         <h3>How to use this map</h3>
-        <p>Choose a data category and measure, then select a block group to inspect its value. Shading shows relative values across block groups.</p>
+        <p>Choose a data category to map it. Worker-characteristic categories select all subcategories by default; use the dropdown to narrow the selection. Click a block group to see its total, shading percentage, and subcategory counts.</p>
         <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
       </section>
     </aside>
@@ -209,6 +205,7 @@
         <span>Geography: Census block groups</span>
       </footer>
     </section>
+    <!-- Future text-and-graphs analysis panel will be placed in grid column 2, row 2. -->
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
