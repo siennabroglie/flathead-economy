@@ -3,28 +3,79 @@
   "use strict";
 
   const GEOJSON_URL = "data/2023/flathead_economic_2023.geojson";
-  const LODES_PATH = (year) => `data/lodes/${year}/flathead_lodes_jobs_by_block_group.csv`;
-  const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2002 + i);
+  const LODES_PATH = (year) => "data/lodes/" + year + "/flathead_lodes_characteristics_by_block_group.csv";
+  const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2023 - i);
   const ACS_FIELDS = {
     B01001_001E: { label: "Total population", format: "number" },
+    B01001_003E: { label: "Male population under 5", format: "number" },
+    B01001_020E: { label: "Male population age 65–66", format: "number" },
+    B01001_027E: { label: "Female population under 5", format: "number" },
+    B01001_044E: { label: "Female population age 65–66", format: "number" },
     B19013_001E: { label: "Median household income", format: "currency" },
-    B19301_001E: { label: "Per capita income", format: "currency" },
+    B19025_001E: { label: "Aggregate household income", format: "currency" },
+    B11001_001E: { label: "Total households", format: "number" },
+    B11001_002E: { label: "Family households", format: "number" },
+    B11001_007E: { label: "Nonfamily households", format: "number" },
+    B19301_001E: { label: "Per-capita income", format: "currency" },
     B17001_002E: { label: "Population below poverty level", format: "number" },
-    B23025_004E: { label: "Employed population", format: "number" }
+    B15003_017E: { label: "High school graduate", format: "number" },
+    B15003_021E: { label: "Bachelor's degree", format: "number" },
+    B15003_022E: { label: "Master's degree", format: "number" },
+    B15003_023E: { label: "Professional school degree", format: "number" },
+    B15003_024E: { label: "Doctorate degree", format: "number" },
+    B23025_003E: { label: "Civilian labor force", format: "number" },
+    B23025_004E: { label: "Employed population", format: "number" },
+    B23025_005E: { label: "Unemployed population", format: "number" }
   };
-  const JOB_FIELDS = {
-    wac_jobs: { label: "Jobs by workplace", format: "number" },
-    rac_jobs: { label: "Jobs by worker residence", format: "number" }
+  const LODES_META = {
+    total: { label: "Total jobs", format: "number", field: "jobs" },
+    industry: { label: "Industry jobs", format: "number" },
+    earnings: { label: "Jobs by worker earnings", format: "number" },
+    education: { label: "Jobs by worker education", format: "number" },
+    age: { label: "Jobs by worker age", format: "number" },
+    raceethnicity: { label: "Jobs by worker race and ethnicity", format: "number" },
+    sex: { label: "Jobs by worker sex", format: "number" }
+  };
+  const INDUSTRY_LABELS = {
+    CNS01: "Agriculture, forestry, fishing and hunting", CNS02: "Mining, quarrying, and oil and gas extraction",
+    CNS03: "Utilities", CNS04: "Construction", CNS05: "Manufacturing", CNS06: "Wholesale trade",
+    CNS07: "Retail trade", CNS08: "Transportation and warehousing", CNS09: "Information",
+    CNS10: "Finance and insurance", CNS11: "Real estate and rental and leasing",
+    CNS12: "Professional, scientific and technical services", CNS13: "Management of companies and enterprises",
+    CNS14: "Administrative and support services", CNS15: "Educational services",
+    CNS16: "Health care and social assistance", CNS17: "Arts, entertainment and recreation",
+    CNS18: "Accommodation and food services", CNS19: "Other services", CNS20: "Public administration"
+  };
+  const DETAIL_LABELS = {
+    CE01: "$1,250 per month or less", CE02: "$1,251–$3,333 per month", CE03: "More than $3,333 per month",
+    CD01: "Less than high school", CD02: "High school or equivalent, no college",
+    CD03: "Some college or associate degree", CD04: "Bachelor's degree or advanced degree",
+    CA01: "Youngest age group", CA02: "Age 30–54", CA03: "Oldest age group",
+    CR01: "White alone", CR02: "Black or African American alone", CR03: "American Indian or Alaska Native alone",
+    CR04: "Asian alone", CR05: "Native Hawaiian or Other Pacific Islander alone", CR07: "Two or more race groups",
+    CT01: "Not Hispanic or Latino", CT02: "Hispanic or Latino", CS01: "Male", CS02: "Female"
+  };
+  const ACS_CATEGORY_DEFAULTS = {
+    population: "B01001_001E", "median-income": "B19013_001E",
+    "aggregate-income": "B19025_001E", households: "B11001_002E",
+    "per-capita": "B19301_001E", poverty: "B17001_002E",
+    education: "B15003_021E", employment: "B23025_004E"
+  };
+  const ACS_CATEGORY_LABELS = {
+    population: "Population & Age", "median-income": "Median household income",
+    "aggregate-income": "Aggregate household income", households: "Household composition",
+    "per-capita": "Per-capita income", poverty: "Poverty status",
+    education: "Education level", employment: "Employment status"
   };
   const COLORS = ["#f2f3ed", "#d4e2d7", "#a9c9b3", "#76a489", "#477b61", "#24513c"];
-
   const els = {
-    dataset: document.querySelector("#dataset-select"),
-    measure: document.querySelector("#measure-select"),
-    year: document.querySelector("#year-select"),
-    yearControl: document.querySelector("#year-control"),
-    acsControl: document.querySelector("#acs-control"),
-    acsMeasure: document.querySelector("#acs-measure-select"),
+    lodesYear: document.querySelector("#lodes-year"),
+    lodesMeasures: document.querySelector("#lodes-measures"),
+    basis: Array.from(document.querySelectorAll('input[name="lodes-basis"]')),
+    lodesNote: document.querySelector("#lodes-availability-note"),
+    acsYear: document.querySelector("#acs-year"),
+    acsMeasures: document.querySelector("#acs-measures"),
+    acsDetail: document.querySelector("#acs-detail"),
     legendTitle: document.querySelector("#legend-title"),
     legend: document.querySelector("#legend"),
     status: document.querySelector("#map-status"),
@@ -41,14 +92,17 @@
   let baseFeatures = [];
   let selectedYearData = new Map();
   let activeMode = "jobs";
+  let activeLodesCategory = "total";
+  let activeAcsCategory = "population";
+  let currentBreaks = [];
 
-  LODES_YEARS.slice().reverse().forEach((year) => {
+  LODES_YEARS.forEach((year) => {
     const option = document.createElement("option");
     option.value = String(year);
     option.textContent = String(year);
-    els.year.appendChild(option);
+    els.lodesYear.appendChild(option);
   });
-  els.year.value = "2023";
+  els.lodesYear.value = "2023";
 
   function parseCsv(text) {
     const rows = [];
@@ -80,20 +134,51 @@
     if (value === null || value === undefined || value === "") return "No data";
     const n = Number(value);
     if (!Number.isFinite(n)) return "No data";
-    return type === "currency"
-      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n)
-      : new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
+    if (type === "currency") return new Intl.NumberFormat("en-US", {
+      style: "currency", currency: "USD", maximumFractionDigits: 0
+    }).format(n);
+    if (type === "percent") return new Intl.NumberFormat("en-US", {
+      style: "percent", maximumFractionDigits: 1
+    }).format(n);
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
   };
-  const activeField = () => activeMode === "jobs" ? els.measure.value : els.acsMeasure.value;
-  const activeMeta = () => activeMode === "jobs" ? JOB_FIELDS[activeField()] : ACS_FIELDS[activeField()];
-  const getValue = (feature) => {
-    const id = String(feature.properties.GEOID ?? feature.properties.GEOIDFQ ?? "");
-    if (activeMode === "jobs") {
-      const row = selectedYearData.get(id);
-      return row ? numeric(row[activeField()]) : null;
+  const selectedBasis = () => (els.basis.find((item) => item.checked) || {}).value || "rac";
+  const selectedLodesField = () => {
+    if (activeLodesCategory === "total") return selectedBasis() + "_jobs";
+    const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
+    return selectedBasis() + "_" + (selector ? selector.value : "");
+  };
+  function activeMeta() {
+    if (activeMode === "acs") {
+      const field = els.acsDetail.value;
+      return ACS_FIELDS[field] || { label: "ACS measure", format: "number" };
     }
-    return numeric(feature.properties[activeField()]);
-  };
+    if (activeLodesCategory === "industry" && document.querySelector('[data-display="industry"]').value === "percent") {
+      return { label: (INDUSTRY_LABELS[document.querySelector('[data-selector="industry"]').value] || "Industry jobs") + " (% of total jobs)", format: "percent" };
+    }
+    if (activeLodesCategory === "industry") return {
+      label: INDUSTRY_LABELS[document.querySelector('[data-selector="industry"]').value] || "Industry jobs", format: "number"
+    };
+    if (activeLodesCategory !== "total") {
+      const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
+      return { label: DETAIL_LABELS[selector.value] || LODES_META[activeLodesCategory].label, format: "number" };
+    }
+    return LODES_META.total;
+  }
+  function getValue(feature) {
+    const p = feature.properties || {};
+    if (activeMode === "acs") return numeric(p[els.acsDetail.value]);
+    const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
+    if (!row) return null;
+    const field = selectedLodesField();
+    const value = numeric(row[field]);
+    if (value === null) return null;
+    if (activeLodesCategory === "industry" && document.querySelector('[data-display="industry"]').value === "percent") {
+      const total = numeric(row[selectedBasis() + "_jobs"]);
+      return total ? value / total : null;
+    }
+    return value;
+  }
   const quantileBreaks = (values) => {
     const sorted = values.slice().sort((a, b) => a - b);
     if (!sorted.length) return [];
@@ -104,27 +189,23 @@
     const index = breaks.findIndex((limit) => value <= limit);
     return COLORS[index < 0 ? COLORS.length - 1 : index + 1];
   };
-
   function styleFeature(feature) {
-    const values = baseFeatures.map(getValue).filter((value) => value !== null);
-    const breaks = quantileBreaks(values);
     return {
-      fillColor: colorFor(getValue(feature), breaks),
-      weight: 1,
-      opacity: 1,
-      color: "#ffffff",
-      dashArray: "",
-      fillOpacity: 0.82
+      fillColor: colorFor(getValue(feature), currentBreaks),
+      weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.82
     };
   }
-
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[ch]);
+  }
   function popupContent(feature) {
-    const p = feature.properties;
+    const p = feature.properties || {};
     const title = p.NAMELSAD || p.NAME || p.GEOID || "Census block group";
-    const currentMeta = activeMeta();
-    const currentValue = getValue(feature);
+    const meta = activeMeta();
     const lines = [
-      [currentMeta.label, formatValue(currentValue, currentMeta.format)],
+      [meta.label, formatValue(getValue(feature), meta.format)],
       ["Geographic ID", p.GEOID || "Not available"]
     ];
     if (activeMode === "jobs") {
@@ -133,14 +214,16 @@
         lines.push(["Jobs by workplace", formatValue(numeric(row.wac_jobs))]);
         lines.push(["Jobs by worker residence", formatValue(numeric(row.rac_jobs))]);
       }
-      lines.push(["Source", `LODES ${els.year.value}`]);
+      lines.push(["Source", "LODES " + els.lodesYear.value]);
+      if (activeLodesCategory === "education" && Number(els.lodesYear.value) < 2009) {
+        lines.push(["Availability", "Not published for this year"]);
+      }
     } else {
-      lines.push(["ACS estimate", "2024 five-year"]);
+      lines.push(["Source", "ACS " + els.acsYear.value + " five-year estimates"]);
     }
-    return `<div class="popup-card"><h3 class="popup-title">${escapeHtml(title)}</h3>${lines.map(([label, value]) => `<div class="popup-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>`;
-  }
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+    return '<div class="popup-card"><h3 class="popup-title">' + escapeHtml(title) + '</h3>' +
+      lines.map(([label, value]) => '<div class="popup-row"><span>' + escapeHtml(label) +
+        '</span><strong>' + escapeHtml(value) + '</strong></div>').join("") + '</div>';
   }
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
@@ -149,29 +232,27 @@
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
     });
   }
-
   function updateLegend() {
-    const values = baseFeatures.map(getValue).filter((value) => value !== null);
-    const breaks = quantileBreaks(values);
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legend.replaceChildren();
-    if (!breaks.length) {
+    if (!currentBreaks.length) {
       els.legend.textContent = "No values available for this selection.";
       return;
     }
     let previous = null;
-    breaks.forEach((limit, i) => {
+    currentBreaks.forEach((limit, i) => {
       const row = document.createElement("div");
       row.className = "legend-row";
       const swatch = document.createElement("span");
       swatch.className = "legend-swatch";
       swatch.style.backgroundColor = COLORS[i + 1];
       const range = document.createElement("span");
-      range.textContent = i === 0 ? `Up to ${formatValue(limit, meta.format)}` : `${formatValue(previous, meta.format)} – ${formatValue(limit, meta.format)}`;
+      range.textContent = i === 0 ? "Up to " + formatValue(limit, meta.format) :
+        formatValue(previous, meta.format) + " – " + formatValue(limit, meta.format);
       const value = document.createElement("span");
       value.className = "legend-value";
-      value.textContent = `Q${i + 1}`;
+      value.textContent = "Q" + (i + 1);
       row.append(swatch, range, value);
       els.legend.appendChild(row);
       previous = limit;
@@ -186,51 +267,145 @@
     missing.append(swatch, label, document.createElement("span"));
     els.legend.appendChild(missing);
   }
-
   function refreshMap() {
     if (!geojsonLayer) return;
+    currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
-    els.period.textContent = activeMode === "jobs" ? `LODES · ${els.year.value}` : "ACS · 2024 five-year";
-    els.status.textContent = `${baseFeatures.length} block groups · ${baseFeatures.filter((f) => getValue(f) !== null).length} with data`;
+    els.period.textContent = activeMode === "jobs" ? "LODES · " + els.lodesYear.value :
+      "ACS · " + els.acsYear.value + " five-year";
+    els.status.textContent = baseFeatures.length + " block groups · " +
+      baseFeatures.filter((feature) => getValue(feature) !== null).length + " with data";
     geojsonLayer.eachLayer((layer) => {
       if (layer.isPopupOpen()) layer.setPopupContent(popupContent(layer.feature));
     });
   }
-
-  async function loadJobsYear(year) {
-    els.status.textContent = `Loading employment data for ${year}…`;
+  async function loadLodesYear(year) {
+    els.status.textContent = "Loading employment data for " + year + "…";
     const response = await fetch(LODES_PATH(year));
-    if (!response.ok) throw new Error(`Could not load LODES data for ${year} (HTTP ${response.status}).`);
+    if (!response.ok) throw new Error("Could not load LODES characteristics for " + year + " (HTTP " + response.status + ").");
     const rows = parseCsv(await response.text());
     selectedYearData = new Map(rows.map((row) => [String(row.GEOID), row]));
+    const unavailable = Number(year) < 2009;
+    els.lodesMeasures.querySelectorAll('[data-category="raceethnicity"], [data-category="education"], [data-category="sex"]').forEach((input) => {
+      input.disabled = unavailable;
+      const category = input.dataset.category;
+      const selector = document.querySelector('[data-selector="' + category + '"]');
+      if (selector) selector.disabled = unavailable || !input.checked;
+      if (unavailable && input.checked) input.checked = false;
+    });
+    if (unavailable && ["raceethnicity", "education", "sex"].includes(activeLodesCategory)) {
+      activeLodesCategory = "total";
+      document.querySelector('[data-category="total"]').checked = true;
+    }
+    els.lodesNote.textContent = unavailable
+      ? "Race, ethnicity, education and sex are unavailable before 2009; these controls are disabled for this year."
+      : "Worker education describes jobs for workers age 30 and older. Age group labels reflect published LODES definitions.";
+    syncLodesSelectors();
     refreshMap();
   }
-
-  function updateModeControls() {
-    activeMode = els.dataset.value;
-    const isJobs = activeMode === "jobs";
-    els.yearControl.hidden = !isJobs;
-    els.measure.closest("label")?.remove();
-    els.measure.hidden = !isJobs;
-    const measureLabel = document.querySelector('label[for="measure-select"]');
-    if (measureLabel) measureLabel.hidden = !isJobs;
-    els.acsControl.hidden = isJobs;
-    if (isJobs) {
-      els.measure.value = els.measure.value || "wac_jobs";
-      loadJobsYear(els.year.value).catch(showError);
-    } else {
-      refreshMap();
-    }
+  function syncLodesSelectors() {
+    document.querySelectorAll("[data-selector]").forEach((selector) => {
+      const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
+      selector.disabled = !input || !input.checked || input.disabled;
+    });
+    const industryDisplay = document.querySelector('[data-display="industry"]');
+    const industryInput = document.querySelector('[data-category="industry"]');
+    industryDisplay.disabled = !industryInput.checked || industryInput.disabled;
+  }
+  function activateLodesCategory(category) {
+    activeMode = "jobs";
+    activeLodesCategory = category;
+    refreshMap();
+  }
+  function activateAcsCategory(category) {
+    activeMode = "acs";
+    activeAcsCategory = category;
+    const field = ACS_CATEGORY_DEFAULTS[category];
+    if (field) els.acsDetail.value = field;
+    const selectedInput = els.acsMeasures.querySelector('[data-category="' + category + '"]');
+    if (selectedInput) selectedInput.checked = true;
+    refreshMap();
+  }
+  function categoryForAcsField(field) {
+    const groups = {
+      population: ["B01001_001E", "B01001_003E", "B01001_020E", "B01001_027E", "B01001_044E"],
+      "median-income": ["B19013_001E"],
+      "aggregate-income": ["B19025_001E"],
+      households: ["B11001_001E", "B11001_002E", "B11001_007E"],
+      "per-capita": ["B19301_001E"],
+      poverty: ["B17001_002E"],
+      education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+      employment: ["B23025_003E", "B23025_004E", "B23025_005E"]
+    };
+    return Object.keys(groups).find((key) => groups[key].includes(field)) || "population";
+  }
+  function syncAcsActiveCategory() {
+    const selectedCategory = categoryForAcsField(els.acsDetail.value);
+    activeAcsCategory = selectedCategory;
+    const selectedInput = els.acsMeasures.querySelector('[data-category="' + selectedCategory + '"]');
+    if (selectedInput) selectedInput.checked = true;
   }
   function showError(error) {
     console.error(error);
-    els.status.textContent = `Data could not be loaded: ${error.message}`;
+    els.status.textContent = "Data could not be loaded: " + error.message;
   }
+
+  els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      const category = input.dataset.category;
+      if (input.checked) {
+        activateLodesCategory(category);
+      } else if (activeLodesCategory === category) {
+        const fallback = els.lodesMeasures.querySelector('input[type="checkbox"]:checked');
+        activateLodesCategory(fallback ? fallback.dataset.category : "total");
+        if (!fallback) els.lodesMeasures.querySelector('[data-category="total"]').checked = true;
+      }
+      syncLodesSelectors();
+    });
+  });
+  document.querySelectorAll("[data-selector]").forEach((selector) => {
+    selector.addEventListener("change", () => {
+      const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
+      if (input && !input.checked) input.checked = true;
+      activateLodesCategory(selector.dataset.selector);
+      syncLodesSelectors();
+    });
+  });
+  document.querySelector('[data-display="industry"]').addEventListener("change", () => {
+    activateLodesCategory("industry");
+  });
+  els.basis.forEach((radio) => radio.addEventListener("change", () => {
+    activateLodesCategory(activeLodesCategory);
+  }));
+  els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
+  els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        activateAcsCategory(input.dataset.category);
+      } else if (activeAcsCategory === input.dataset.category) {
+        const fallback = els.acsMeasures.querySelector('input[type="checkbox"]:checked');
+        if (fallback) activateAcsCategory(fallback.dataset.category);
+        else {
+          input.checked = true;
+          activateAcsCategory(input.dataset.category);
+        }
+      }
+    });
+  });
+  els.acsDetail.addEventListener("change", () => {
+    syncAcsActiveCategory();
+    activeMode = "acs";
+    refreshMap();
+  });
+  els.acsYear.addEventListener("change", () => {
+    activeMode = "acs";
+    refreshMap();
+  });
 
   fetch(GEOJSON_URL)
     .then((response) => {
-      if (!response.ok) throw new Error(`Could not load block-group GeoJSON (HTTP ${response.status}).`);
+      if (!response.ok) throw new Error("Could not load block-group GeoJSON (HTTP " + response.status + ").");
       return response.json();
     })
     .then((geojson) => {
@@ -238,12 +413,7 @@
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
       geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
       map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
-      return loadJobsYear(els.year.value);
+      return loadLodesYear(els.lodesYear.value);
     })
     .catch(showError);
-
-  els.dataset.addEventListener("change", updateModeControls);
-  els.measure.addEventListener("change", () => activeMode === "jobs" && loadJobsYear(els.year.value).catch(showError));
-  els.year.addEventListener("change", () => activeMode === "jobs" && loadJobsYear(els.year.value).catch(showError));
-  els.acsMeasure.addEventListener("change", refreshMap);
 })();
