@@ -535,6 +535,8 @@
       ? "Race, ethnicity, education and sex are unavailable before 2009; these controls are disabled for this year."
       : "Worker education describes jobs for workers age 30 and older. Age group labels reflect published LODES definitions.";
     syncLodesSelectors();
+    updatePrimaryOptions();
+    setPrimaryContext(els.primaryMeasure.value);
     refreshMap();
   }
   function syncLodesSelectors() {
