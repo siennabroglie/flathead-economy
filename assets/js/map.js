@@ -214,6 +214,9 @@
     if (isDominantMode()) {
       return { label: "Dominant worker-category share", format: "percent", dominant: true };
     }
+    if (activeMode === "jobs" && activeLodesCategory === "raceethnicity") {
+      return { label: "Selected race or ethnicity share", format: "percent", dominant: true };
+    }
     return LODES_META.total;
   }
   function getSingleValue(feature) {
