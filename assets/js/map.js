@@ -67,10 +67,22 @@
     "per-capita": "Per-capita income", poverty: "Poverty status",
     education: "Education level", employment: "Employment status"
   };
+  const ACS_CATEGORY_FIELDS = {
+    population: ["B01001_001E"],
+    "median-income": ["B19013_001E"],
+    "aggregate-income": ["B19025_001E"],
+    households: ["B11001_002E", "B11001_007E"],
+    "per-capita": ["B19301_001E"],
+    poverty: ["B17001_002E"],
+    education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+    employment: ["B23025_004E", "B23025_005E"]
+  };
   const COLORS = ["#f2f3ed", "#d4e2d7", "#a9c9b3", "#76a489", "#477b61", "#24513c"];
   const els = {
     lodesYear: document.querySelector("#lodes-year"),
     lodesMeasures: document.querySelector("#lodes-measures"),
+    mapMode: document.querySelector("#map-mode"),
+    primaryMeasure: document.querySelector("#primary-measure"),
     basis: Array.from(document.querySelectorAll('input[name="lodes-basis"]')),
     lodesNote: document.querySelector("#lodes-availability-note"),
     acsYear: document.querySelector("#acs-year"),
@@ -94,6 +106,9 @@
   let activeMode = "jobs";
   let activeLodesCategory = "total";
   let activeAcsCategory = "population";
+  let mapMode = "single";
+  let compositeValues = new Map();
+  let compositeError = "";
   let currentBreaks = [];
 
   LODES_YEARS.forEach((year) => {
@@ -143,8 +158,8 @@
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
   };
   const selectedBasis = () => (els.basis.find((item) => item.checked) || {}).value || "rac";
-  const selectedLodesCodes = () => {
-    const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
+  const selectedLodesCodes = (category = activeLodesCategory) => {
+    const selector = document.querySelector('[data-selector="' + category + '"]');
     return selector ? Array.from(selector.selectedOptions).map((option) => option.value) : [];
   };
   const DOMINANT_ORDER = {
@@ -154,23 +169,31 @@
     sex: ["CS01", "CS02"],
     raceethnicity: ["CR01", "CR02", "CR03", "CR04", "CR05", "CR07", "CT01", "CT02"]
   };
-  function dominantCategory(feature) {
+  function dominantCategory(feature, category = activeLodesCategory) {
     const row = selectedYearData.get(String((feature.properties || {}).GEOID ?? (feature.properties || {}).GEOIDFQ ?? ""));
     if (!row) return null;
-    const selected = selectedLodesCodes();
-    const ordered = (DOMINANT_ORDER[activeLodesCategory] || []).filter((code) => selected.includes(code));
+    const selected = selectedLodesCodes(category);
+    const ordered = (DOMINANT_ORDER[category] || []).filter((code) => selected.includes(code));
     if (!ordered.length) return null;
+    // Race and ethnicity are distinct dimensions and must not be treated as one distribution.
+    if (category === "raceethnicity") return null;
     const counts = ordered.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]) }));
     if (counts.some((item) => item.count === null)) return null;
-    const selectedTotal = counts.reduce((sum, item) => sum + item.count, 0);
-    const rowTotal = numeric(row[selectedBasis() + "_jobs"]);
-    const denominator = activeLodesCategory === "raceethnicity" ? rowTotal : selectedTotal;
+    const selector = document.querySelector('[data-selector="' + category + '"]');
+    const allCodes = selector ? Array.from(selector.options).map((option) => option.value) : ordered;
+    const denominatorValues = allCodes.map((code) => numeric(row[selectedBasis() + "_" + code]));
+    if (denominatorValues.some((value) => value === null)) return null;
+    const denominator = denominatorValues.reduce((sum, value) => sum + value, 0);
     if (!denominator) return null;
     const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
     return { ...winner, share: winner.count / denominator, rank: ordered.indexOf(winner.code), ordered };
   }
-  const isDominantMode = () => activeMode === "jobs" && !["total", "industry"].includes(activeLodesCategory);
+  const isDominantMode = () => mapMode === "single" && activeMode === "jobs" &&
+    !["total", "industry", "raceethnicity"].includes(activeLodesCategory);
   function activeMeta() {
+    if (mapMode === "combined") {
+      return { label: "Combined index · equal-weight normalized score", format: "number" };
+    }
     if (activeMode === "acs") {
       const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
       if (fields.length > 1) return { label: "Combined selected ACS subcategories", format: "number" };
@@ -185,7 +208,7 @@
     }
     return LODES_META.total;
   }
-  function getValue(feature) {
+  function getSingleValue(feature) {
     const p = feature.properties || {};
     if (activeMode === "acs") {
       const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
@@ -205,7 +228,14 @@
       return values.reduce((sum, value) => sum + value, 0);
     }
     const dominant = dominantCategory(feature);
-    return dominant ? dominant.rank : null;
+    return dominant ? dominant.share : null;
+  }
+  function getValue(feature) {
+    if (mapMode === "combined") {
+      const p = feature.properties || {};
+      return compositeValues.get(String(p.GEOID ?? p.GEOIDFQ ?? "")) ?? null;
+    }
+    return getSingleValue(feature);
   }
   const quantileBreaks = (values) => {
     const sorted = values.slice().sort((a, b) => a - b);
@@ -218,16 +248,7 @@
     return COLORS[index < 0 ? COLORS.length - 1 : index + 1];
   };
   function styleFeature(feature) {
-    let fillColor = colorFor(getValue(feature), currentBreaks);
-    if (isDominantMode()) {
-      const dominant = dominantCategory(feature);
-      if (!dominant) fillColor = "#d8dcd8";
-      else {
-        const paletteIndex = dominant.ordered.length <= 1 ? 0 :
-          Math.round((dominant.rank / (dominant.ordered.length - 1)) * (COLORS.length - 1));
-        fillColor = COLORS[COLORS.length - 1 - paletteIndex];
-      }
-    }
+    const fillColor = colorFor(getValue(feature), currentBreaks);
     return { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.82 };
   }
   function escapeHtml(value) {
@@ -373,15 +394,111 @@
     missing.append(swatch, label, document.createElement("span"));
     els.legend.appendChild(missing);
   }
+  function selectedMeasureKeys() {
+    const keys = [];
+    els.lodesMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) keys.push("jobs:" + input.dataset.category);
+    });
+    els.acsMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) keys.push("acs:" + input.dataset.category);
+    });
+    return keys;
+  }
+  function measureLabel(key) {
+    const parts = key.split(":");
+    const category = parts[1];
+    if (parts[0] === "jobs") return "Employment · " + (LODES_META[category] || {}).label;
+    return "Population · " + (ACS_CATEGORY_LABELS[category] || category);
+  }
+  function setPrimaryContext(key) {
+    if (!key) return;
+    const parts = key.split(":");
+    activeMode = parts[0] === "acs" ? "acs" : "jobs";
+    if (activeMode === "jobs") {
+      activeLodesCategory = parts[1];
+    } else {
+      activeAcsCategory = parts[1];
+      const fields = activeAcsCategory === "population" && acsSelections.population
+        ? acsSelections.population
+        : (acsSelections[activeAcsCategory] || ACS_CATEGORY_FIELDS[activeAcsCategory] || []);
+      Array.from(els.acsDetail.options).forEach((option) => { option.selected = fields.includes(option.value); });
+    }
+  }
+  function updatePrimaryOptions() {
+    const keys = selectedMeasureKeys();
+    const current = els.primaryMeasure.value || "jobs:total";
+    els.primaryMeasure.replaceChildren();
+    keys.forEach((key) => {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = measureLabel(key);
+      els.primaryMeasure.appendChild(option);
+    });
+    if (keys.includes(current)) els.primaryMeasure.value = current;
+    else if (keys.length) els.primaryMeasure.value = keys[0];
+    els.primaryMeasure.disabled = keys.length === 0 || mapMode === "combined";
+    setPrimaryContext(els.primaryMeasure.value);
+    if (!keys.length) els.primaryMeasure.innerHTML = '<option value="">No measures selected</option>';
+  }
+  const acsSelections = {};
+  function measureValueForKey(feature, key) {
+    const oldMode = activeMode;
+    const oldLodes = activeLodesCategory;
+    const oldAcs = activeAcsCategory;
+    const oldAcsFields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+    const parts = key.split(":");
+    setPrimaryContext(key);
+    const value = getSingleValue(feature);
+    activeMode = oldMode;
+    activeLodesCategory = oldLodes;
+    activeAcsCategory = oldAcs;
+    Array.from(els.acsDetail.options).forEach((option) => { option.selected = oldAcsFields.includes(option.value); });
+    return value;
+  }
+  function calculateCompositeValues() {
+    compositeValues = new Map();
+    compositeError = "";
+    const keys = selectedMeasureKeys();
+    if (!keys.length) {
+      compositeError = "Select at least one measure to build a combined index.";
+      return;
+    }
+    if (keys.some((key) => key === "jobs:raceethnicity")) {
+      compositeError = "Race and ethnicity are separate dimensions and cannot be combined into one distribution. Unselect Worker Race & Ethnicity or use Single-variable mode.";
+      return;
+    }
+    const columns = keys.map((key) => ({
+      key,
+      values: baseFeatures.map((feature) => measureValueForKey(feature, key))
+    }));
+    if (columns.some((column) => !column.values.some((value) => value !== null))) {
+      compositeError = "At least one selected measure has no usable values for this year. Choose compatible measures before applying the combined index.";
+      return;
+    }
+    const normalized = columns.map((column) => {
+      const valid = column.values.filter((value) => value !== null);
+      const min = Math.min(...valid);
+      const max = Math.max(...valid);
+      return column.values.map((value) => value === null ? null : (max === min ? 0.5 : (value - min) / (max - min)));
+    });
+    baseFeatures.forEach((feature, index) => {
+      const values = normalized.map((column) => column[index]);
+      const id = String((feature.properties || {}).GEOID ?? (feature.properties || {}).GEOIDFQ ?? "");
+      compositeValues.set(id, values.some((value) => value === null) ? null :
+        values.reduce((sum, value) => sum + value, 0) / values.length);
+    });
+  }
   function refreshMap() {
     if (!geojsonLayer) return;
+    if (mapMode === "combined") calculateCompositeValues();
+    else { compositeValues = new Map(); compositeError = ""; }
     currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
     els.period.textContent = activeMode === "jobs" ? "LODES · " + els.lodesYear.value :
       "ACS · " + els.acsYear.value + " five-year";
-    els.status.textContent = baseFeatures.length + " block groups · " +
-      baseFeatures.filter((feature) => getValue(feature) !== null).length + " with data";
+    els.status.textContent = compositeError || (baseFeatures.length + " block groups · " +
+      baseFeatures.filter((feature) => getValue(feature) !== null).length + " with data");
     geojsonLayer.eachLayer((layer) => {
       if (layer.isPopupOpen()) layer.setPopupContent(popupContent(layer.feature));
     });
@@ -419,31 +536,16 @@
   function activateLodesCategory(category) {
     activeMode = "jobs";
     activeLodesCategory = category;
-    els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-      input.checked = input.dataset.category === category;
-    });
     syncLodesSelectors();
+    updatePrimaryOptions();
     refreshMap();
   }
   function activateAcsCategory(category) {
     activeMode = "acs";
     activeAcsCategory = category;
-    const fieldsByCategory = {
-      population: ["B01001_001E"],
-      "median-income": ["B19013_001E"],
-      "aggregate-income": ["B19025_001E"],
-      households: ["B11001_002E", "B11001_007E"],
-      "per-capita": ["B19301_001E"],
-      poverty: ["B17001_002E"],
-      education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
-      employment: ["B23025_004E", "B23025_005E"]
-    };
-    const fields = fieldsByCategory[category] || [ACS_CATEGORY_DEFAULTS[category]];
+    const fields = acsSelections[category] || ACS_CATEGORY_FIELDS[category] || [ACS_CATEGORY_DEFAULTS[category]];
     Array.from(els.acsDetail.options).forEach((option) => {
       option.selected = fields.includes(option.value);
-    });
-    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-      input.checked = input.dataset.category === category;
     });
     refreshMap();
   }
@@ -462,11 +564,9 @@
   }
   function syncAcsActiveCategory() {
     const selected = Array.from(els.acsDetail.selectedOptions);
-    const selectedCategory = selected.length ? categoryForAcsField(selected[0].value) : "population";
+    const selectedCategory = selected.length ? categoryForAcsField(selected[0].value) : activeAcsCategory;
     activeAcsCategory = selectedCategory;
-    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-      input.checked = input.dataset.category === selectedCategory;
-    });
+    acsSelections[selectedCategory] = selected.map((option) => option.value);
   }
   function showError(error) {
     console.error(error);
@@ -478,17 +578,20 @@
       if (input.checked) {
         const selector = document.querySelector('[data-selector="' + input.dataset.category + '"]');
         if (selector) Array.from(selector.options).forEach((option) => { option.selected = true; });
-        activateLodesCategory(input.dataset.category);
-      } else if (activeLodesCategory === input.dataset.category) {
-        activateLodesCategory("total");
       }
+      updatePrimaryOptions();
+      setPrimaryContext(els.primaryMeasure.value);
+      syncLodesSelectors();
+      refreshMap();
     });
   });
   document.querySelectorAll("[data-selector]").forEach((selector) => {
     selector.addEventListener("change", () => {
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
       if (input && !input.checked) input.checked = true;
-      activateLodesCategory(selector.dataset.selector);
+      updatePrimaryOptions();
+      setPrimaryContext(els.primaryMeasure.value);
+      refreshMap();
     });
   });
   els.basis.forEach((radio) => radio.addEventListener("change", () => {
@@ -497,11 +600,10 @@
   els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
-      if (input.checked) {
-        activateAcsCategory(input.dataset.category);
-      } else if (activeAcsCategory === input.dataset.category) {
-        input.checked = true;
-      }
+      if (input.checked) activateAcsCategory(input.dataset.category);
+      updatePrimaryOptions();
+      setPrimaryContext(els.primaryMeasure.value);
+      refreshMap();
     });
   });
   els.acsDetail.addEventListener("change", () => {
@@ -518,13 +620,28 @@
       }
     }
     syncAcsActiveCategory();
-    activeMode = "acs";
+    const categoryInput = document.querySelector('[data-category="' + activeAcsCategory + '"]');
+    if (categoryInput && !categoryInput.checked) categoryInput.checked = true;
+    updatePrimaryOptions();
+    setPrimaryContext(els.primaryMeasure.value);
     refreshMap();
   });
   els.acsYear.addEventListener("change", () => {
-    activeMode = "acs";
     refreshMap();
   });
+  els.mapMode.addEventListener("change", () => {
+    mapMode = els.mapMode.value;
+    els.primaryMeasure.disabled = mapMode === "combined" || !selectedMeasureKeys().length;
+    refreshMap();
+  });
+  els.primaryMeasure.addEventListener("change", () => {
+    setPrimaryContext(els.primaryMeasure.value);
+    refreshMap();
+  });
+
+  updatePrimaryOptions();
+  setPrimaryContext(els.primaryMeasure.value);
+  syncLodesSelectors();
 
   fetch(GEOJSON_URL)
     .then((response) => {
