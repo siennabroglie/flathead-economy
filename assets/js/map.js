@@ -173,6 +173,7 @@
   function activeMeta() {
     if (activeMode === "acs") {
       const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      if (fields.length > 1) return { label: "Combined selected ACS subcategories", format: "number" };
       const field = fields[0] || "B01001_001E";
       return ACS_FIELDS[field] || { label: "ACS measure", format: "number" };
     }
@@ -188,8 +189,10 @@
     const p = feature.properties || {};
     if (activeMode === "acs") {
       const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
-      const field = fields[0] || "B01001_001E";
-      return numeric(p[field]);
+      if (!fields.length) return null;
+      const values = fields.map((field) => numeric(p[field]));
+      if (values.some((value) => value === null)) return null;
+      return values.reduce((sum, value) => sum + value, 0);
     }
     const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
     if (!row) return null;
@@ -395,11 +398,11 @@
       population: ["B01001_001E"],
       "median-income": ["B19013_001E"],
       "aggregate-income": ["B19025_001E"],
-      households: ["B11001_001E", "B11001_002E", "B11001_007E"],
+      households: ["B11001_002E", "B11001_007E"],
       "per-capita": ["B19301_001E"],
       poverty: ["B17001_002E"],
       education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
-      employment: ["B23025_003E", "B23025_004E", "B23025_005E"]
+      employment: ["B23025_004E", "B23025_005E"]
     };
     const fields = fieldsByCategory[category] || [ACS_CATEGORY_DEFAULTS[category]];
     Array.from(els.acsDetail.options).forEach((option) => {
@@ -466,6 +469,18 @@
     });
   });
   els.acsDetail.addEventListener("change", () => {
+    let selected = Array.from(els.acsDetail.selectedOptions);
+    if (selected.length > 1) {
+      const category = categoryForAcsField(selected[0].value);
+      selected.forEach((option) => {
+        if (categoryForAcsField(option.value) !== category) option.selected = false;
+      });
+      selected = Array.from(els.acsDetail.selectedOptions);
+      if (category === "population" && selected.length > 1) {
+        const total = selected.find((option) => option.value === "B01001_001E");
+        if (total) total.selected = false;
+      }
+    }
     syncAcsActiveCategory();
     activeMode = "acs";
     refreshMap();
