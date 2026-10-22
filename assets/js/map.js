@@ -287,7 +287,7 @@
     const rows = parseCsv(await response.text());
     selectedYearData = new Map(rows.map((row) => [String(row.GEOID), row]));
     const unavailable = Number(year) < 2009;
-    document.querySelectorAll('[data-category="raceethnicity"], [data-category="education"], [data-category="sex"]').forEach((input) => {
+    els.lodesMeasures.querySelectorAll('[data-category="raceethnicity"], [data-category="education"], [data-category="sex"]').forEach((input) => {
       input.disabled = unavailable;
       const category = input.dataset.category;
       const selector = document.querySelector('[data-selector="' + category + '"]');
@@ -323,6 +323,8 @@
     activeAcsCategory = category;
     const field = ACS_CATEGORY_DEFAULTS[category];
     if (field) els.acsDetail.value = field;
+    const selectedInput = els.acsMeasures.querySelector('[data-category="' + category + '"]');
+    if (selectedInput) selectedInput.checked = true;
     refreshMap();
   }
   function categoryForAcsField(field) {
@@ -338,12 +340,11 @@
     };
     return Object.keys(groups).find((key) => groups[key].includes(field)) || "population";
   }
-  function syncAcsCheckboxes() {
+  function syncAcsActiveCategory() {
     const selectedCategory = categoryForAcsField(els.acsDetail.value);
     activeAcsCategory = selectedCategory;
-    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-      input.checked = input.dataset.category === selectedCategory;
-    });
+    const selectedInput = els.acsMeasures.querySelector('[data-category="' + selectedCategory + '"]');
+    if (selectedInput) selectedInput.checked = true;
   }
   function showError(error) {
     console.error(error);
@@ -380,15 +381,20 @@
   els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
-      if (input.checked) activateAcsCategory(input.dataset.category);
-      else if (activeAcsCategory === input.dataset.category) {
-        input.checked = true;
+      if (input.checked) {
+        activateAcsCategory(input.dataset.category);
+      } else if (activeAcsCategory === input.dataset.category) {
+        const fallback = els.acsMeasures.querySelector('input[type="checkbox"]:checked');
+        if (fallback) activateAcsCategory(fallback.dataset.category);
+        else {
+          input.checked = true;
+          activateAcsCategory(input.dataset.category);
+        }
       }
-      syncAcsCheckboxes();
     });
   });
   els.acsDetail.addEventListener("change", () => {
-    syncAcsCheckboxes();
+    syncAcsActiveCategory();
     activeMode = "acs";
     refreshMap();
   });
