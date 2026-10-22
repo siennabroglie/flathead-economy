@@ -24,6 +24,19 @@
         <p class="section-kicker">EXPLORE THE DATA</p>
         <h2>Map settings</h2>
 
+        <div class="map-mode-controls">
+          <label for="map-mode">Map mode</label>
+          <select id="map-mode">
+            <option value="single" selected>Single-variable</option>
+            <option value="combined">Combined index</option>
+          </select>
+          <label for="primary-measure">Primary measure</label>
+          <select id="primary-measure" aria-describedby="primary-measure-note">
+            <option value="jobs:total">Employment · Total jobs</option>
+          </select>
+          <p id="primary-measure-note" class="field-note">Choose which selected measure controls the map colors.</p>
+        </div>
+
         <section class="data-group" aria-labelledby="employment-heading">
           <div class="group-heading">
             <h3 id="employment-heading">Employment Data</h3>
