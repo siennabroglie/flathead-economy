@@ -162,10 +162,12 @@
     if (!ordered.length) return null;
     const counts = ordered.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]) }));
     if (counts.some((item) => item.count === null)) return null;
-    const total = counts.reduce((sum, item) => sum + item.count, 0);
-    if (!total) return null;
+    const selectedTotal = counts.reduce((sum, item) => sum + item.count, 0);
+    const rowTotal = numeric(row[selectedBasis() + "_jobs"]);
+    const denominator = activeLodesCategory === "raceethnicity" ? rowTotal : selectedTotal;
+    if (!denominator) return null;
     const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
-    return { ...winner, share: winner.count / total, rank: ordered.indexOf(winner.code), ordered };
+    return { ...winner, share: winner.count / denominator, rank: ordered.indexOf(winner.code), ordered };
   }
   const isDominantMode = () => activeMode === "jobs" && !["total", "industry"].includes(activeLodesCategory);
   function activeMeta() {
