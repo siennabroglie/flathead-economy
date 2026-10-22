@@ -322,7 +322,7 @@
         lines.push(["Availability", "Not published for this year"]);
       }
     } else {
-      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      const fields = selectedAcsFields(activeAcsCategory);
       const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
       lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
       if (values.length > 1) lines.push(["Selected subcategory counts", ""]);
