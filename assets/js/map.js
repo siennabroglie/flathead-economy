@@ -246,9 +246,14 @@
         if (isDominantMode()) {
           const dominant = dominantCategory(feature);
           const totalJobs = numeric(row[selectedBasis() + "_jobs"]);
+          const selectedGroupTotal = selectedLodesCodes().reduce((sum, code) => {
+            const value = numeric(row[selectedBasis() + "_" + code]);
+            return sum + (value === null ? 0 : value);
+          }, 0);
           lines.push(["Total jobs in block group", formatValue(totalJobs)]);
+          lines.push(["Jobs across selected subcategories", formatValue(selectedGroupTotal)]);
           lines.push(["Dominant category", dominant ? (DETAIL_LABELS[dominant.code] || dominant.code) : "No data"]);
-          lines.push(["Dominant category share of selected groups", dominant ? formatValue(dominant.share, "percent") : "No data"]);
+          lines.push([activeLodesCategory === "raceethnicity" ? "Dominant category share of all jobs" : "Dominant category share of selected subcategories", dominant ? formatValue(dominant.share, "percent") : "No data"]);
           lines.push(["Jobs in dominant category", dominant ? formatValue(dominant.count) : "No data"]);
           lines.push(["Selected subcategory counts", ""]);
           selectedLodesCodes().forEach((code) => {
