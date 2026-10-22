@@ -239,20 +239,33 @@
     const p = feature.properties || {};
     const title = p.NAMELSAD || p.NAME || p.GEOID || "Census block group";
     const meta = activeMeta();
-    const lines = [
-      [meta.label, isDominantMode() ? ((dominantCategory(feature) || {}).code ? (DETAIL_LABELS[dominantCategory(feature).code] || dominantCategory(feature).code) : "No data") : formatValue(getValue(feature), meta.format)],
-      ["Geographic ID", p.GEOID || "Not available"]
-    ];
-    if (isDominantMode()) {
-      const dominant = dominantCategory(feature);
-      if (dominant) {
-        lines.push(["Share of selected categories", formatValue(dominant.share, "percent")]);
-        lines.push(["Jobs in dominant category", formatValue(dominant.count)]);
-      }
-    }
+    const lines = [];
     if (activeMode === "jobs") {
-      const row = selectedYearData.get(String(p.GEOID || ""));
+      const row = selectedYearData.get(String(p.GEOID || p.GEOIDFQ || ""));
       if (row) {
+        if (isDominantMode()) {
+          const dominant = dominantCategory(feature);
+          const totalJobs = numeric(row[selectedBasis() + "_jobs"]);
+          lines.push(["Total jobs in block group", formatValue(totalJobs)]);
+          lines.push(["Dominant category", dominant ? (DETAIL_LABELS[dominant.code] || dominant.code) : "No data"]);
+          lines.push(["Dominant category share of selected groups", dominant ? formatValue(dominant.share, "percent") : "No data"]);
+          lines.push(["Jobs in dominant category", dominant ? formatValue(dominant.count) : "No data"]);
+          lines.push(["Selected subcategory counts", ""]);
+          selectedLodesCodes().forEach((code) => {
+            const count = numeric(row[selectedBasis() + "_" + code]);
+            lines.push([DETAIL_LABELS[code] || optionLabel(code), formatValue(count)]);
+          });
+        } else if (activeLodesCategory === "industry") {
+          const total = getValue(feature);
+          lines.push(["Combined jobs in selected industries", formatValue(total)]);
+          lines.push(["Total jobs in block group", formatValue(numeric(row[selectedBasis() + "_jobs"]))]);
+          selectedLodesCodes().forEach((code) => {
+            lines.push([optionLabel(code), formatValue(numeric(row[selectedBasis() + "_" + code]))]);
+          });
+        } else {
+          lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
+          lines.push(["Total jobs in block group", formatValue(numeric(row[selectedBasis() + "_jobs"]))]);
+        }
         lines.push(["Jobs by workplace", formatValue(numeric(row.wac_jobs))]);
         lines.push(["Jobs by worker residence", formatValue(numeric(row.rac_jobs))]);
       }
@@ -261,11 +274,27 @@
         lines.push(["Availability", "Not published for this year"]);
       }
     } else {
+      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
+      lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
+      if (values.length > 1) lines.push(["Selected subcategory counts", ""]);
+      values.forEach(({ field, value }) => {
+        const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
+        lines.push([label, formatValue(value, (ACS_FIELDS[field] || {}).format || "number")]);
+      });
+      lines.push(["Geographic ID", p.GEOID || "Not available"]);
       lines.push(["Source", "ACS " + els.acsYear.value + " five-year estimates"]);
     }
     return '<div class="popup-card"><h3 class="popup-title">' + escapeHtml(title) + '</h3>' +
       lines.map(([label, value]) => '<div class="popup-row"><span>' + escapeHtml(label) +
         '</span><strong>' + escapeHtml(value) + '</strong></div>').join("") + '</div>';
+  }
+  function optionLabel(code) {
+    const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
+    const option = selector && Array.from(selector.options).find((item) => item.value === code);
+    if (option) return option.textContent;
+    const acsOption = Array.from(els.acsDetail.options).find((item) => item.value === code);
+    return acsOption ? acsOption.textContent : code;
   }
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
@@ -442,6 +471,8 @@
   els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
       if (input.checked) {
+        const selector = document.querySelector('[data-selector="' + input.dataset.category + '"]');
+        if (selector) Array.from(selector.options).forEach((option) => { option.selected = true; });
         activateLodesCategory(input.dataset.category);
       } else if (activeLodesCategory === input.dataset.category) {
         activateLodesCategory("total");
