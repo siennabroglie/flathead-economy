@@ -77,6 +77,10 @@ metadata/lodes_history_manifest.json
 
 Each annual summary records official source URLs, SHA-256 hashes, job totals, coverage, and the build year. Routine runs never overwrite a complete annual output. The workflow can be run manually from **Actions → Update LODES Historical Data → Run workflow**. Leave `rebuild_existing` false for routine updates; set it true only when intentionally rebuilding historical years.
 
+The same official RAC/WAC downloads also contain worker/job characteristic counts. The history updater aggregates these columns to block groups into a separate `flathead_lodes_characteristics_by_block_group.csv` file for each year, preserving the existing total-jobs CSV. The expanded output includes industry sector (20 categories), earnings (3), age (3), education (4), race (6), ethnicity (2), and sex (2), separately for residence-based RAC and workplace-based WAC. Field labels and availability rules are documented in `metadata/lodes_characteristics_dictionary.csv`.
+
+LODES race, ethnicity, education, and sex characteristics are available from 2009 onward; for 2002–2008, those fields are stored as null rather than treating the source's placeholder zeros as observed counts. Education characteristics cover workers age 30 and older. Industry, earnings, and age characteristics are available throughout the available annual series. The pipeline checks that characteristic columns exist, validates years and nonnegative counts, preserves missing geography matches as null, and checks expanded totals against already-published totals.
+
 The LODES history output is a standalone annual jobs table. It does not replace the existing `data/2023/` spatial products or silently merge a new LODES year with a different ACS vintage. Those steps remain separate so historical outputs and methodology stay explicit.
 
 Official source directories:
