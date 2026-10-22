@@ -1,0 +1,128 @@
+{
+  "year": 2009,
+  "county": "Flathead County, Montana",
+  "source": "U.S. Census Bureau LEHD LODES 8",
+  "source_urls": {
+    "rac": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2009.csv.gz",
+    "wac": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/wac/mt_wac_S000_JT00_2009.csv.gz"
+  },
+  "source_sha256": {
+    "rac": "b5768237e645e4ec246a449896c07ad0a2eeebdd49bcd68ce1d2e261d0c2afb3",
+    "wac": "41aef9c1176eecde82ad9cafce702c860c3b238aa565fedc2420530c78db2056"
+  },
+  "output": "data/lodes/2009/flathead_lodes_characteristics_by_block_group.csv",
+  "block_groups": 85,
+  "characteristic_fields": [
+    "C000",
+    "CA01",
+    "CA02",
+    "CA03",
+    "CE01",
+    "CE02",
+    "CE03",
+    "CNS01",
+    "CNS02",
+    "CNS03",
+    "CNS04",
+    "CNS05",
+    "CNS06",
+    "CNS07",
+    "CNS08",
+    "CNS09",
+    "CNS10",
+    "CNS11",
+    "CNS12",
+    "CNS13",
+    "CNS14",
+    "CNS15",
+    "CNS16",
+    "CNS17",
+    "CNS18",
+    "CNS19",
+    "CNS20",
+    "CR01",
+    "CR02",
+    "CR03",
+    "CR04",
+    "CR05",
+    "CR07",
+    "CT01",
+    "CT02",
+    "CD01",
+    "CD02",
+    "CD03",
+    "CD04",
+    "CS01",
+    "CS02"
+  ],
+  "dimensions": {
+    "industry": [
+      "CNS01",
+      "CNS02",
+      "CNS03",
+      "CNS04",
+      "CNS05",
+      "CNS06",
+      "CNS07",
+      "CNS08",
+      "CNS09",
+      "CNS10",
+      "CNS11",
+      "CNS12",
+      "CNS13",
+      "CNS14",
+      "CNS15",
+      "CNS16",
+      "CNS17",
+      "CNS18",
+      "CNS19",
+      "CNS20"
+    ],
+    "earnings": [
+      "CE01",
+      "CE02",
+      "CE03"
+    ],
+    "age": [
+      "CA01",
+      "CA02",
+      "CA03"
+    ],
+    "race": [
+      "CR01",
+      "CR02",
+      "CR03",
+      "CR04",
+      "CR05",
+      "CR07"
+    ],
+    "ethnicity": [
+      "CT01",
+      "CT02"
+    ],
+    "education": [
+      "CD01",
+      "CD02",
+      "CD03",
+      "CD04"
+    ],
+    "sex": [
+      "CS01",
+      "CS02"
+    ]
+  },
+  "availability": {
+    "industry_earnings_age": "2002 onward where official LODES year is available",
+    "race_ethnicity_education_sex": "2009 onward; earlier years are null/unavailable",
+    "education_universe": "workers age 30 and older"
+  },
+  "rac_block_groups_with_data": 85,
+  "wac_block_groups_with_data": 84,
+  "notes": [
+    "Each characteristic count is aggregated from Census blocks to 12-digit block-group GEOIDs.",
+    "RAC assigns jobs by worker residence; WAC assigns jobs by workplace.",
+    "Missing block-group matches remain null and are not converted to zero.",
+    "Race, ethnicity, education, and sex fields are null before 2009 because these characteristics were not published for those years.",
+    "The original total-jobs CSV is preserved during routine runs."
+  ]
+}

@@ -2,7 +2,7 @@
   "source": "U.S. Census Bureau LEHD LODES 8",
   "state": "Montana",
   "county": "Flathead County",
-  "selection": "S000/JT00, C000 total jobs",
+  "selection": "S000/JT00, total jobs plus worker/job characteristic counts",
   "available_years": [
     2002,
     2003,
@@ -27,6 +27,53 @@
     2022,
     2023
   ],
+  "characteristic_fields": [
+    "C000",
+    "CA01",
+    "CA02",
+    "CA03",
+    "CE01",
+    "CE02",
+    "CE03",
+    "CNS01",
+    "CNS02",
+    "CNS03",
+    "CNS04",
+    "CNS05",
+    "CNS06",
+    "CNS07",
+    "CNS08",
+    "CNS09",
+    "CNS10",
+    "CNS11",
+    "CNS12",
+    "CNS13",
+    "CNS14",
+    "CNS15",
+    "CNS16",
+    "CNS17",
+    "CNS18",
+    "CNS19",
+    "CNS20",
+    "CR01",
+    "CR02",
+    "CR03",
+    "CR04",
+    "CR05",
+    "CR07",
+    "CT01",
+    "CT02",
+    "CD01",
+    "CD02",
+    "CD03",
+    "CD04",
+    "CS01",
+    "CS02"
+  ],
+  "characteristic_availability": {
+    "industry_earnings_age": "2002 onward where official LODES year is available",
+    "race_ethnicity_education_sex": "2009 onward; earlier years are null/unavailable"
+  },
   "releases": {
     "2002": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2002.csv.gz",
@@ -34,7 +81,8 @@
       "rac_sha256": "7806eb49b0739c8229beafa748e158b9be918266250988cd4eff644d7b7f4e07",
       "wac_sha256": "2a2a01d009911d44939a450a08e4eab083b1bb2b070ff39108c61c943f9887a7",
       "output": "data/lodes/2002/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2002/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2003": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2003.csv.gz",
@@ -42,7 +90,8 @@
       "rac_sha256": "70735a90737c9321d04a1618a909e87d51ca0ebbda66cbde5b1b9716ab2137a8",
       "wac_sha256": "c18b4f551d3c2b8c4653fe3b3433438625711b569447221aa5b0b8137d02901f",
       "output": "data/lodes/2003/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2003/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2004": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2004.csv.gz",
@@ -50,7 +99,8 @@
       "rac_sha256": "2eb43e0613f998cb3d7e67704c497e563dacbe583606ea500e3d0df3d6e4c03e",
       "wac_sha256": "0c98dbfeccf3da3eff3dd1693993520f5956a22a29b9ac7fa31a939221d4ce1e",
       "output": "data/lodes/2004/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2004/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2005": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2005.csv.gz",
@@ -58,7 +108,8 @@
       "rac_sha256": "b0129a6aff9c822ca6cb3d9ac1744046c800de5e85b4282c162e3d4500a91a89",
       "wac_sha256": "737148a605bab37c5045562852588b4144c7c9d28aaf8803d211932dfc509e00",
       "output": "data/lodes/2005/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2005/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2006": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2006.csv.gz",
@@ -66,7 +117,8 @@
       "rac_sha256": "e8e28da664c45af4be8875b1adb63042bee9e49bbcad0cc35001fa120f4dcbdd",
       "wac_sha256": "18291c464fa57be5721144995bb425e7c9ee79c5954a02244376fa55317544ba",
       "output": "data/lodes/2006/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2006/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2007": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2007.csv.gz",
@@ -74,7 +126,8 @@
       "rac_sha256": "202a6d986918f634f6a342c112b4da7e2fe16cb336ffad5f61b3d8ee823d09bd",
       "wac_sha256": "eb5cc9ede14521dd9fb255a0dd75261c007e84dac39826a1acf25e0d852a4adb",
       "output": "data/lodes/2007/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2007/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2008": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2008.csv.gz",
@@ -82,7 +135,8 @@
       "rac_sha256": "7fdcd142db72f19470d597b7a0f22203ab4ce95c13a6d804ef6a88aa90e65c71",
       "wac_sha256": "bdcda1d8b853486ad36b3cd6ff61b8293dca4323b52a2ea4ad5ffb39cedf2718",
       "output": "data/lodes/2008/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2008/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2009": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2009.csv.gz",
@@ -90,7 +144,8 @@
       "rac_sha256": "b5768237e645e4ec246a449896c07ad0a2eeebdd49bcd68ce1d2e261d0c2afb3",
       "wac_sha256": "41aef9c1176eecde82ad9cafce702c860c3b238aa565fedc2420530c78db2056",
       "output": "data/lodes/2009/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2009/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2010": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2010.csv.gz",
@@ -98,7 +153,8 @@
       "rac_sha256": "cd2bf55aede06f0ffcada221b5355f839590cc46a84b2c1004d3ade8f3c42df4",
       "wac_sha256": "ba8a5e653b849f6aafd6bfb1b7f8faabc1fdc14952aee040a821b6f4bba184fd",
       "output": "data/lodes/2010/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2010/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2011": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2011.csv.gz",
@@ -106,7 +162,8 @@
       "rac_sha256": "ce460cbecf7ad228603abe88264acc80471dc54059d209dea98c7c5886ebe5a3",
       "wac_sha256": "c2d32e5fa31598fd401986a9f4d1890dcf6dca94b4096c844b62b55cefe11c98",
       "output": "data/lodes/2011/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2011/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2012": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2012.csv.gz",
@@ -114,7 +171,8 @@
       "rac_sha256": "c73b693dafcaaf364b68efd5e2e00c5bfc41eccd754911cb9929e37243f501e8",
       "wac_sha256": "4dd1e38c3658cb0e39e8923b30927456d2a76a085dafb8ea42c6b0d317f82c18",
       "output": "data/lodes/2012/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2012/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2013": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2013.csv.gz",
@@ -122,7 +180,8 @@
       "rac_sha256": "a9ee96460091c4b9058d5d800c1f7711be674403faf5170fb8f093e2a9b41851",
       "wac_sha256": "29da03824d19c8b513c1102f8514bad2a4ec88db2401c53bb582e7849a4acc7d",
       "output": "data/lodes/2013/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2013/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2014": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2014.csv.gz",
@@ -130,7 +189,8 @@
       "rac_sha256": "89fdcdbe1e6eac202b1c4c22c6d114f4d22024740c0c2cfb6ac488a140a64f34",
       "wac_sha256": "e96bd2a452a674c0032f7f0cbede7511c41245f6c63a95350568150f13186683",
       "output": "data/lodes/2014/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2014/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2015": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2015.csv.gz",
@@ -138,7 +198,8 @@
       "rac_sha256": "9042751b0436751350160cb96fb39fe70695bf10fc8a3b65c6f3970c51ec782c",
       "wac_sha256": "8326b84fb9d0fffe9204db39405344a0c0755c6578123c086a28e94c25e909e2",
       "output": "data/lodes/2015/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2015/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2016": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2016.csv.gz",
@@ -146,7 +207,8 @@
       "rac_sha256": "64e1f6ce35663b0951bb5b7d25888912f0a4b89b57eb05ea1416fb40d74a0d76",
       "wac_sha256": "7297dbfc8e75ed3a615ff56c0e7850a23b0881240c0dc87e18975d7e6b55061d",
       "output": "data/lodes/2016/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2016/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2017": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2017.csv.gz",
@@ -154,7 +216,8 @@
       "rac_sha256": "600b902e3b78519602b494be34ea8e34e07c4ca15efd1ce469d3521515e2985a",
       "wac_sha256": "1dad0e9d05bd00144d62c345b5d6228b53508c1bd304d63f477f3a117e5a8096",
       "output": "data/lodes/2017/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2017/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2018": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2018.csv.gz",
@@ -162,7 +225,8 @@
       "rac_sha256": "4a1afec45e26c849265b65e4232e981a8ffd3bb600451bec12e085b5a2a54f96",
       "wac_sha256": "6689df3e853398ff9abbf1c287ba24a04a6b179fce4e29f9e171a86a425621cf",
       "output": "data/lodes/2018/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2018/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2019": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2019.csv.gz",
@@ -170,7 +234,8 @@
       "rac_sha256": "17a76029ab1a6d56fe4b584bb14c49b4e27d84105515219d21ff1bb78918214d",
       "wac_sha256": "6c2ce5af9faca3a91537a6ed0ab505271aac79a912c934cee9ce341de2a5595c",
       "output": "data/lodes/2019/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2019/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2020": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2020.csv.gz",
@@ -178,7 +243,8 @@
       "rac_sha256": "746699271fd72c1d7291d3489426ded80b04e09b6f8800745f7adaf28935a1d4",
       "wac_sha256": "731206f102f6b553a82cc2495216c8d232702c271106a1a5e333310332116970",
       "output": "data/lodes/2020/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2020/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2021": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2021.csv.gz",
@@ -186,7 +252,8 @@
       "rac_sha256": "82e9668feaab97050c99a01aa305a3b346bad47e138235020f54897c8ddb2a05",
       "wac_sha256": "6acf5231e17f1f15836f2c810a7d1eb6b026ea7ae80e081acca2dbfb6bffd6b1",
       "output": "data/lodes/2021/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2021/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2022": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2022.csv.gz",
@@ -194,7 +261,8 @@
       "rac_sha256": "35c31c4a0295d86cac33301121c1eb65d7a0ace8317e703017fca199894a47fb",
       "wac_sha256": "51351c1816a55082250dc51a29f3ef43abdc6ba8e495cd2a3076e0b24403179f",
       "output": "data/lodes/2022/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2022/flathead_lodes_characteristics_by_block_group.csv"
     },
     "2023": {
       "rac_url": "https://lehd.ces.census.gov/data/lodes/LODES8/mt/rac/mt_rac_S000_JT00_2023.csv.gz",
@@ -202,7 +270,8 @@
       "rac_sha256": "03cae56ccbce39afe9d5ecfb75da01430277ecbab0e06dad526ca6581f854321",
       "wac_sha256": "46ca3d6bd602334614fa4dac57a835dd20334c0e087c43ac8d8b3074b7d370e9",
       "output": "data/lodes/2023/flathead_lodes_jobs_by_block_group.csv",
-      "block_groups": 85
+      "block_groups": 85,
+      "characteristics_output": "data/lodes/2023/flathead_lodes_characteristics_by_block_group.csv"
     }
   },
   "routine_overwrite_policy": "Never overwrite a complete annual output; explicit --rebuild-existing required."
