@@ -182,7 +182,7 @@ class LodesHistoryUpdater:
             if not geocodes.str.fullmatch(r"30029\d{10}").all():
                 raise RuntimeError(f"Unexpected Flathead Census block GEOID in {path.name}")
 
-            values = chunk[LODES_CHARACTERISTIC_FIELDS].apply(pd.to_numeric, errors="raise")
+            values = chunk[list(LODES_CHARACTERISTIC_FIELDS)].apply(pd.to_numeric, errors="raise")
             if (values < 0).any().any():
                 raise RuntimeError(f"Negative LODES characteristic counts found in {path.name}")
 
