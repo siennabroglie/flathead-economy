@@ -254,3 +254,24 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (max-width: 900px) {
   .data-group { min-width: 0; }
 }
+
+
+/* Map mode and primary measure controls */
+.map-mode-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 14px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+.map-mode-controls label {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+}
+.map-mode-controls .field-note { margin: 2px 0 0; }
+#primary-measure:disabled { opacity: .55; cursor: not-allowed; }

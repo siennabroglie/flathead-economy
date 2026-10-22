@@ -24,6 +24,19 @@
         <p class="section-kicker">EXPLORE THE DATA</p>
         <h2>Map settings</h2>
 
+        <div class="map-mode-controls">
+          <label for="map-mode">Map mode</label>
+          <select id="map-mode">
+            <option value="single" selected>Single-variable</option>
+            <option value="combined">Combined index</option>
+          </select>
+          <label for="primary-measure">Primary measure</label>
+          <select id="primary-measure" aria-describedby="primary-measure-note">
+            <option value="jobs:total">Employment · Total jobs</option>
+          </select>
+          <p id="primary-measure-note" class="field-note">Choose which selected measure controls the map colors.</p>
+        </div>
+
         <section class="data-group" aria-labelledby="employment-heading">
           <div class="group-heading">
             <h3 id="employment-heading">Employment Data</h3>
@@ -186,7 +199,7 @@
 
       <section class="about-section">
         <h3>How to use this map</h3>
-        <p>Choose a data category to map it. Worker-characteristic categories select all subcategories by default; use the dropdown to narrow the selection. Click a block group to see its total, shading percentage, and subcategory counts.</p>
+        <p>Select multiple categories if useful. In Single-variable mode, choose the Primary measure to control map shading. Combined index mode normalizes the selected measures to a 0–1 scale and averages them equally; it is exploratory, not a test of statistical significance. Click a block group to inspect its values.</p>
         <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
       </section>
     </aside>
