@@ -628,8 +628,14 @@
     selector.disabled = !document.querySelector('[data-category="' + category + '"]').checked;
     selector.addEventListener("change", () => {
       let selected = selectedAcsFields(category);
-      if (category === "population" && selected.length > 1 && selected.includes("B01001_001E")) {
-        selected = selected.filter((field) => field !== "B01001_001E");
+      const parentTotals = {
+        population: "B01001_001E",
+        households: "B11001_001E",
+        employment: "B23025_003E"
+      };
+      const parentTotal = parentTotals[category];
+      if (parentTotal && selected.length > 1 && selected.includes(parentTotal)) {
+        selected = selected.filter((field) => field !== parentTotal);
         setAcsFields(category, selected);
       }
       activeMode = "acs";
