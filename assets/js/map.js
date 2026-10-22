@@ -204,7 +204,7 @@
       return { label: "Combined jobs in selected industries", format: "number" };
     }
     if (isDominantMode()) {
-      return { label: "Dominant " + LODES_META[activeLodesCategory].label.replace(/^Jobs by worker /, "worker ") + " category", format: "number", dominant: true };
+      return { label: "Dominant worker-category share", format: "percent", dominant: true };
     }
     return LODES_META.total;
   }
@@ -235,6 +235,7 @@
       const p = feature.properties || {};
       return compositeValues.get(String(p.GEOID ?? p.GEOIDFQ ?? "")) ?? null;
     }
+    if (!els.primaryMeasure.value) return null;
     return getSingleValue(feature);
   }
   const quantileBreaks = (values) => {
@@ -258,10 +259,19 @@
   }
   function popupContent(feature) {
     const p = feature.properties || {};
-    const title = p.NAMELSAD || p.NAME || p.GEOID || "Census block group";
+    const namedGroup = String(p.NAMELSAD || p.NAME || "").match(/Block Group\\s+(\\d+)/i);
+    const title = namedGroup ? "Block Group " + namedGroup[1] :
+      (p.GEOID ? "Block Group " + String(p.GEOID).slice(-1) : "Census block group");
     const meta = activeMeta();
     const lines = [];
-    if (activeMode === "jobs") {
+    if (mapMode === "combined") {
+      lines.push(["Combined index score", formatValue(getValue(feature), "number")]);
+      selectedMeasureKeys().forEach((key) => {
+        const value = measureValueForKey(feature, key);
+        lines.push([measureLabel(key), formatValue(value, key.startsWith("acs:") && ["median-income", "aggregate-income", "per-capita"].includes(key.split(":")[1]) ? "currency" : "number")]);
+      });
+      lines.push(["Method", "Equal-weight mean of min–max normalized measures"]);
+    } else if (activeMode === "jobs") {
       const row = selectedYearData.get(String(p.GEOID || p.GEOIDFQ || ""));
       if (row) {
         if (isDominantMode()) {
