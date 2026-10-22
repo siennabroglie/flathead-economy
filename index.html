@@ -24,19 +24,6 @@
         <p class="section-kicker">EXPLORE THE DATA</p>
         <h2>Map settings</h2>
 
-        <div class="map-mode-controls">
-          <label for="map-mode">Map mode</label>
-          <select id="map-mode">
-            <option value="single" selected>Single-variable</option>
-            <option value="combined">Combined index</option>
-          </select>
-          <label for="primary-measure">Primary measure</label>
-          <select id="primary-measure" aria-describedby="primary-measure-note">
-            <option value="jobs:total">Employment · Total jobs</option>
-          </select>
-          <p id="primary-measure-note" class="field-note">Choose which selected measure controls the map colors.</p>
-        </div>
-
         <section class="data-group" aria-labelledby="employment-heading">
           <div class="group-heading">
             <h3 id="employment-heading">Employment Data</h3>
@@ -143,50 +130,71 @@
           </select>
           <p class="field-note">ACS five-year estimates are period estimates, not single-year counts.</p>
           <div class="measure-list" id="acs-measures">
-            <label class="measure-option"><input type="checkbox" data-category="population" checked> <span>Population &amp; Age</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="median-income"> <span>Median Household Income</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="aggregate-income"> <span>Aggregate Household Income</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="households"> <span>Household Composition</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="per-capita"> <span>Per-capita Income</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="poverty"> <span>Poverty Status</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="education"> <span>Education Level</span></label>
-            <label class="measure-option"><input type="checkbox" data-category="employment"> <span>Employment Status</span></label>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="population" checked> <span>Population &amp; Age</span></label>
+              <select data-acs-selector="population" multiple size="5" aria-label="Population and age subcategories">
+                <option value="B01001_001E" selected>Total population</option>
+                <option value="B01001_003E">Male under 5</option>
+                <option value="B01001_020E">Male 65–66</option>
+                <option value="B01001_027E">Female under 5</option>
+                <option value="B01001_044E">Female 65–66</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="median-income"> <span>Median Household Income</span></label>
+              <select data-acs-selector="median-income" multiple size="2" aria-label="Median household income measures">
+                <option value="B19013_001E" selected>Median household income</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="aggregate-income"> <span>Aggregate Household Income</span></label>
+              <select data-acs-selector="aggregate-income" multiple size="2" aria-label="Aggregate household income measures">
+                <option value="B19025_001E" selected>Aggregate household income</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="households"> <span>Household Composition</span></label>
+              <select data-acs-selector="households" multiple size="3" aria-label="Household composition subcategories">
+                <option value="B11001_001E">Total households</option>
+                <option value="B11001_002E" selected>Family households</option>
+                <option value="B11001_007E" selected>Nonfamily households</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="per-capita"> <span>Per-capita Income</span></label>
+              <select data-acs-selector="per-capita" multiple size="2" aria-label="Per-capita income measures">
+                <option value="B19301_001E" selected>Per-capita income</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="poverty"> <span>Poverty Status</span></label>
+              <select data-acs-selector="poverty" multiple size="2" aria-label="Poverty status subcategories">
+                <option value="B17001_002E" selected>Below poverty level</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="education"> <span>Education Level</span></label>
+              <select data-acs-selector="education" multiple size="6" aria-label="Education level subcategories">
+                <option value="B15003_017E">High school graduate</option>
+                <option value="B15003_018E">GED or alternative credential</option>
+                <option value="B15003_019E">Some college, less than one year</option>
+                <option value="B15003_020E">Some college, one or more years, no degree</option>
+                <option value="B15003_021E" selected>Bachelor's degree</option>
+                <option value="B15003_022E">Master's degree</option>
+                <option value="B15003_023E">Professional school degree</option>
+                <option value="B15003_024E">Doctorate degree</option>
+              </select>
+            </div>
+            <div class="measure-option with-select">
+              <label><input type="checkbox" data-category="employment"> <span>Employment Status</span></label>
+              <select data-acs-selector="employment" multiple size="3" aria-label="Employment status subcategories">
+                <option value="B23025_003E">Civilian labor force</option>
+                <option value="B23025_004E" selected>Employed</option>
+                <option value="B23025_005E">Unemployed</option>
+              </select>
+            </div>
           </div>
-          <label for="acs-detail">Population measure</label>
-          <select id="acs-detail" multiple size="5" aria-label="Population subcategories">
-            <optgroup label="Population & Age">
-              <option value="B01001_001E">Total population</option>
-              <option value="B01001_003E">Male under 5</option>
-              <option value="B01001_020E">Male 65–66</option>
-              <option value="B01001_027E">Female under 5</option>
-              <option value="B01001_044E">Female 65–66</option>
-            </optgroup>
-            <optgroup label="Income">
-              <option value="B19013_001E">Median household income</option>
-              <option value="B19025_001E">Aggregate household income</option>
-              <option value="B19301_001E">Per-capita income</option>
-            </optgroup>
-            <optgroup label="Household Composition">
-              <option value="B11001_001E">Total households</option>
-              <option value="B11001_002E">Family households</option>
-              <option value="B11001_007E">Nonfamily households</option>
-            </optgroup>
-            <optgroup label="Poverty Status">
-              <option value="B17001_002E">Below poverty level</option>
-            </optgroup>
-            <optgroup label="Education Level">
-              <option value="B15003_017E">High school graduate</option>
-              <option value="B15003_021E">Bachelor's degree</option>
-              <option value="B15003_022E">Master's degree</option>
-              <option value="B15003_023E">Professional school degree</option>
-              <option value="B15003_024E">Doctorate degree</option>
-            </optgroup>
-            <optgroup label="Employment Status">
-              <option value="B23025_003E">Civilian labor force</option>
-              <option value="B23025_004E">Employed</option>
-              <option value="B23025_005E">Unemployed</option>
-            </optgroup>
-          </select>
+          <select id="acs-detail" multiple hidden aria-hidden="true" tabindex="-1"></select>
         </section>
       </section>
 
@@ -212,7 +220,22 @@
         </div>
         <span id="map-period" class="period-chip">LODES · 2023</span>
       </div>
-      <div id="map" role="application" aria-label="Interactive choropleth map of Flathead County"></div>
+      <div class="map-stage">
+        <div class="map-mode-controls map-equation-window" aria-label="Map equation and display mode">
+          <p class="equation-window-title">MAP EQUATION</p>
+          <label for="map-mode">Map mode</label>
+          <select id="map-mode">
+            <option value="single" selected>Single-variable</option>
+            <option value="combined">Combined index</option>
+          </select>
+          <label for="primary-measure">Primary measure</label>
+          <select id="primary-measure" aria-describedby="primary-measure-note">
+            <option value="jobs:total">Employment · Total jobs</option>
+          </select>
+          <p id="primary-measure-note" class="field-note">Choose which selected measure controls map colors.</p>
+        </div>
+        <div id="map" role="application" aria-label="Interactive choropleth map of Flathead County"></div>
+      </div>
       <footer class="map-footer">
         <span>Click a shaded area for details</span>
         <span>Geography: Census block groups</span>
