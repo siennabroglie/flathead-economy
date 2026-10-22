@@ -373,15 +373,85 @@
   }
   function syncLodesSelectors() {
     document.querySelectorAll("[data-selector]").forEach((selector) => {
+      const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
+      selector.disabled = !input || !input.checked || input.disabled;
+    });
+  }
+  function activateLodesCategory(category) {
+    activeMode = "jobs";
+    activeLodesCategory = category;
+    els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === category;
+    });
+    syncLodesSelectors();
+    refreshMap();
+  }
+  function activateAcsCategory(category) {
+    activeMode = "acs";
+    activeAcsCategory = category;
+    const fieldsByCategory = {
+      population: ["B01001_001E"],
+      "median-income": ["B19013_001E"],
+      "aggregate-income": ["B19025_001E"],
+      households: ["B11001_001E", "B11001_002E", "B11001_007E"],
+      "per-capita": ["B19301_001E"],
+      poverty: ["B17001_002E"],
+      education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+      employment: ["B23025_003E", "B23025_004E", "B23025_005E"]
+    };
+    const fields = fieldsByCategory[category] || [ACS_CATEGORY_DEFAULTS[category]];
+    Array.from(els.acsDetail.options).forEach((option) => {
+      option.selected = fields.includes(option.value);
+    });
+    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === category;
+    });
+    refreshMap();
+  }
+  function categoryForAcsField(field) {
+    const groups = {
+      population: ["B01001_001E", "B01001_003E", "B01001_020E", "B01001_027E", "B01001_044E"],
+      "median-income": ["B19013_001E"],
+      "aggregate-income": ["B19025_001E"],
+      households: ["B11001_001E", "B11001_002E", "B11001_007E"],
+      "per-capita": ["B19301_001E"],
+      poverty: ["B17001_002E"],
+      education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+      employment: ["B23025_003E", "B23025_004E", "B23025_005E"]
+    };
+    return Object.keys(groups).find((key) => groups[key].includes(field)) || "population";
+  }
+  function syncAcsActiveCategory() {
+    const selected = Array.from(els.acsDetail.selectedOptions);
+    const selectedCategory = selected.length ? categoryForAcsField(selected[0].value) : "population";
+    activeAcsCategory = selectedCategory;
+    els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = input.dataset.category === selectedCategory;
+    });
+  }
+  function showError(error) {
+    console.error(error);
+    els.status.textContent = "Data could not be loaded: " + error.message;
+  }
+
+  els.lodesMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      if (input.checked) {
+        activateLodesCategory(input.dataset.category);
+      } else if (activeLodesCategory === input.dataset.category) {
+        activateLodesCategory("total");
+      }
+    });
+  });
+  document.querySelectorAll("[data-selector]").forEach((selector) => {
     selector.addEventListener("change", () => {
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
       if (input && !input.checked) input.checked = true;
       activateLodesCategory(selector.dataset.selector);
-      syncLodesSelectors();
     });
   });
   els.basis.forEach((radio) => radio.addEventListener("change", () => {
-    activateLodesCategory(activeLodesCategory);
+    refreshMap();
   }));
   els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
@@ -389,12 +459,7 @@
       if (input.checked) {
         activateAcsCategory(input.dataset.category);
       } else if (activeAcsCategory === input.dataset.category) {
-        const fallback = els.acsMeasures.querySelector('input[type="checkbox"]:checked');
-        if (fallback) activateAcsCategory(fallback.dataset.category);
-        else {
-          input.checked = true;
-          activateAcsCategory(input.dataset.category);
-        }
+        input.checked = true;
       }
     });
   });
