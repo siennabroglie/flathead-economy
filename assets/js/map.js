@@ -88,6 +88,7 @@
     acsYear: document.querySelector("#acs-year"),
     acsMeasures: document.querySelector("#acs-measures"),
     acsDetail: document.querySelector("#acs-detail"),
+    acsSelectors: Array.from(document.querySelectorAll("[data-acs-selector]")),
     legendTitle: document.querySelector("#legend-title"),
     legend: document.querySelector("#legend"),
     status: document.querySelector("#map-status"),
@@ -203,7 +204,7 @@
       return { label: "Combined index · equal-weight normalized score", format: "number" };
     }
     if (activeMode === "acs") {
-      const fields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+      const fields = selectedAcsFields(activeAcsCategory);
       if (fields.length > 1) return { label: "Combined selected ACS subcategories", format: "number" };
       const field = fields[0] || "B01001_001E";
       return ACS_FIELDS[field] || { label: "ACS measure", format: "number" };
@@ -340,7 +341,7 @@
     const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
     const option = selector && Array.from(selector.options).find((item) => item.value === code);
     if (option) return option.textContent;
-    const acsOption = Array.from(els.acsDetail.options).find((item) => item.value === code);
+    const acsOption = Array.from(document.querySelectorAll("[data-acs-selector] option")).find((item) => item.value === code);
     return acsOption ? acsOption.textContent : code;
   }
   function onEachFeature(feature, layer) {
@@ -409,10 +410,8 @@
       activeLodesCategory = parts[1];
     } else {
       activeAcsCategory = parts[1];
-      const fields = activeAcsCategory === "population" && acsSelections.population
-        ? acsSelections.population
-        : (acsSelections[activeAcsCategory] || ACS_CATEGORY_FIELDS[activeAcsCategory] || []);
-      Array.from(els.acsDetail.options).forEach((option) => { option.selected = fields.includes(option.value); });
+      const fields = acsSelections[activeAcsCategory] || selectedAcsFields(activeAcsCategory) || ACS_CATEGORY_FIELDS[activeAcsCategory] || [];
+      setAcsFields(activeAcsCategory, fields);
     }
   }
   function updatePrimaryOptions() {
@@ -432,18 +431,36 @@
     if (!keys.length) els.primaryMeasure.innerHTML = '<option value="">No measures selected</option>';
   }
   const acsSelections = {};
+  function acsSelector(category = activeAcsCategory) {
+    return document.querySelector('[data-acs-selector="' + category + '"]');
+  }
+  function selectedAcsFields(category = activeAcsCategory) {
+    const selector = acsSelector(category);
+    return selector ? Array.from(selector.selectedOptions).map((option) => option.value) : [];
+  }
+  function setAcsFields(category, fields) {
+    const selector = acsSelector(category);
+    if (selector) Array.from(selector.options).forEach((option) => { option.selected = fields.includes(option.value); });
+    acsSelections[category] = fields.slice();
+    Array.from(els.acsDetail.options).forEach((option) => { option.selected = fields.includes(option.value); });
+  }
+  function syncActiveAcsFields() {
+    const fields = selectedAcsFields(activeAcsCategory);
+    acsSelections[activeAcsCategory] = fields;
+    Array.from(els.acsDetail.options).forEach((option) => { option.selected = fields.includes(option.value); });
+  }
   function measureValueForKey(feature, key) {
     const oldMode = activeMode;
     const oldLodes = activeLodesCategory;
     const oldAcs = activeAcsCategory;
-    const oldAcsFields = Array.from(els.acsDetail.selectedOptions).map((option) => option.value);
+    const oldAcsFields = selectedAcsFields(oldAcs);
     const parts = key.split(":");
     setPrimaryContext(key);
     const value = getSingleValue(feature);
     activeMode = oldMode;
     activeLodesCategory = oldLodes;
     activeAcsCategory = oldAcs;
-    Array.from(els.acsDetail.options).forEach((option) => { option.selected = oldAcsFields.includes(option.value); });
+    setAcsFields(oldAcs, oldAcsFields);
     return value;
   }
   function calculateCompositeValues() {
@@ -544,10 +561,8 @@
   function activateAcsCategory(category) {
     activeMode = "acs";
     activeAcsCategory = category;
-    const fields = acsSelections[category] || ACS_CATEGORY_FIELDS[category] || [ACS_CATEGORY_DEFAULTS[category]];
-    Array.from(els.acsDetail.options).forEach((option) => {
-      option.selected = fields.includes(option.value);
-    });
+    const fields = acsSelections[category] || selectedAcsFields(category) || ACS_CATEGORY_FIELDS[category] || [ACS_CATEGORY_DEFAULTS[category]];
+    setAcsFields(category, fields);
     refreshMap();
   }
   function categoryForAcsField(field) {
@@ -563,11 +578,9 @@
     };
     return Object.keys(groups).find((key) => groups[key].includes(field)) || "population";
   }
-  function syncAcsActiveCategory() {
-    const selected = Array.from(els.acsDetail.selectedOptions);
-    const selectedCategory = selected.length ? categoryForAcsField(selected[0].value) : activeAcsCategory;
-    activeAcsCategory = selectedCategory;
-    acsSelections[selectedCategory] = selected.map((option) => option.value);
+  function syncAcsActiveCategory(category) {
+    activeAcsCategory = category;
+    syncActiveAcsFields();
   }
   function showError(error) {
     console.error(error);
@@ -601,31 +614,33 @@
   els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
-      if (input.checked) activateAcsCategory(input.dataset.category);
+      const category = input.dataset.category;
+      const selector = acsSelector(category);
+      if (selector) selector.disabled = !input.checked;
+      if (input.checked) activateAcsCategory(category);
       updatePrimaryOptions();
       setPrimaryContext(els.primaryMeasure.value);
       refreshMap();
     });
   });
-  els.acsDetail.addEventListener("change", () => {
-    let selected = Array.from(els.acsDetail.selectedOptions);
-    if (selected.length > 1) {
-      const category = categoryForAcsField(selected[0].value);
-      selected.forEach((option) => {
-        if (categoryForAcsField(option.value) !== category) option.selected = false;
-      });
-      selected = Array.from(els.acsDetail.selectedOptions);
-      if (category === "population" && selected.length > 1) {
-        const total = selected.find((option) => option.value === "B01001_001E");
-        if (total) total.selected = false;
+  els.acsSelectors.forEach((selector) => {
+    const category = selector.dataset.acsSelector;
+    selector.disabled = !document.querySelector('[data-category="' + category + '"]').checked;
+    selector.addEventListener("change", () => {
+      let selected = selectedAcsFields(category);
+      if (category === "population" && selected.length > 1 && selected.includes("B01001_001E")) {
+        selected = selected.filter((field) => field !== "B01001_001E");
+        setAcsFields(category, selected);
       }
-    }
-    syncAcsActiveCategory();
-    const categoryInput = document.querySelector('[data-category="' + activeAcsCategory + '"]');
-    if (categoryInput && !categoryInput.checked) categoryInput.checked = true;
-    updatePrimaryOptions();
-    setPrimaryContext(els.primaryMeasure.value);
-    refreshMap();
+      activeMode = "acs";
+      activeAcsCategory = category;
+      syncAcsActiveCategory(category);
+      const categoryInput = document.querySelector('[data-category="' + category + '"]');
+      if (categoryInput && !categoryInput.checked) categoryInput.checked = true;
+      updatePrimaryOptions();
+      setPrimaryContext(els.primaryMeasure.value);
+      refreshMap();
+    });
   });
   els.acsYear.addEventListener("change", () => {
     refreshMap();
@@ -640,6 +655,11 @@
     refreshMap();
   });
 
+  els.acsSelectors.forEach((selector) => {
+    const category = selector.dataset.acsSelector;
+    acsSelections[category] = Array.from(selector.selectedOptions).map((option) => option.value);
+    selector.disabled = !document.querySelector('[data-category="' + category + '"]').checked;
+  });
   updatePrimaryOptions();
   setPrimaryContext(els.primaryMeasure.value);
   syncLodesSelectors();
