@@ -1,0 +1,42 @@
+field_suffix,dimension,label,available_from,universe,notes
+C000,total_jobs,Total jobs,2002,All jobs,Total count used for existing RAC/WAC totals
+CA01,worker_age,Age 29 or younger,2002,Jobs by worker age,From 2012 onward the youngest group is ages 14-29
+CA02,worker_age,Age 30-54,2002,Jobs by worker age,
+CA03,worker_age,Age 55 or older,2002,Jobs by worker age,From 2012 onward the oldest group is ages 55-99
+CE01,worker_earnings,Monthly earnings $1250 or less,2002,Jobs by worker earnings,
+CE02,worker_earnings,Monthly earnings $1251-$3333,2002,Jobs by worker earnings,
+CE03,worker_earnings,Monthly earnings greater than $3333,2002,Jobs by worker earnings,
+CNS01,industry,Agriculture forestry fishing and hunting,2002,Jobs by NAICS industry sector,NAICS 11
+CNS02,industry,Mining quarrying and oil and gas extraction,2002,Jobs by NAICS industry sector,NAICS 21
+CNS03,industry,Utilities,2002,Jobs by NAICS industry sector,NAICS 22
+CNS04,industry,Construction,2002,Jobs by NAICS industry sector,NAICS 23
+CNS05,industry,Manufacturing,2002,Jobs by NAICS industry sector,NAICS 31-33
+CNS06,industry,Wholesale trade,2002,Jobs by NAICS industry sector,NAICS 42
+CNS07,industry,Retail trade,2002,Jobs by NAICS industry sector,NAICS 44-45
+CNS08,industry,Transportation and warehousing,2002,Jobs by NAICS industry sector,NAICS 48-49
+CNS09,industry,Information,2002,Jobs by NAICS industry sector,NAICS 51
+CNS10,industry,Finance and insurance,2002,Jobs by NAICS industry sector,NAICS 52
+CNS11,industry,Real estate and rental and leasing,2002,Jobs by NAICS industry sector,NAICS 53
+CNS12,industry,Professional scientific and technical services,2002,Jobs by NAICS industry sector,NAICS 54
+CNS13,industry,Management of companies and enterprises,2002,Jobs by NAICS industry sector,NAICS 55
+CNS14,industry,Administrative and support and waste management and remediation services,2002,Jobs by NAICS industry sector,NAICS 56
+CNS15,industry,Educational services,2002,Jobs by NAICS industry sector,NAICS 61
+CNS16,industry,Health care and social assistance,2002,Jobs by NAICS industry sector,NAICS 62
+CNS17,industry,Arts entertainment and recreation,2002,Jobs by NAICS industry sector,NAICS 71
+CNS18,industry,Accommodation and food services,2002,Jobs by NAICS industry sector,NAICS 72
+CNS19,industry,Other services except public administration,2002,Jobs by NAICS industry sector,NAICS 81
+CNS20,industry,Public administration,2002,Jobs by NAICS industry sector,NAICS 92
+CR01,worker_race,White alone,2009,Jobs by worker race,Not an ethnicity category
+CR02,worker_race,Black or African American alone,2009,Jobs by worker race,Not an ethnicity category
+CR03,worker_race,American Indian or Alaska Native alone,2009,Jobs by worker race,Not an ethnicity category
+CR04,worker_race,Asian alone,2009,Jobs by worker race,Not an ethnicity category
+CR05,worker_race,Native Hawaiian or Other Pacific Islander alone,2009,Jobs by worker race,Not an ethnicity category
+CR07,worker_race,Two or more race groups,2009,Jobs by worker race,Not an ethnicity category
+CT01,worker_ethnicity,Not Hispanic or Latino,2009,Jobs by worker ethnicity,
+CT02,worker_ethnicity,Hispanic or Latino,2009,Jobs by worker ethnicity,
+CD01,worker_education,Less than high school,2009,Jobs for workers age 30 and older,Education characteristics cover workers age 30+
+CD02,worker_education,High school or equivalent no college,2009,Jobs for workers age 30 and older,Education characteristics cover workers age 30+
+CD03,worker_education,Some college or associate degree,2009,Jobs for workers age 30 and older,Education characteristics cover workers age 30+
+CD04,worker_education,Bachelor's degree or advanced degree,2009,Jobs for workers age 30 and older,Education characteristics cover workers age 30+
+CS01,worker_sex,Male,2009,Jobs by worker sex,
+CS02,worker_sex,Female,2009,Jobs by worker sex,
