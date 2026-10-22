@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -27,4 +29,4 @@ jobs:
         run: node --check assets/js/map.js
 
       - name: Check whitespace errors
-        run: git diff --check origin/main...HEAD
+        run: git diff --check "origin/${{ github.base_ref }}...HEAD"
