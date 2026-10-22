@@ -173,14 +173,22 @@
     const row = selectedYearData.get(String((feature.properties || {}).GEOID ?? (feature.properties || {}).GEOIDFQ ?? ""));
     if (!row) return null;
     const selected = selectedLodesCodes(category);
-    const ordered = (DOMINANT_ORDER[category] || []).filter((code) => selected.includes(code));
+    let ordered = (DOMINANT_ORDER[category] || []).filter((code) => selected.includes(code));
     if (!ordered.length) return null;
-    // Race and ethnicity are distinct dimensions and must not be treated as one distribution.
-    if (category === "raceethnicity") return null;
+    // Race and ethnicity are distinct dimensions; map one dimension at a time.
+    if (category === "raceethnicity") {
+      const raceCodes = ordered.filter((code) => code.startsWith("CR"));
+      const ethnicityCodes = ordered.filter((code) => code.startsWith("CT"));
+      if (raceCodes.length && ethnicityCodes.length) return null;
+      ordered = raceCodes.length ? raceCodes : ethnicityCodes;
+    }
     const counts = ordered.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]) }));
     if (counts.some((item) => item.count === null)) return null;
     const selector = document.querySelector('[data-selector="' + category + '"]');
-    const allCodes = selector ? Array.from(selector.options).map((option) => option.value) : ordered;
+    let allCodes = selector ? Array.from(selector.options).map((option) => option.value) : ordered;
+    if (category === "raceethnicity") {
+      allCodes = allCodes.filter((code) => ordered[0].startsWith("CR") ? code.startsWith("CR") : code.startsWith("CT"));
+    }
     const denominatorValues = allCodes.map((code) => numeric(row[selectedBasis() + "_" + code]));
     if (denominatorValues.some((value) => value === null)) return null;
     const denominator = denominatorValues.reduce((sum, value) => sum + value, 0);
@@ -259,7 +267,7 @@
   }
   function popupContent(feature) {
     const p = feature.properties || {};
-    const namedGroup = String(p.NAMELSAD || p.NAME || "").match(/Block Group\\s+(\\d+)/i);
+    const namedGroup = String(p.NAMELSAD || p.NAME || "").match(/Block Group\s+(\d+)/i);
     const title = namedGroup ? "Block Group " + namedGroup[1] :
       (p.GEOID ? "Block Group " + String(p.GEOID).slice(-1) : "Census block group");
     const meta = activeMeta();
@@ -343,7 +351,7 @@
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legend.replaceChildren();
-    if (isDominantMode()) {
+    if (isDominantMode() && mapMode === "legacy") {
       const selected = selectedLodesCodes();
       const ordered = (DOMINANT_ORDER[activeLodesCategory] || []).filter((code) => selected.includes(code));
       if (!ordered.length) {
@@ -505,10 +513,18 @@
     currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
-    els.period.textContent = activeMode === "jobs" ? "LODES · " + els.lodesYear.value :
-      "ACS · " + els.acsYear.value + " five-year";
-    els.status.textContent = compositeError || (baseFeatures.length + " block groups · " +
-      baseFeatures.filter((feature) => getValue(feature) !== null).length + " with data");
+    els.period.textContent = mapMode === "combined"
+      ? "Combined index · LODES " + els.lodesYear.value + " + ACS " + els.acsYear.value
+      : (activeMode === "jobs" ? "LODES · " + els.lodesYear.value : "ACS · " + els.acsYear.value + " five-year");
+    const selectedRaceCodes = selectedLodesCodes("raceethnicity");
+    const raceEthnicityConflict = mapMode === "single" && activeMode === "jobs" &&
+      activeLodesCategory === "raceethnicity" &&
+      selectedRaceCodes.some((code) => code.startsWith("CR")) &&
+      selectedRaceCodes.some((code) => code.startsWith("CT"));
+    els.status.textContent = compositeError || (raceEthnicityConflict
+      ? "Choose race OR ethnicity subcategories—not both—to map one distribution."
+      : (baseFeatures.length + " block groups · " +
+        baseFeatures.filter((feature) => getValue(feature) !== null).length + " with data"));
     geojsonLayer.eachLayer((layer) => {
       if (layer.isPopupOpen()) layer.setPopupContent(popupContent(layer.feature));
     });
