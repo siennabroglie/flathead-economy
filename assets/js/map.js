@@ -581,7 +581,7 @@
           : selected === 0
             ? "None selected"
             : selected + " selected";
-        const disabled = !parent.checked || parent.disabled;
+        const disabled = parent.disabled;
         allButton.disabled = disabled;
         customButton.disabled = disabled;
       };
