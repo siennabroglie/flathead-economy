@@ -545,6 +545,72 @@
     setPrimaryContext(els.primaryMeasure.value);
     refreshMap();
   }
+  function setupBulkSelectionControls() {
+    const selectors = [
+      ...document.querySelectorAll("[data-selector]"),
+      ...document.querySelectorAll("[data-acs-selector]")
+    ];
+    selectors.forEach((selector) => {
+      const isAcs = selector.hasAttribute("data-acs-selector");
+      const category = isAcs ? selector.dataset.acsSelector : selector.dataset.selector;
+      const parent = document.querySelector('[data-category="' + category + '"]');
+      if (!parent) return;
+      const toolbar = document.createElement("div");
+      toolbar.className = "subcategory-toolbar";
+      const status = document.createElement("span");
+      status.className = "subcategory-selection-status";
+      status.setAttribute("aria-live", "polite");
+      const allButton = document.createElement("button");
+      allButton.type = "button";
+      allButton.className = "subcategory-action";
+      allButton.textContent = "All";
+      allButton.setAttribute("aria-label", "Select all " + category + " subcategories");
+      const customButton = document.createElement("button");
+      customButton.type = "button";
+      customButton.className = "subcategory-action";
+      customButton.textContent = "Choose";
+      customButton.setAttribute("aria-label", "Clear selections and choose individual " + category + " subcategories");
+      toolbar.append(status, allButton, customButton);
+      selector.parentNode.insertBefore(toolbar, selector);
+      const items = () => Array.from(selector.querySelectorAll('input[type="checkbox"]'));
+      const refreshStatus = () => {
+        const checkboxes = items();
+        const selected = checkboxes.filter((item) => item.checked).length;
+        status.textContent = selected === checkboxes.length
+          ? "All selected"
+          : selected === 0
+            ? "None selected"
+            : selected + " selected";
+        const disabled = !parent.checked || parent.disabled;
+        allButton.disabled = disabled;
+        customButton.disabled = disabled;
+      };
+      const applySelection = (selectAll) => {
+        parent.checked = true;
+        items().forEach((item) => { item.checked = selectAll; });
+        if (isAcs) {
+          activeMode = "acs";
+          activeAcsCategory = category;
+          acsSelections[category] = items().filter((item) => item.checked).map((item) => item.value);
+          items().forEach((item) => { item.disabled = false; });
+          setAcsFields(category, acsSelections[category]);
+        } else {
+          activeMode = "jobs";
+          activeLodesCategory = category;
+          syncLodesSelectors();
+        }
+        updatePrimaryOptions();
+        setPrimaryContext(els.primaryMeasure.value);
+        refreshMap();
+        refreshStatus();
+      };
+      allButton.addEventListener("click", () => applySelection(true));
+      customButton.addEventListener("click", () => applySelection(false));
+      selector.addEventListener("change", refreshStatus);
+      parent.addEventListener("change", refreshStatus);
+      refreshStatus();
+    });
+  }
   function syncLodesSelectors() {
     document.querySelectorAll("[data-selector]").forEach((selector) => {
       const input = document.querySelector('[data-category="' + selector.dataset.selector + '"]');
@@ -669,6 +735,7 @@
   updatePrimaryOptions();
   setPrimaryContext(els.primaryMeasure.value);
   syncLodesSelectors();
+  setupBulkSelectionControls();
 
   fetch(GEOJSON_URL)
     .then((response) => {
