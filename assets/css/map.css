@@ -308,8 +308,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 /* Clickable subcategory checkboxes: no Ctrl/Command-click required for multi-selection. */
-.subcategory-list { display:grid; gap:2px; max-height:190px; overflow:auto; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
-.subcategory-choice { display:flex; align-items:flex-start; gap:5px; margin:0 5px; padding:1px; font-size:11px; line-height:1; font-weight:400; cursor:pointer; }
+.subcategory-list { display:grid; gap:0; max-height:190px; overflow:auto; margin-top: 3px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+.subcategory-choice { display:flex; align-items:flex-start; gap:1px; margin:0 5px; padding:1px 3px; font-size:11px; line-height:1; font-weight:400; cursor:pointer; }
 .subcategory-choice input { flex:0 0 auto; margin:2px 0 0; }
 .subcategory-choice:has(input:disabled) { opacity:.48; cursor:not-allowed; }
 .subcategory-group-title { margin:6px 0 2px; padding-top:5px; border-top:1px solid var(--border); color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
