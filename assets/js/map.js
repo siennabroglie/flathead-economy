@@ -340,9 +340,9 @@
   function optionLabel(code) {
     const selector = document.querySelector('[data-selector="' + activeLodesCategory + '"]');
     const option = selector && selector.querySelector('input[type="checkbox"][value="' + code + '"]');
-    if (option) return option.textContent;
+    if (option) return option.closest("label")?.querySelector("span")?.textContent.trim() || code;
     const acsOption = Array.from(document.querySelectorAll("[data-acs-selector] input[type=checkbox]")).find((item) => item.value === code);
-    return acsOption ? acsOption.textContent : code;
+    return acsOption ? (acsOption.closest("label")?.querySelector("span")?.textContent.trim() || code) : code;
   }
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
