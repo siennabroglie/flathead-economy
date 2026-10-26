@@ -230,10 +230,10 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Data-source groups and measure selectors */
 .data-group { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border); }
-.group-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.group-heading { display: flex; align-items: center; justify-content: space-between; gap: 0 10px; }
 .group-heading h3 { margin: 0; font-size: 14px; font-weight: 750; letter-spacing: -.015em; }
 .source-tag { padding: 3px 7px; border-radius: 5px; color: var(--accent-strong); background: var(--accent-soft); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
-.data-group > label { display: block; margin: 14px 0 6px; color: var(--text); font-size: 12px; font-weight: 650; }
+.data-group > label { display: block; margin: 1px 0 6px; color: var(--text); font-size: 12px; font-weight: 650; }
 .basis-toggle { display: flex; flex-wrap: wrap; gap: 12px; margin: 15px 0 12px; padding: 0; border: 0; }
 .basis-toggle legend { width: 100%; margin-bottom: 6px; color: var(--text); font-size: 12px; font-weight: 650; }
 .basis-toggle label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; }
@@ -308,7 +308,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 /* Clickable subcategory checkboxes: no Ctrl/Command-click required for multi-selection. */
-.subcategory-list { display:grid; gap:0px; max-height:190px; overflow:auto; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+.subcategory-list { display:grid; gap:0px; max-height:100px; overflow:auto; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
 .subcategory-choice { display:flex; align-items:flex-start; gap:0px; margin:2px 0; padding:0 1px; font-size:11px; line-height:1; font-weight:400; cursor:pointer; }
 .subcategory-choice input { flex:0 0 auto; margin:0; }
 .subcategory-choice:has(input:disabled) { opacity:.48; cursor:not-allowed; }
