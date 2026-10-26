@@ -314,3 +314,30 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .subcategory-choice:has(input:disabled) { opacity:.48; cursor:not-allowed; }
 .subcategory-group-title { margin:6px 0 2px; padding-top:5px; border-top:1px solid var(--border); color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
 .subcategory-group-title:first-child { margin-top:0; border-top:0; padding-top:0; }
+
+
+/* Compact bulk controls for quickly switching between all and custom subcategory selections. */
+.subcategory-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 0 0;
+}
+.subcategory-selection-status {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.subcategory-action {
+  padding: 3px 7px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.subcategory-action:hover:not(:disabled) { background: var(--border); }
+.subcategory-action:disabled { opacity: .45; cursor: not-allowed; }
