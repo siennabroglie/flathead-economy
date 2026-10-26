@@ -343,34 +343,45 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .subcategory-action:disabled { opacity: .45; cursor: not-allowed; }
 
 
-/* Refined subcategory selector spacing and compact scroll window. */
+/* Stable, compact subcategory selectors. */
 .subcategory-list {
-  gap: 0 !important;
-  max-height: 125px !important;
-  margin-top: 4px !important;
-  padding: 4px 8px !important;
+  display: block;
+  box-sizing: border-box;
+  height: 125px;
+  max-height: 125px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
 }
 
 .control-section label.subcategory-choice,
 #acs-control label.subcategory-choice,
-.subcategory-choice {
-  display: flex !important;
+label.subcategory-choice {
+  display: flex;
   align-items: flex-start;
-  gap: 14px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-size: 11px;
-  line-height: 1.1;
+  box-sizing: border-box;
+  gap: 14px;
+  margin: 0;
+  padding: 1px 0;
+  font-size: 11px !important;
+  line-height: 1.2;
   font-weight: 400;
   cursor: pointer;
 }
 
 .subcategory-choice input {
   flex: 0 0 auto;
-  margin: 1px 0 0 !important;
+  margin: 1px 0 0;
+}
+
+.subcategory-choice > span {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .subcategory-group-title {
-  margin: 4px 0 1px !important;
-  padding-top: 3px !important;
+  margin: 4px 0 1px;
+  padding-top: 3px;
 }
