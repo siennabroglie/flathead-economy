@@ -341,3 +341,36 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 .subcategory-action:hover:not(:disabled) { background: var(--border); }
 .subcategory-action:disabled { opacity: .45; cursor: not-allowed; }
+
+
+/* Refined subcategory selector spacing and compact scroll window. */
+.subcategory-list {
+  gap: 0 !important;
+  max-height: 125px !important;
+  margin-top: 4px !important;
+  padding: 4px 8px !important;
+}
+
+.control-section label.subcategory-choice,
+#acs-control label.subcategory-choice,
+.subcategory-choice {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 11px;
+  line-height: 1.1;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.subcategory-choice input {
+  flex: 0 0 auto;
+  margin: 1px 0 0 !important;
+}
+
+.subcategory-group-title {
+  margin: 4px 0 1px !important;
+  padding-top: 3px !important;
+}
