@@ -308,11 +308,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 /* Clickable subcategory checkboxes: no Ctrl/Command-click required for multi-selection. */
-.subcategory-list { display:grid; gap:3px; max-height:190px; overflow:auto; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
-.subcategory-choice { display:flex; align-items:flex-start; gap:7px; margin:0; padding:0 1px; font-size:11px; line-height:.8; font-weight:400; cursor:pointer; }
-.subcategory-choice input { flex:0 0 auto; margin:2px 8px 0; }
+.subcategory-list { display:grid; gap:0px; max-height:190px; overflow:auto; padding:0 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+.subcategory-choice { display:flex; align-items:flex-start; gap:0px; margin:0; padding:0 1px; font-size:11px; line-height:1; font-weight:400; cursor:pointer; }
+.subcategory-choice input { flex:0 0 auto; margin:0 8px; }
 .subcategory-choice:has(input:disabled) { opacity:.48; cursor:not-allowed; }
-.subcategory-group-title { margin:0px 0 2px; padding-top:0px; border-top:1px solid var(--border); color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+.subcategory-group-title { margin:0 0 0; padding-top:0; border-top:1px solid var(--border); color:var(--muted); font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
 .subcategory-group-title:first-child { margin-top:0; border-top:0; padding-top:0; }
 
 
