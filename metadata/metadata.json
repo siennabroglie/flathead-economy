@@ -1,16 +1,11 @@
 {
-  "build_timestamp": "2026-10-21T18:08:59.880682+00:00",
+  "build_timestamp": "2026-11-01T17:56:24.458822+00:00",
   "config": "config/config.yaml",
   "files": [
     {
       "path": "raw/README.md",
       "sha256": "2532b0f1ec4c3604b50b7d3f76b1f331616e16051b6e3c8aaf3656b968af3344",
       "bytes": 231
-    },
-    {
-      "path": "raw/flathead_gis/parcel_service.json",
-      "sha256": "54fd1f4c334423f3c6be41c3b0348214559d7e607352dfb756eb8e94c2f51b98",
-      "bytes": 12017
     },
     {
       "path": "raw/census/tl_2024_30_bg.zip",
@@ -21,6 +16,11 @@
       "path": "raw/schools/MontanaSchools.zip",
       "sha256": "efd2c1c11fb3e772109c262f6080583521334846b84b9779c37a08c015aa44df",
       "bytes": 56928
+    },
+    {
+      "path": "raw/flathead_gis/parcel_service.json",
+      "sha256": "54fd1f4c334423f3c6be41c3b0348214559d7e607352dfb756eb8e94c2f51b98",
+      "bytes": 12017
     },
     {
       "path": "raw/lodes/rac_JT00_c8dd9f81ae44520e0b84d3ce3398e8e5.csv",
