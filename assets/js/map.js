@@ -585,8 +585,8 @@
           if (b.value === null) return -1;
           return b.value - a.value;
         });
-        orderedFields.forEach(({ field, index, countyResult, blockValue }) => {
-          const color = categoryColor(index);
+        orderedFields.forEach(({ field, index, countyResult, blockValue }, rank) => {
+          const color = categoryColor(rank);
           const label = category === "total" ? "Total jobs" :
             (DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field));
           if (!selectedFeature) appendValueLine(card, label, countyResult.value, "number", color);
@@ -625,8 +625,8 @@
           if (b.value === null) return -1;
           return b.value - a.value;
         });
-        orderedFields.forEach(({ field, index, countyValue, blockValue, label }) => {
-          const color = categoryColor(index);
+        orderedFields.forEach(({ field, index, countyValue, blockValue, label }, rank) => {
+          const color = categoryColor(rank);
           const format = (ACS_FIELDS[field] || {}).format;
           if (!selectedFeature) appendValueLine(card, label, countyValue, format, color);
           else if (compareMode) appendComparisonLine(card, label, countyValue, blockValue, format, color);
