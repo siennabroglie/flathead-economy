@@ -241,7 +241,15 @@
         <span>Geography: Census block groups</span>
       </footer>
     </section>
-    <!-- Future text-and-graphs analysis panel will be placed in grid column 2, row 2. -->
+    <section id="data-panel" class="data-panel" aria-label="Selected data summary">
+      <div class="data-panel-heading">
+        <div><p class="section-kicker">DATA SUMMARY</p><h2>County overview</h2></div>
+        <p id="data-panel-selection" class="data-panel-selection">Select a block group to compare local values with the county.</p>
+      </div>
+      <div id="data-panel-cards" class="data-panel-cards" aria-live="polite">
+        <p class="data-panel-empty">Select one or more measures in the settings panel to see county totals and breakdowns here.</p>
+      </div>
+    </section>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
