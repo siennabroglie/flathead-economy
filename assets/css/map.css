@@ -512,3 +512,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   text-align: center;
   white-space: nowrap;
 }
+
+
+/* Prevent the map panel from stretching into the settings panel's unused height. */
+@media (min-width: 901px) {
+  .map-panel { align-self: start; }
+}
