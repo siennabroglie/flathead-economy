@@ -144,6 +144,7 @@
   let compositeError = "";
   let currentBreaks = [];
   let selectedFeature = null;
+  let dataPanelView = "block";
   let countyAcsData = null;
 
   LODES_YEARS.forEach((year) => {
@@ -407,42 +408,63 @@
     line.append(swatch, name, amount);
     container.appendChild(line);
   }
+  function appendComparisonHeader(card) {
+    const header = document.createElement("div");
+    header.className = "data-card-comparison-header";
+    const spacer = document.createElement("span");
+    const label = document.createElement("span");
+    label.textContent = "Measure";
+    const county = document.createElement("strong");
+    county.textContent = "County";
+    const blockGroup = document.createElement("strong");
+    blockGroup.textContent = "Block group";
+    header.append(spacer, label, county, blockGroup);
+    card.appendChild(header);
+  }
+  function appendComparisonLine(container, label, countyValue, blockValue, format, color) {
+    const line = document.createElement("div");
+    line.className = "data-card-comparison-line";
+    const swatch = document.createElement("span");
+    swatch.className = "data-card-value-swatch";
+    swatch.style.backgroundColor = color || "transparent";
+    const name = document.createElement("span");
+    name.className = "data-card-value-name";
+    name.textContent = label;
+    const county = document.createElement("strong");
+    county.textContent = formatValue(countyValue, format || "number");
+    const blockGroup = document.createElement("strong");
+    blockGroup.textContent = formatValue(blockValue, format || "number");
+    line.append(swatch, name, county, blockGroup);
+    container.appendChild(line);
+  }
   function addChart(card, entries, chartKey) {
-    const valid = entries.filter((entry) => (entry.countyValue ?? entry.value) !== null && (entry.countyValue ?? entry.value) >= 0);
-    if (valid.length < 2 || valid.every((entry) => (entry.countyValue ?? entry.value) === 0)) return;
+    const valid = entries.filter((entry) => (entry.value ?? entry.countyValue) !== null && (entry.value ?? entry.countyValue) >= 0);
+    if (valid.length < 2 || valid.every((entry) => (entry.value ?? entry.countyValue) === 0)) return;
     const chart = document.createElement("div"); chart.className = "data-card-chart";
     const controls = document.createElement("div"); controls.className = "data-chart-controls";
     const barsButton = document.createElement("button"), pieButton = document.createElement("button");
     barsButton.type = pieButton.type = "button"; barsButton.textContent = "Bar"; pieButton.textContent = "Pie";
     barsButton.setAttribute("aria-pressed","true"); pieButton.setAttribute("aria-pressed","false");
     const visual = document.createElement("div"); visual.className = "data-bars";
-    const hasComparison = selectedFeature && valid.some((entry) => entry.selectedValue !== undefined);
     const render = (mode) => {
       barsButton.setAttribute("aria-pressed",String(mode === "bar")); pieButton.setAttribute("aria-pressed",String(mode === "pie"));
       visual.replaceChildren();
       if (mode === "bar") {
-        const max = Math.max(...valid.flatMap((entry) => [entry.countyValue ?? entry.value, ...(hasComparison ? [entry.selectedValue] : [])]).filter((value) => value !== null),1);
+        const max = Math.max(...valid.map((entry) => entry.value ?? entry.countyValue),1);
         valid.forEach((entry, index) => {
           const group = document.createElement("div"); group.className = "data-bar-group";
-          const color = categoryColor(index);
-          const values = [{label:"County",value:entry.countyValue ?? entry.value,kind:"county"}];
-          if (hasComparison) values.push({label:"Block group",value:entry.selectedValue,kind:"selected"});
-          values.forEach((item) => {
-            const bar = document.createElement("div"); bar.className = "data-bar-line";
-            const tag = document.createElement("span"); tag.className = "data-bar-tag"; tag.textContent = item.label;
-            const track = document.createElement("span"); track.className = "data-bar-track";
-            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind;
-            fill.style.backgroundColor = color;
-            fill.style.opacity = item.kind === "selected" ? "0.58" : "1";
-            fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%";
-            track.appendChild(fill);
-            const amount = document.createElement("strong"); amount.className = "data-bar-value"; amount.textContent = formatValue(item.value);
-            bar.append(tag,track,amount); group.appendChild(bar);
-          });
-          visual.appendChild(group);
+          const bar = document.createElement("div"); bar.className = "data-bar-line";
+          const track = document.createElement("span"); track.className = "data-bar-track";
+          const fill = document.createElement("span"); fill.className = "data-bar-fill";
+          fill.style.backgroundColor = categoryColor(index);
+          const value = entry.value ?? entry.countyValue;
+          fill.style.height = (value === null ? 0 : value / max * 100) + "%";
+          track.appendChild(fill);
+          const amount = document.createElement("strong"); amount.className = "data-bar-value"; amount.textContent = formatValue(value);
+          bar.append(track,amount); group.appendChild(bar); visual.appendChild(group);
         });
       } else {
-        const pieValues = valid.map((entry) => ({label:entry.label,value:hasComparison ? entry.selectedValue : (entry.countyValue ?? entry.value)})).filter((entry) => entry.value !== null && entry.value >= 0);
+        const pieValues = valid.map((entry) => ({label:entry.label,value:entry.value ?? entry.countyValue})).filter((entry) => entry.value !== null && entry.value >= 0);
         const total = pieValues.reduce((sum,entry)=>sum+entry.value,0);
         if (!total) { visual.textContent = "No values available for this chart."; return; }
         let cursor=0;
@@ -458,7 +480,6 @@
           item.append(swatch,label);item.title=label.textContent;legend.appendChild(item);
         });
         layout.append(pie,legend);visual.appendChild(layout);
-        if(hasComparison){const note=document.createElement("p");note.className="data-panel-note";note.textContent="Pie shows the selected block group's distribution; use Bar to compare it with county values.";visual.appendChild(note);}
       }
     };
     barsButton.addEventListener("click",()=>render("bar"));pieButton.addEventListener("click",()=>render("pie"));
@@ -468,6 +489,7 @@
     const host = document.querySelector("#data-panel-cards");
     const selection = document.querySelector("#data-panel-selection");
     const meta = document.querySelector("#data-panel-meta");
+    const viewSwitch = document.querySelector("#data-panel-view-switch");
     if (!host || !selection) return;
     host.replaceChildren();
     if (!baseFeatures.length || !countyAcsData) {
@@ -475,8 +497,15 @@
       return;
     }
     const selectedId = selectedFeature ? selectedFeatureId(selectedFeature) : "";
+    const compareMode = Boolean(selectedFeature && dataPanelView === "compare");
+    if (viewSwitch) {
+      viewSwitch.hidden = !selectedFeature;
+      viewSwitch.querySelectorAll("button[data-view]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.view === dataPanelView));
+      });
+    }
     selection.textContent = selectedFeature
-      ? "Comparing Flathead County with " + (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1))) + "."
+      ? (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1)))
       : "Showing Flathead County totals.";
     if (meta) meta.textContent = "LODES " + els.lodesYear.value + " · " +
       (selectedBasis() === "rac" ? "Worker residence" : "Workplace") +
@@ -491,22 +520,24 @@
       const title = document.createElement("h3");
       title.textContent = source === "jobs" ? DATA_PANEL_LABELS[category] : ACS_CATEGORY_LABELS[category];
       card.appendChild(title);
+      if (compareMode) appendComparisonHeader(card);
       const entries = [];
       if (source === "jobs") {
         const selector = document.querySelector('[data-selector="' + category + '"]');
         const fields = category === "total" ? ["jobs"] :
           (selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]')).map((input) => input.value) : []);
         const basis = selectedBasis();
+        const row = selectedFeature ? selectedYearData.get(selectedId) : null;
         fields.forEach((field, index) => {
           const color = categoryColor(index);
-          const result = countyLodesValue(field);
+          const countyResult = countyLodesValue(field);
+          const blockValue = row ? numeric(row[basis + "_" + field]) : null;
           const label = category === "total" ? "Total jobs" :
             (DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field));
-          const row = selectedFeature ? selectedYearData.get(selectedId) : null;
-          const selectedValue = row ? numeric(row[basis + "_" + field]) : undefined;
-          appendValueLine(card, label, result.value, "number", color);
-          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, "number", color);
-          entries.push({label, countyValue:result.value, selectedValue, value:result.value});
+          if (!selectedFeature) appendValueLine(card, label, countyResult.value, "number", color);
+          else if (compareMode) appendComparisonLine(card, label, countyResult.value, blockValue, "number", color);
+          else appendValueLine(card, label, blockValue, "number", color);
+          entries.push({label, value:selectedFeature ? blockValue : countyResult.value, countyValue:countyResult.value});
         });
         const expected = baseFeatures.length;
         const coverage = fields.length ? Math.min(...fields.map((field) => countyLodesValue(field).count)) : 0;
@@ -518,7 +549,7 @@
             " block groups with records. Missing records are not assumed to be zero.";
           card.appendChild(note);
         }
-        if (category !== "total") addChart(card, entries, "jobs-" + category);
+        if (!compareMode && category !== "total") addChart(card, entries, "jobs-" + category);
         const note = document.createElement("p");
         note.className = "data-panel-note";
         note.textContent = "LODES " + els.lodesYear.value + " · " +
@@ -528,20 +559,31 @@
         const fields = ACS_CATEGORY_FIELDS[category] || [];
         fields.forEach((field, index) => {
           const color = categoryColor(index);
-          const value = numeric(countyAcsData[field]);
+          const countyValue = numeric(countyAcsData[field]);
+          const blockValue = selectedFeature ? numeric(selectedFeature.properties[field]) : null;
           const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
-          const selectedValue = selectedFeature ? numeric(selectedFeature.properties[field]) : undefined;
-          appendValueLine(card, label, value, (ACS_FIELDS[field] || {}).format, color);
-          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, (ACS_FIELDS[field] || {}).format, color);
-          entries.push({label, countyValue:value, selectedValue, value});
+          const format = (ACS_FIELDS[field] || {}).format;
+          if (!selectedFeature) appendValueLine(card, label, countyValue, format, color);
+          else if (compareMode) appendComparisonLine(card, label, countyValue, blockValue, format, color);
+          else appendValueLine(card, label, blockValue, format, color);
+          entries.push({label, value:selectedFeature ? blockValue : countyValue, countyValue});
         });
-        if (fields.length > 1) addChart(card, entries, "acs-" + category);
+        if (!compareMode && fields.length > 1) addChart(card, entries, "acs-" + category);
         const note = document.createElement("p");
         note.className = "data-panel-note";
         note.textContent = "ACS " + els.acsYear.value + " five-year estimates.";
         card.appendChild(note);
       }
       host.appendChild(card);
+    });
+  }
+  const dataPanelViewSwitch = document.querySelector("#data-panel-view-switch");
+  if (dataPanelViewSwitch) {
+    dataPanelViewSwitch.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-view]");
+      if (!button || !selectedFeature) return;
+      dataPanelView = button.dataset.view;
+      renderDataPanel();
     });
   }
 
