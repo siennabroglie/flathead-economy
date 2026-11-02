@@ -529,10 +529,17 @@
           (selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]')).map((input) => input.value) : []);
         const basis = selectedBasis();
         const row = selectedFeature ? selectedYearData.get(selectedId) : null;
-        fields.forEach((field, index) => {
-          const color = categoryColor(index);
+        const orderedFields = fields.map((field, index) => {
           const countyResult = countyLodesValue(field);
           const blockValue = row ? numeric(row[basis + "_" + field]) : null;
+          return { field, index, value: selectedFeature ? blockValue : countyResult.value, countyResult, blockValue };
+        }).sort((a, b) => {
+          if (a.value === null) return b.value === null ? 0 : 1;
+          if (b.value === null) return -1;
+          return b.value - a.value;
+        });
+        orderedFields.forEach(({ field, index, countyResult, blockValue }) => {
+          const color = categoryColor(index);
           const label = category === "total" ? "Total jobs" :
             (DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field));
           if (!selectedFeature) appendValueLine(card, label, countyResult.value, "number", color);
@@ -558,11 +565,21 @@
         card.appendChild(note);
       } else {
         const fields = ACS_CATEGORY_FIELDS[category] || [];
-        fields.forEach((field, index) => {
-          const color = categoryColor(index);
+        const orderedFields = fields.map((field, index) => {
           const countyValue = numeric(countyAcsData[field]);
           const blockValue = selectedFeature ? numeric(selectedFeature.properties[field]) : null;
           const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
+          return { field, index, countyValue, blockValue, label, value: selectedFeature ? blockValue : countyValue };
+        }).sort((a, b) => {
+          const aTotal = a.label.toLowerCase().startsWith("total ");
+          const bTotal = b.label.toLowerCase().startsWith("total ");
+          if (aTotal !== bTotal) return aTotal ? -1 : 1;
+          if (a.value === null) return b.value === null ? 0 : 1;
+          if (b.value === null) return -1;
+          return b.value - a.value;
+        });
+        orderedFields.forEach(({ field, index, countyValue, blockValue, label }) => {
+          const color = categoryColor(index);
           const format = (ACS_FIELDS[field] || {}).format;
           if (!selectedFeature) appendValueLine(card, label, countyValue, format, color);
           else if (compareMode) appendComparisonLine(card, label, countyValue, blockValue, format, color);
