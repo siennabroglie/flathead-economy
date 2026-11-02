@@ -15,7 +15,16 @@
       <h1>Economic Atlas</h1>
       <p class="site-subtitle">Explore local economic and demographic patterns by census block group.</p>
     </div>
-    <div class="header-meta"><span class="status-dot"></span> Data-driven map prototype</div>
+    <div class="header-actions">
+      <details class="header-help">
+        <summary>How to use this map</summary>
+        <div class="header-help-content">
+          <p>Select multiple categories if useful. In Single-variable mode, choose the Primary measure to control map shading. Combined index mode normalizes the selected measures to a 0–1 scale and averages them equally; it is exploratory, not a test of statistical significance. Click a block group to inspect its values.</p>
+          <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
+        </div>
+      </details>
+      <div class="header-meta"><span class="status-dot"></span> Data-driven map prototype</div>
+    </div>
   </header>
 
   <main class="app-shell">
@@ -238,11 +247,6 @@
         <p id="map-status" class="map-status" role="status">Loading block-group geography…</p>
       </section>
 
-      <section class="about-section">
-        <h3>How to use this map</h3>
-        <p>Select multiple categories if useful. In Single-variable mode, choose the Primary measure to control map shading. Combined index mode normalizes the selected measures to a 0–1 scale and averages them equally; it is exploratory, not a test of statistical significance. Click a block group to inspect its values.</p>
-        <p class="source-note">Sources: U.S. Census Bureau ACS and LEHD Origin-Destination Employment Statistics (LODES).</p>
-      </section>
       </div>
     </section>
     <section id="data-panel" class="data-panel" aria-label="Selected data summary">
