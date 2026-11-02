@@ -705,3 +705,22 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   width: 100%;
   max-width: 25px;
 }
+
+
+/* Color swatches identify each subcategory in the written data lists. */
+.data-card-value {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+.data-card-value-swatch {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+}
+.data-card-value-name {
+  min-width: 0;
+  color: var(--text-muted);
+}
