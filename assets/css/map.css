@@ -403,3 +403,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
  .data-panel-selection { text-align:left; }
  .data-panel-cards { grid-template-columns:1fr; }
 }
+
+.data-bar-group { display:grid; gap:3px; margin-bottom:7px; }
+.data-bar-line { display:grid; grid-template-columns:58px minmax(30px,1fr) auto; align-items:center; gap:6px; }
+.data-bar-tag { color:var(--text-muted); font-size:9px; }
+.data-bar-fill.selected { background:#b58a4b; }
+@media (max-width:600px) { .data-bar-line { grid-template-columns:54px minmax(24px,1fr) auto; } }
