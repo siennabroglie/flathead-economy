@@ -410,22 +410,23 @@
       if (mode === "bar") {
         const max = Math.max(...valid.flatMap((entry) => [entry.countyValue ?? entry.value, ...(hasComparison ? [entry.selectedValue] : [])]).filter((value) => value !== null),1);
         valid.forEach((entry, index) => {
-          const row = document.createElement("div"); row.className = "data-bar-group";
+          const group = document.createElement("div"); group.className = "data-bar-group";
           const color = COLORS[(index % (COLORS.length - 1)) + 1];
           const values = [{label:"County",value:entry.countyValue ?? entry.value,kind:"county"}];
           if (hasComparison) values.push({label:"Block group",value:entry.selectedValue,kind:"selected"});
           values.forEach((item) => {
-            const line = document.createElement("div"); line.className = "data-bar-line";
+            const bar = document.createElement("div"); bar.className = "data-bar-line";
             const tag = document.createElement("span"); tag.className = "data-bar-tag"; tag.textContent = item.label;
             const track = document.createElement("span"); track.className = "data-bar-track";
             const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind;
             fill.style.backgroundColor = color;
             fill.style.opacity = item.kind === "selected" ? "0.58" : "1";
-            fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%"; fill.style.width = "100%"; track.appendChild(fill);
-            const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(item.value);
-            line.append(tag,track,value); row.appendChild(line);
+            fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%";
+            track.appendChild(fill);
+            const amount = document.createElement("strong"); amount.className = "data-bar-value"; amount.textContent = formatValue(item.value);
+            bar.append(tag,track,amount); group.appendChild(bar);
           });
-          visual.appendChild(row);
+          visual.appendChild(group);
         });
       } else {
         const pieValues = valid.map((entry) => ({label:entry.label,value:hasComparison ? entry.selectedValue : (entry.countyValue ?? entry.value)})).filter((entry) => entry.value !== null && entry.value >= 0);
