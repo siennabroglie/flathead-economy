@@ -532,3 +532,30 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   font-size: 11px;
   line-height: 1.45;
 }
+
+/* Match the map + Data Summary column to the settings panel height. */
+@media (min-width: 901px) {
+  .app-shell {
+    grid-template-rows: minmax(0, auto) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .control-panel {
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .map-panel {
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .data-panel {
+    grid-row: 2;
+    align-self: stretch;
+    height: auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
