@@ -559,3 +559,64 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     overflow-y: auto;
   }
 }
+
+/* The map and summary form one column whose total height follows Map settings. */
+@media (min-width: 901px) {
+  .app-shell {
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .control-panel {
+    grid-row: 1;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .map-column {
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--content-gap);
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .map-column > .map-panel {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    min-width: 0;
+  }
+
+  .map-column > .data-panel {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .map-column {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: var(--content-gap);
+    min-width: 0;
+  }
+
+  .map-column > .map-panel,
+  .map-column > .data-panel {
+    grid-column: 1;
+    width: 100%;
+    height: auto;
+  }
+}
