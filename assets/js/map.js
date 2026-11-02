@@ -437,7 +437,7 @@
       : "Showing Flathead County totals.";
     if (meta) meta.textContent = "LODES " + els.lodesYear.value + " · " +
       (selectedBasis() === "rac" ? "Worker residence" : "Workplace") +
-      "  |  ACS " + els.acsYear.value + " five-year estimates";
+      "  |  ACS " + (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value + " five-year estimates";
     const cards = [
       ...Object.keys(DATA_PANEL_LABELS).map((category) => ({ source:"jobs", category })),
       ...Object.keys(ACS_CATEGORY_LABELS).map((category) => ({ source:"acs", category }))
