@@ -792,3 +792,45 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   .data-panel-view-switch { flex-direction: column; }
   .data-panel-view-switch button { text-align: right; }
 }
+
+
+/* Fit every category bar inside its chart without horizontal scrolling. */
+.data-bars {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.data-bar-group {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
+}
+
+.data-bar-line {
+  width: 100%;
+  min-width: 0;
+}
+
+.data-bar-track {
+  width: min(100%, 12px);
+  max-width: 12px;
+  align-self: center;
+}
+
+.data-bar-value {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 7px;
+  text-overflow: clip;
+}
+
+@media (max-width: 600px) {
+  .data-bars { gap: 2px; }
+  .data-bar-track { max-width: 10px; }
+  .data-bar-value { font-size: 6px; }
+}
