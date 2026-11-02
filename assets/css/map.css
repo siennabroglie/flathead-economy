@@ -409,3 +409,40 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .data-bar-tag { color:var(--text-muted); font-size:9px; }
 .data-bar-fill.selected { background:#b58a4b; }
 @media (max-width:600px) { .data-bar-line { grid-template-columns:54px minmax(24px,1fr) auto; } }
+
+
+/* Align the data summary with the full height of the settings panel. */
+@media (min-width: 901px) {
+  .app-shell { align-items: stretch; }
+  .control-panel { align-self: stretch; }
+  .data-panel {
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+/* Render chart bars as visible horizontal tracks. */
+.data-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(70px, 2fr) auto;
+  align-items: center;
+}
+.data-bar-line {
+  display: grid;
+  grid-template-columns: 58px minmax(70px, 1fr) auto;
+  align-items: center;
+}
+.data-bar-track {
+  display: block;
+  width: 100%;
+  height: 9px;
+}
+.data-bar-fill {
+  display: block;
+  height: 100%;
+}
+@media (max-width: 900px) {
+  .data-panel { width: 100%; height: auto; }
+}
