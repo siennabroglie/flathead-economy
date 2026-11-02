@@ -552,10 +552,12 @@
         card.append(controls);
         const max = Math.max(1,...rows.map((row)=>Math.max(row.value||0,row.county||0)));
         rows.forEach((row,index) => {
-          const line=document.createElement("div"); line.className="data-bar-row";
+          const line=document.createElement("div"); line.className=compare?"data-comparison-row":"data-bar-row";
           const name=document.createElement("span"); name.className="data-bar-label"; name.textContent=row.label; line.append(name);
-          const track=document.createElement("div"); track.className="data-bar-track";
-          const fill=document.createElement("div"); fill.className="data-bar-fill"; fill.style.width=(100*(row.value||0)/max)+"%"; fill.style.background=CHART_COLORS[index%CHART_COLORS.length]; track.append(fill); line.append(track);
+          const track=document.createElement("div"); track.className=compare?"data-comparison-tracks":"data-bar-track";
+          const fill=document.createElement("div"); fill.className="data-bar-fill"; fill.style.width=(100*(row.value||0)/max)+"%"; fill.style.background=CHART_COLORS[index%CHART_COLORS.length]; track.append(fill);
+          if(compare){const second=document.createElement("div");second.style.width=(100*(row.county||0)/max)+"%";second.style.background="#aab7c5";track.prepend(second);}
+          line.append(track);
           const value=document.createElement("strong"); value.className="data-bar-value"; value.textContent=formatValue(row.value); line.append(value); card.append(line);
         });
       }
