@@ -202,6 +202,42 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .leaflet-control-zoom a { color: var(--text) !important; }
 [hidden] { display: none !important; }
 
+
+/* County and selected block-group data summary */
+.data-panel { grid-column:2; grid-row:2; min-width:0; padding:22px 24px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-panel); box-shadow:var(--shadow); }
+.data-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+.data-panel-heading h2 { margin:3px 0 0; font-size:17px; font-weight:650; }
+.data-panel-content { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; padding-top:16px; }
+.data-summary-card { min-width:0; padding:14px; border:1px solid var(--border); border-radius:var(--radius-control); background:var(--surface); }
+.data-summary-card h3 { margin:0 0 8px; font-size:13px; }
+.data-summary-total { margin:0 0 10px; font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; }
+.data-chart-controls { display:flex; justify-content:flex-end; gap:5px; margin:8px 0; }
+.data-chart-controls button { padding:4px 9px; border:1px solid var(--border); border-radius:5px; color:var(--text-muted); background:var(--surface-muted); font-size:10px; cursor:pointer; }
+.data-chart-controls button[aria-pressed="true"] { color:var(--accent-strong); border-color:var(--accent); background:var(--accent-soft); }
+.data-bars { display:grid; gap:8px; }
+.data-bar-row { display:grid; grid-template-columns:minmax(90px,1fr) minmax(60px,1.5fr) auto; gap:8px; align-items:center; font-size:10px; }
+.data-bar-label { overflow-wrap:anywhere; color:var(--text-muted); }
+.data-bar-track { height:9px; overflow:hidden; border-radius:10px; background:var(--surface-muted); }
+.data-bar-fill { height:100%; border-radius:10px; background:var(--accent); }
+.data-bar-value { font-variant-numeric:tabular-nums; text-align:right; }
+.data-pie-wrap { display:flex; align-items:center; gap:14px; }
+.data-pie { flex:0 0 118px; width:118px; aspect-ratio:1; border-radius:50%; }
+.data-pie-legend { display:grid; gap:5px; min-width:0; font-size:10px; }
+.data-pie-legend div { display:flex; align-items:center; gap:6px; }
+.data-pie-legend i { flex:0 0 8px; width:8px; height:8px; border-radius:2px; }
+.data-comparison-legend { display:flex; gap:12px; margin:0 0 8px; color:var(--text-muted); font-size:10px; }
+.data-comparison-legend span { display:inline-flex; align-items:center; gap:5px; }
+.data-comparison-legend i { width:9px; height:9px; border-radius:2px; background:var(--accent); }
+.data-comparison-legend span:last-child i { background:#aab7c5; }
+.data-comparison-bars { display:grid; gap:9px; }
+.data-comparison-row { display:grid; grid-template-columns:minmax(90px,1fr) minmax(80px,2fr); gap:8px; align-items:center; font-size:10px; }
+.data-comparison-tracks { display:grid; gap:3px; }
+.data-comparison-tracks div { height:8px; border-radius:8px; background:#aab7c5; }
+.data-comparison-tracks div:first-child { background:var(--accent); }
+.data-empty { color:var(--text-muted); font-size:12px; }
+@media (max-width:900px) { .data-panel { grid-column:1; grid-row:3; } }
+@media (max-width:600px) { .data-panel { padding:18px; } .data-panel-content { grid-template-columns:minmax(0,1fr); } }
+
 @media (max-width: 1100px) {
   .app-shell { grid-template-columns: minmax(350px, 0.9fr) minmax(0, 1.1fr); }
   .control-section { column-gap: 14px; }
@@ -212,6 +248,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .app-shell { grid-template-columns: minmax(0, 1fr); }
   .control-panel { grid-column: 1; grid-row: 1; }
   .map-panel { grid-column: 1; grid-row: 2; }
+  .data-panel { grid-column: 1; grid-row: 3; }
   #map { --map-height: 65vh; }
 }
 @media (max-width: 600px) {
