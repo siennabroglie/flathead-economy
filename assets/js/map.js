@@ -689,7 +689,12 @@
       const categoryLabel = categoryInput?.closest("label")?.querySelector("span")?.textContent.trim()
         || measureLabel(key);
       if (!group) return categoryLabel;
-      const selected = Array.from(group.querySelectorAll('input[type="checkbox"]:checked'))
+      const allOptions = Array.from(group.querySelectorAll('input[type="checkbox"]:not(:disabled)'));
+      const selectedInputs = allOptions.filter((input) => input.checked);
+      if (allOptions.length && selectedInputs.length === allOptions.length) {
+        return categoryLabel + " (all)";
+      }
+      const selected = selectedInputs
         .map((input) => input.closest("label")?.querySelector("span")?.textContent.trim())
         .filter(Boolean);
       return categoryLabel + (selected.length ? ": " + selected.join(", ") : ": no subcategories selected");
