@@ -98,14 +98,14 @@
     education: ["B15003_017E", "B15003_018E", "B15003_019E", "B15003_020E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
     employment: ["B23025_004E", "B23025_005E"]
   };
-  // Multihue sequential scale for map intensity, from low to high.
-  const COLORS = ["#f3f4f6", "#3288bd", "#99d594", "#fee08b", "#fc8d59", "#d53e4f"];
-  // Distinct categorical colors shared by the written lists and charts.
+  // Muted sequential scale for map intensity, from low to high.
+  const COLORS = ["#e9e5dc", "#d5d8c8", "#aebfae", "#829f9b", "#657f8b", "#59677f"];
+  // Muted, varied categorical colors shared by the written lists and charts.
   const CATEGORY_COLORS = [
-    "#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#ff7f00",
-    "#a65628", "#f781bf", "#17becf", "#bcbd22", "#6a3d9a",
-    "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e",
-    "#e6ab02", "#a6761d", "#1f78b4", "#b2df8a", "#fb9a99"
+    "#66869a", "#b47770", "#78977c", "#9a83a8", "#c08d61",
+    "#7d9fa0", "#b18b9a", "#8b8d68", "#8a7890", "#b2a071",
+    "#668f82", "#b47d61", "#7b88a8", "#a97882", "#91a36f",
+    "#c09a76", "#718fa8", "#a18eae", "#829b91", "#bd8e8a"
   ];
   const categoryColor = (index) => CATEGORY_COLORS[index % CATEGORY_COLORS.length];
   syncMapColumnHeight();
@@ -298,8 +298,55 @@
   };
   function styleFeature(feature) {
     const fillColor = colorFor(getValue(feature), currentBreaks);
-    return { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.82 };
+    return { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.68 };
   }
+  function addOutsideCountyMask(features) {
+    const edges = new Map();
+    const pointKey = (point) => point.map((value) => Number(value).toFixed(6)).join(",");
+    const addRingEdges = (ring) => {
+      for (let i = 0; i < ring.length - 1; i += 1) {
+        const start = ring[i], end = ring[i + 1];
+        const a = pointKey(start), b = pointKey(end);
+        const key = a < b ? a + "|" + b : b + "|" + a;
+        if (edges.has(key)) edges.delete(key);
+        else edges.set(key, { start, end, startKey: a, endKey: b });
+      }
+    };
+    features.forEach((feature) => {
+      const geometry = feature.geometry || {};
+      const polygons = geometry.type === "Polygon" ? [geometry.coordinates]
+        : geometry.type === "MultiPolygon" ? geometry.coordinates : [];
+      polygons.forEach((polygon) => (polygon || []).forEach(addRingEdges));
+    });
+    const byStart = new Map();
+    edges.forEach((edge) => {
+      if (!byStart.has(edge.startKey)) byStart.set(edge.startKey, []);
+      byStart.get(edge.startKey).push(edge);
+    });
+    const unused = new Set(edges.values());
+    const rings = [];
+    while (unused.size) {
+      const first = unused.values().next().value;
+      const ring = [first.start];
+      let edge = first;
+      let guard = 0;
+      while (edge && unused.has(edge) && guard < edges.size + 1) {
+        unused.delete(edge);
+        ring.push(edge.end);
+        if (edge.endKey === first.startKey) break;
+        edge = (byStart.get(edge.endKey) || []).find((candidate) => unused.has(candidate));
+        guard += 1;
+      }
+      if (ring.length >= 4 && pointKey(ring[0]) === pointKey(ring[ring.length - 1])) rings.push(ring);
+    }
+    if (!rings.length) return;
+    const world = [[-89.9, -180], [-89.9, 180], [89.9, 180], [89.9, -180]];
+    const countyHoles = rings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude]));
+    L.polygon([world, ...countyHoles], {
+      stroke: false, fillColor: "#777b7b", fillOpacity: 0.48, interactive: false
+    }).addTo(map);
+  }
+
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -616,7 +663,7 @@
       if (selectedFeature) layer.openPopup();
     });
     layer.on({
-      mouseover: (event) => event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.95 }),
+      mouseover: (event) => event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.82 }),
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
     });
   }
@@ -1026,6 +1073,7 @@
     .then((geojson) => {
       baseFeatures = geojson.features || [];
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
+      addOutsideCountyMask(baseFeatures);
       geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
       map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
       return Promise.all([
