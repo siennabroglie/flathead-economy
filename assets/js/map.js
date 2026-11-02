@@ -122,6 +122,7 @@
     acsDetail: document.querySelector("#acs-detail"),
     acsSelectors: Array.from(document.querySelectorAll("[data-acs-selector]")),
     legendTitle: document.querySelector("#legend-title"),
+    legendDescription: document.querySelector("#legend-description"),
     legend: document.querySelector("#legend"),
     status: document.querySelector("#map-status"),
     period: document.querySelector("#map-period")
@@ -678,9 +679,41 @@
     renderDataPanel();
   });
 
+  function combinedVariableDescriptions(keys) {
+    return keys.map((key) => {
+      const [source, category] = key.split(":");
+      const root = source === "jobs" ? els.lodesMeasures : els.acsMeasures;
+      const selectorAttr = source === "jobs" ? "data-selector" : "data-acs-selector";
+      const group = root.querySelector('[' + selectorAttr + '="' + category + '"]');
+      const categoryInput = root.querySelector('input[data-category="' + category + '"]');
+      const categoryLabel = categoryInput?.closest("label")?.querySelector("span")?.textContent.trim()
+        || measureLabel(key);
+      if (!group) return categoryLabel;
+      const selected = Array.from(group.querySelectorAll('input[type="checkbox"]:checked'))
+        .map((input) => input.closest("label")?.querySelector("span")?.textContent.trim())
+        .filter(Boolean);
+      return categoryLabel + (selected.length ? ": " + selected.join(", ") : ": no subcategories selected");
+    });
+  }
   function updateLegend() {
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
+    els.legendDescription.replaceChildren();
+    els.legendDescription.hidden = mapMode !== "combined";
+    if (mapMode === "combined") {
+      const variablesTitle = document.createElement("strong");
+      variablesTitle.textContent = "Variables";
+      const variables = document.createElement("ul");
+      combinedVariableDescriptions(selectedMeasureKeys()).forEach((description) => {
+        const item = document.createElement("li");
+        item.textContent = description;
+        variables.appendChild(item);
+      });
+      const formula = document.createElement("p");
+      formula.className = "legend-formula";
+      formula.textContent = "Formula: For each selected variable, min–max normalize its block-group values to 0–1: (value − minimum) ÷ (maximum − minimum). Then calculate the arithmetic mean of the normalized variables, giving each variable equal weight. If a variable has the same value in every block group, its normalized value is 0.5.";
+      els.legendDescription.append(variablesTitle, variables, formula);
+    }
     els.legend.replaceChildren();
     if (!currentBreaks.length) {
       els.legend.textContent = "No values available for this selection.";
