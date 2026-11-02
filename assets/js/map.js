@@ -145,6 +145,7 @@
   let compositeError = "";
   let currentBreaks = [];
   let selectedFeature = null;
+  const selectedFeatureIds = new Set();
   let ignoreNextMapClick = false;
   let dataPanelView = "block";
   let countyAcsData = null;
@@ -299,7 +300,13 @@
   };
   function styleFeature(feature) {
     const fillColor = colorFor(getValue(feature), currentBreaks);
-    return { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.68 };
+    const selected = selectedFeatureIds.has(selectedFeatureId(feature));
+    return selected
+      ? { fillColor, weight: 4, opacity: 1, color: "#ffb000", dashArray: "5 3", fillOpacity: 0.9 }
+      : { fillColor, weight: 1, opacity: 1, color: "#ffffff", dashArray: "", fillOpacity: 0.68 };
+  }
+  function refreshSelectionStyles() {
+    if (geojsonLayer) geojsonLayer.eachLayer((layer) => geojsonLayer.resetStyle(layer));
   }
   function addOutsideCountyMask(features) {
     const edges = new Map();
@@ -553,9 +560,18 @@
         button.setAttribute("aria-pressed", String(button.dataset.view === dataPanelView));
       });
     }
-    selection.textContent = selectedFeature
-      ? (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1)))
-      : "Showing Flathead County totals.";
+    if (selectedFeature) {
+      const selectedNames = baseFeatures
+        .filter((feature) => selectedFeatureIds.has(selectedFeatureId(feature)))
+        .map((feature) => feature.properties.NAMELSAD || ("Block Group " + selectedFeatureId(feature).slice(-1)));
+      const activeName = selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1));
+      selection.textContent = selectedNames.length > 1
+        ? "Selected " + selectedNames.length + " block groups: " + selectedNames.join(", ") +
+          ". Showing details for " + activeName + "."
+        : activeName;
+    } else {
+      selection.textContent = "Showing Flathead County totals.";
+    }
     if (meta) meta.textContent = "LODES " + els.lodesYear.value + " · " +
       (selectedBasis() === "rac" ? "Worker residence" : "Workplace") +
       "  |  ACS " + (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value + " five-year estimates";
@@ -656,15 +672,35 @@
 
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
-    layer.on("click", () => {
+    layer.on("click", (event) => {
       ignoreNextMapClick = true;
       const id = selectedFeatureId(feature);
-      selectedFeature = selectedFeature && selectedFeatureId(selectedFeature) === id ? null : feature;
+      const original = event.originalEvent || {};
+      const additiveSelection = Boolean(original.shiftKey || original.metaKey || original.ctrlKey);
+      if (additiveSelection) {
+        if (selectedFeatureIds.has(id)) selectedFeatureIds.delete(id);
+        else selectedFeatureIds.add(id);
+      } else {
+        selectedFeatureIds.clear();
+        selectedFeatureIds.add(id);
+      }
+      selectedFeature = selectedFeatureIds.has(id)
+        ? feature
+        : (selectedFeatureIds.size
+          ? baseFeatures.find((item) => selectedFeatureId(item) === Array.from(selectedFeatureIds).slice(-1)[0]) || null
+          : null);
+      if (!selectedFeatureIds.size) dataPanelView = "block";
+      refreshSelectionStyles();
       renderDataPanel();
       if (selectedFeature) layer.openPopup();
+      else map.closePopup();
     });
     layer.on({
-      mouseover: (event) => event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.82 }),
+      mouseover: (event) => {
+        if (!selectedFeatureIds.has(selectedFeatureId(feature))) {
+          event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.82 });
+        }
+      },
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
     });
   }
@@ -673,9 +709,12 @@
       ignoreNextMapClick = false;
       return;
     }
-    if (!selectedFeature) return;
+    if (!selectedFeatureIds.size) return;
+    selectedFeatureIds.clear();
     selectedFeature = null;
     dataPanelView = "block";
+    refreshSelectionStyles();
+    map.closePopup();
     renderDataPanel();
   });
 
