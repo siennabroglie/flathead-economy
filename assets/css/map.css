@@ -518,3 +518,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (min-width: 901px) {
   .map-panel { align-self: start; }
 }
+
+
+/* Keep the map row at its natural height; let the summary fill the row below it. */
+@media (min-width: 901px) {
+  .app-shell { grid-template-rows: auto minmax(0, 1fr); }
+}
