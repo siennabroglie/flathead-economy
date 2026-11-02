@@ -19,6 +19,9 @@
     B19301_001E: { label: "Per-capita income", format: "currency" },
     B17001_002E: { label: "Population below poverty level", format: "number" },
     B15003_017E: { label: "High school graduate", format: "number" },
+    B15003_018E: { label: "GED or alternative credential", format: "number" },
+    B15003_019E: { label: "Some college, less than one year", format: "number" },
+    B15003_020E: { label: "Some college, one or more years, no degree", format: "number" },
     B15003_021E: { label: "Bachelor's degree", format: "number" },
     B15003_022E: { label: "Master's degree", format: "number" },
     B15003_023E: { label: "Professional school degree", format: "number" },
@@ -68,13 +71,13 @@
     education: "Education level", employment: "Employment status"
   };
   const ACS_CATEGORY_FIELDS = {
-    population: ["B01001_001E"],
+    population: ["B01001_001E", "B01001_003E", "B01001_020E", "B01001_027E", "B01001_044E"],
     "median-income": ["B19013_001E"],
     "aggregate-income": ["B19025_001E"],
-    households: ["B11001_002E", "B11001_007E"],
+    households: ["B11001_001E", "B11001_002E", "B11001_007E"],
     "per-capita": ["B19301_001E"],
     poverty: ["B17001_002E"],
-    education: ["B15003_017E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
+    education: ["B15003_017E", "B15003_018E", "B15003_019E", "B15003_020E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
     employment: ["B23025_004E", "B23025_005E"]
   };
   const COLORS = ["#f2f3ed", "#d4e2d7", "#a9c9b3", "#76a489", "#477b61", "#24513c"];
