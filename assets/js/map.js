@@ -4,6 +4,7 @@
 
   const GEOJSON_URL = "data/2023/flathead_economic_2023.geojson";
   const LODES_PATH = (year) => "data/lodes/" + year + "/flathead_lodes_characteristics_by_block_group.csv";
+  const ACS_COUNTY_PATH = (year) => "data/county/acs5_" + year + "_flathead_county.csv";
   const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2023 - i);
   const ACS_FIELDS = {
     B01001_001E: { label: "Total population", format: "number" },
@@ -92,7 +93,7 @@
     legendTitle: document.querySelector("#legend-title"),
     legend: document.querySelector("#legend"),
     status: document.querySelector("#map-status"),
-    period: document.querySelector("#map-period")
+    period: document.querySelector("#map-period"), dataPanel: document.querySelector("#data-panel-content"), dataTitle: document.querySelector("#data-panel-title"), dataPeriod: document.querySelector("#data-panel-period")
   };
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([48.25, -114.25], 9);
@@ -104,6 +105,9 @@
   let geojsonLayer = null;
   let baseFeatures = [];
   let selectedYearData = new Map();
+  let countyAcsRow = null;
+  let selectedFeature = null;
+  let chartModes = {};
   let activeMode = "jobs";
   let activeLodesCategory = "total";
   let activeAcsCategory = "population";
@@ -346,6 +350,7 @@
   }
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
+    layer.on("click", () => { selectedFeature = selectedFeature === feature ? null : feature; refreshMap(); });
     layer.on({
       mouseover: (event) => event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.95 }),
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
@@ -496,12 +501,75 @@
         values.reduce((sum, value) => sum + value, 0) / values.length);
     });
   }
+  async function loadCountyAcs(year) {
+    const response = await fetch(ACS_COUNTY_PATH(year));
+    if (!response.ok) throw new Error("Could not load county ACS estimates for " + year + ".");
+    countyAcsRow = parseCsv(await response.text())[0] || null;
+  }
+  function renderDataPanel() {
+    if (!els.dataPanel) return;
+    const groups = [];
+    els.lodesMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) groups.push({source:"jobs",category:input.dataset.category,label:LODES_META[input.dataset.category].label,codes:input.dataset.category === "total" ? ["jobs"] : selectedLodesCodes(input.dataset.category)});
+    });
+    els.acsMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) groups.push({source:"acs",category:input.dataset.category,label:ACS_CATEGORY_LABELS[input.dataset.category],codes:selectedAcsFields(input.dataset.category)});
+    });
+    const compare = Boolean(selectedFeature);
+    const props = selectedFeature ? selectedFeature.properties : {};
+    const match = String(props.NAMELSAD || props.NAME || "").match(/Block Group\\s+(\\d+)/i);
+    els.dataTitle.textContent = compare ? (match ? "Block Group " + match[1] : "Selected block group") : "Flathead County totals";
+    els.dataPeriod.textContent = "LODES " + els.lodesYear.value + " · ACS " + els.acsYear.value;
+    els.dataPanel.replaceChildren();
+    groups.forEach((group) => {
+      const card = document.createElement("article"); card.className = "data-summary-card";
+      const heading = document.createElement("h3"); heading.textContent = group.label; card.append(heading);
+      const rows = group.codes.map((code) => {
+        let value = null, county = null;
+        if (group.source === "acs") {
+          value = compare ? numeric(props[code]) : numeric(countyAcsRow && countyAcsRow[code]);
+          county = numeric(countyAcsRow && countyAcsRow[code]);
+        } else {
+          const field = code === "jobs" ? "jobs" : code;
+          const row = compare ? selectedYearData.get(String(props.GEOID || "")) : null;
+          value = compare ? numeric(row && row[selectedBasis() + "_" + field]) : 0;
+          if (!compare) selectedYearData.forEach((record) => { const n = numeric(record[selectedBasis() + "_" + field]); if (n !== null) value += n; });
+          county = compare ? value : null;
+        }
+        const selector = document.querySelector((group.source === "acs" ? '[data-acs-selector="' : '[data-selector="') + group.category + '"]');
+        const input = selector && Array.from(selector.querySelectorAll("input")).find((item) => item.value === code);
+        const label = code === "jobs" ? "Total jobs" : (input ? input.closest("label").querySelector("span").textContent.trim() : ((DETAIL_LABELS[code] || INDUSTRY_LABELS[code] || (ACS_FIELDS[code] || {}).label) || code));
+        return {code,label,value,county};
+      });
+      const total = rows.reduce((sum,row) => sum + (row.value || 0),0);
+      const totalText = document.createElement("p"); totalText.className = "data-summary-total";
+      totalText.textContent = rows.length === 1 ? formatValue(total, (ACS_FIELDS[rows[0].code] || {}).format || "number") : formatValue(total);
+      card.append(totalText);
+      if (compare || rows.length > 1) {
+        const legend = document.createElement("p"); legend.className = "data-empty"; legend.textContent = compare ? "County (top) compared with selected block group (bottom)" : "County distribution"; card.append(legend);
+        const controls = document.createElement("div"); controls.className = "data-chart-controls";
+        if (!compare) ["bar","pie"].forEach((mode) => { const button=document.createElement("button"); button.textContent=mode==="bar"?"Bar":"Pie"; button.setAttribute("aria-pressed",(chartModes[group.source+":"+group.category]||"bar")===mode); button.addEventListener("click",()=>{chartModes[group.source+":"+group.category]=mode;renderDataPanel();}); controls.append(button); });
+        card.append(controls);
+        const max = Math.max(1,...rows.map((row)=>Math.max(row.value||0,row.county||0)));
+        rows.forEach((row,index) => {
+          const line=document.createElement("div"); line.className="data-bar-row";
+          const name=document.createElement("span"); name.className="data-bar-label"; name.textContent=row.label; line.append(name);
+          const track=document.createElement("div"); track.className="data-bar-track";
+          const fill=document.createElement("div"); fill.className="data-bar-fill"; fill.style.width=(100*(row.value||0)/max)+"%"; fill.style.background=CHART_COLORS[index%CHART_COLORS.length]; track.append(fill); line.append(track);
+          const value=document.createElement("strong"); value.className="data-bar-value"; value.textContent=formatValue(row.value); line.append(value); card.append(line);
+        });
+      }
+      els.dataPanel.append(card);
+    });
+    if (!groups.length) { const empty=document.createElement("p"); empty.className="data-empty"; empty.textContent="Select a data type to view its totals."; els.dataPanel.append(empty); }
+  }
+  const CHART_COLORS = ["#315b4b","#8aa895","#c0a36b","#7892aa","#b77c6d","#8e82a8"];
   function refreshMap() {
     if (!geojsonLayer) return;
     if (mapMode === "combined") calculateCompositeValues();
     else { compositeValues = new Map(); compositeError = ""; }
     currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
-    geojsonLayer.setStyle(styleFeature);
+    geojsonLayer.setStyle((feature) => { const style = styleFeature(feature); if (selectedFeature === feature) { style.color = "#172b22"; style.weight = 3; } return style; });
     updateLegend();
     els.period.textContent = mapMode === "combined"
       ? "Combined index · LODES " + els.lodesYear.value + " + ACS " + els.acsYear.value
