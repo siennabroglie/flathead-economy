@@ -99,13 +99,13 @@
     employment: ["B23025_004E", "B23025_005E"]
   };
   // Muted sequential scale for map intensity, from low to high.
-  const COLORS = ["#f0d8c8", "#dfb99e", "#c99b83", "#a77f83", "#7c8291", "#536f83"];
+  const COLORS = ["#f7cf62", "#f5a04e", "#ed765b", "#d85d8c", "#a45bb5", "#5577c8"];
   // Muted, varied categorical colors shared by the written lists and charts.
   const CATEGORY_COLORS = [
-    "#477f9b", "#c56f63", "#648f70", "#9273a8", "#c28a43",
-    "#4e9994", "#b86f8d", "#92964f", "#766b9d", "#d08a58",
-    "#397f78", "#b75b4f", "#6e83b7", "#a65f76", "#829b55",
-    "#bd805e", "#4f87a8", "#9878b5", "#628e89", "#c17b78"
+    "#3185d8", "#ed7655", "#35a66f", "#9563c7", "#e5a52f",
+    "#20a6a1", "#d65c91", "#8a9f35", "#675fc0", "#e4863d",
+    "#168b79", "#d9534f", "#5278d5", "#bd5680", "#78a943",
+    "#d27a42", "#328eb8", "#a45cc2", "#3d9b91", "#dc6b68"
   ];
   const categoryColor = (index) => CATEGORY_COLORS[index % CATEGORY_COLORS.length];
   syncMapColumnHeight();
