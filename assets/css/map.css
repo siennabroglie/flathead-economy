@@ -446,3 +446,69 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (max-width: 900px) {
   .data-panel { width: 100%; height: auto; }
 }
+
+
+/* Keep the summary viewport fixed within its grid cell; scroll its contents. */
+@media (min-width: 901px) {
+  .data-panel {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* Compact column charts: vertical bars arranged side by side. */
+.data-bars {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+.data-bar-group {
+  display: flex;
+  flex: 1 0 42px;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 42px;
+  margin: 0;
+}
+.data-bar-line {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.data-bar-tag {
+  order: 0;
+  text-align: center;
+  font-size: 9px;
+}
+.data-bar-track {
+  order: 1;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 28px;
+  height: 104px;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+}
+.data-bar-fill {
+  width: 100% !important;
+  height: var(--bar-height, 0%);
+  border-radius: 4px 4px 0 0;
+}
+.data-bar-value {
+  order: 2;
+  min-width: 0;
+  font-size: 9px;
+  text-align: center;
+  white-space: nowrap;
+}
