@@ -111,6 +111,8 @@
   let compositeValues = new Map();
   let compositeError = "";
   let currentBreaks = [];
+  let selectedFeature = null;
+  let countyAcsData = null;
 
   LODES_YEARS.forEach((year) => {
     const option = document.createElement("option");
@@ -344,8 +346,176 @@
     const acsOption = Array.from(document.querySelectorAll("[data-acs-selector] input[type=checkbox]")).find((item) => item.value === code);
     return acsOption ? (acsOption.closest("label")?.querySelector("span")?.textContent.trim() || code) : code;
   }
+
+  const DATA_PANEL_LABELS = { total:"Total jobs", industry:"Industry groups", earnings:"Worker earnings", education:"Worker education", age:"Worker age", raceethnicity:"Worker race & ethnicity", sex:"Worker sex" };
+  function selectedFeatureId(feature) {
+    const p = feature && feature.properties ? feature.properties : {};
+    return String(p.GEOID ?? p.GEOIDFQ ?? "");
+  }
+  function countyLodesValue(field) {
+    const basis = selectedBasis();
+    let sum = 0, count = 0;
+    selectedYearData.forEach((row) => {
+      const value = numeric(row[basis + "_" + field]);
+      if (value !== null) { sum += value; count += 1; }
+    });
+    return { value: count ? sum : null, count };
+  }
+  function appendValueLine(container, label, value, format) {
+    const line = document.createElement("div");
+    line.className = "data-card-value";
+    const name = document.createElement("span");
+    name.textContent = label;
+    const amount = document.createElement("strong");
+    amount.textContent = formatValue(value, format || "number");
+    line.append(name, amount);
+    container.appendChild(line);
+  }
+  function addChart(card, entries, chartKey) {
+    const valid = entries.filter((entry) => entry.value !== null && entry.value >= 0);
+    if (valid.length < 2 || valid.every((entry) => entry.value === 0)) return;
+    const chart = document.createElement("div");
+    chart.className = "data-card-chart";
+    const controls = document.createElement("div");
+    controls.className = "data-chart-controls";
+    const barsButton = document.createElement("button");
+    const pieButton = document.createElement("button");
+    barsButton.type = pieButton.type = "button";
+    barsButton.textContent = "Bar";
+    pieButton.textContent = "Pie";
+    barsButton.setAttribute("aria-pressed", "true");
+    pieButton.setAttribute("aria-pressed", "false");
+    const visual = document.createElement("div");
+    visual.className = "data-bars";
+    const render = (mode) => {
+      barsButton.setAttribute("aria-pressed", String(mode === "bar"));
+      pieButton.setAttribute("aria-pressed", String(mode === "pie"));
+      visual.replaceChildren();
+      if (mode === "bar") {
+        const max = Math.max(...valid.map((entry) => entry.value), 1);
+        valid.forEach((entry) => {
+          const row = document.createElement("div"); row.className = "data-bar-row";
+          const label = document.createElement("span"); label.className = "data-bar-label"; label.textContent = entry.label; label.title = entry.label;
+          const track = document.createElement("span"); track.className = "data-bar-track";
+          const fill = document.createElement("span"); fill.className = "data-bar-fill"; fill.style.width = (entry.value / max * 100) + "%"; track.appendChild(fill);
+          const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(entry.value);
+          row.append(label, track, value); visual.appendChild(row);
+        });
+      } else {
+        const total = valid.reduce((sum, entry) => sum + entry.value, 0);
+        let cursor = 0;
+        const stops = valid.map((entry, index) => {
+          const start = cursor; cursor += entry.value / total * 100;
+          return COLORS[(index % (COLORS.length - 1)) + 1] + " " + start + "% " + cursor + "%";
+        });
+        const layout = document.createElement("div"); layout.className = "data-pie-layout";
+        const pie = document.createElement("div"); pie.className = "data-pie"; pie.style.setProperty("--pie-gradient", "conic-gradient(" + stops.join(",") + ")");
+        const legend = document.createElement("div"); legend.className = "data-pie-legend";
+        valid.forEach((entry) => { const item = document.createElement("span"); item.textContent = entry.label + " · " + formatValue(entry.value); item.title = item.textContent; legend.appendChild(item); });
+        layout.append(pie, legend); visual.appendChild(layout);
+      }
+    };
+    barsButton.addEventListener("click", () => render("bar"));
+    pieButton.addEventListener("click", () => render("pie"));
+    controls.append(barsButton, pieButton); chart.append(controls, visual); card.appendChild(chart);
+    render("bar");
+  }
+  function renderDataPanel() {
+    const host = document.querySelector("#data-panel-cards");
+    const selection = document.querySelector("#data-panel-selection");
+    if (!host || !selection) return;
+    host.replaceChildren();
+    if (!baseFeatures.length || !countyAcsData) {
+      host.textContent = "Loading county and block-group data…";
+      return;
+    }
+    const selectedId = selectedFeature ? selectedFeatureId(selectedFeature) : "";
+    selection.textContent = selectedFeature
+      ? "Comparing Flathead County with " + (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1))) + ". Click the selected area again to clear."
+      : "County totals. Click a block group on the map to compare its values.";
+    const cards = [];
+    els.lodesMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) cards.push({ source:"jobs", category:input.dataset.category });
+    });
+    els.acsMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
+      if (!input.disabled) cards.push({ source:"acs", category:input.dataset.category });
+    });
+    if (!cards.length) {
+      const empty = document.createElement("p"); empty.className = "data-panel-empty";
+      empty.textContent = "Select one or more measures in the settings panel to see county totals and breakdowns here.";
+      host.appendChild(empty); return;
+    }
+    cards.forEach(({source, category}) => {
+      const card = document.createElement("article"); card.className = "data-card";
+      const title = document.createElement("h3");
+      title.textContent = source === "jobs" ? DATA_PANEL_LABELS[category] : ACS_CATEGORY_LABELS[category];
+      card.appendChild(title);
+      let entries = [];
+      let note = "";
+      if (source === "jobs") {
+        const codes = category === "total" ? [] : selectedLodesCodes(category);
+        const fields = category === "total" ? ["jobs"] : codes;
+        let countyTotal = 0, countyCount = 0;
+        fields.forEach((field) => {
+          const result = countyLodesValue(field);
+          if (result.value !== null) { countyTotal += result.value; countyCount = Math.min(countyCount || result.count, result.count); }
+          if (category !== "total") entries.push({ label: DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field), value: result.value });
+        });
+        const expected = baseFeatures.length;
+        const coverageBasis = selectedBasis();
+        if (countyCount && countyCount < expected) note = coverageBasis === "wac"
+          ? "Workplace totals are incomplete: " + countyCount + " of " + expected + " block groups have source records. Missing records are not assumed to be zero."
+          : "Coverage: " + countyCount + " of " + expected + " block groups.";
+        appendValueLine(card, "Flathead County", countyCount ? countyTotal : null);
+        if (selectedFeature) {
+          const row = selectedYearData.get(selectedId);
+          const bgValue = !row ? null : category === "total" ? numeric(row[coverageBasis + "_jobs"]) :
+            fields.reduce((sum, field) => { const value = numeric(row[coverageBasis + "_" + field]); return value === null ? sum : sum + value; }, 0);
+          appendValueLine(card, "Selected block group", bgValue);
+        }
+        if (category !== "total") {
+          const bgEntries = selectedFeature ? entries.map((entry, index) => {
+            const row = selectedYearData.get(selectedId);
+            const value = row ? numeric(row[coverageBasis + "_" + fields[index]]) : null;
+            return { label: entry.label, value };
+          }) : entries;
+          addChart(card, selectedFeature ? bgEntries : entries, "jobs-" + category);
+        }
+        if (category === "total" && countyCount < expected && coverageBasis === "wac") note = "Workplace county total is incomplete because one block group has no source record.";
+        if (category === "total") note = (note ? note + " " : "") + "LODES " + els.lodesYear.value + " · " + (coverageBasis === "rac" ? "worker residence" : "workplace") + ".";
+      } else {
+        const fields = selectedAcsFields(category);
+        const countyValues = fields.map((field) => ({ field, value:numeric(countyAcsData[field]) }));
+        const countyTotal = countyValues.every((item) => item.value !== null) ? countyValues.reduce((sum,item)=>sum+item.value,0) : null;
+        appendValueLine(card, "Flathead County", countyTotal, (ACS_FIELDS[fields[0]] || {}).format);
+        if (selectedFeature) {
+          const props = selectedFeature.properties || {};
+          const bgValues = fields.map((field) => numeric(props[field]));
+          const bgTotal = bgValues.every((value) => value !== null) ? bgValues.reduce((sum,value)=>sum+value,0) : null;
+          appendValueLine(card, "Selected block group", bgTotal, (ACS_FIELDS[fields[0]] || {}).format);
+        }
+        if (fields.length > 1) {
+          entries = countyValues.map(({field,value}) => ({ label:(ACS_FIELDS[field] || {}).label || optionLabel(field), value }));
+          if (selectedFeature) entries = fields.map((field) => ({ label:(ACS_FIELDS[field] || {}).label || optionLabel(field), value:numeric(selectedFeature.properties[field]) }));
+          addChart(card, entries, "acs-" + category);
+        } else if (selectedFeature) {
+          note = "Single-value comparison; no breakdown chart is needed.";
+        }
+        note = (note ? note + " " : "") + "ACS " + els.acsYear.value + " five-year estimates.";
+      }
+      if (note) { const p = document.createElement("p"); p.className = "data-panel-note" + (note.includes("incomplete") ? " data-card-warning" : ""); p.textContent = note; card.appendChild(p); }
+      host.appendChild(card);
+    });
+  }
+
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
+    layer.on("click", () => {
+      const id = selectedFeatureId(feature);
+      selectedFeature = selectedFeature && selectedFeatureId(selectedFeature) === id ? null : feature;
+      renderDataPanel();
+      if (selectedFeature) layer.openPopup();
+    });
     layer.on({
       mouseover: (event) => event.target.setStyle({ weight: 2.5, color: "#1c3328", fillOpacity: 0.95 }),
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
@@ -518,6 +688,7 @@
     geojsonLayer.eachLayer((layer) => {
       if (layer.isPopupOpen()) layer.setPopupContent(popupContent(layer.feature));
     });
+    renderDataPanel();
   }
   async function loadLodesYear(year) {
     els.status.textContent = "Loading employment data for " + year + "…";
@@ -747,7 +918,12 @@
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
       geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
       map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
-      return loadLodesYear(els.lodesYear.value);
+      return Promise.all([
+        loadLodesYear(els.lodesYear.value),
+        fetch("data/county/acs5_" + els.acsYear.value + "_flathead_county.csv")
+          .then((response) => { if (!response.ok) throw new Error("Could not load county ACS estimates (HTTP " + response.status + ")."); return response.text(); })
+          .then((text) => { countyAcsData = parseCsv(text)[0] || null; if (!countyAcsData) throw new Error("County ACS file contains no data row."); })
+      ]).then(() => renderDataPanel());
     })
     .catch(showError);
 })();
