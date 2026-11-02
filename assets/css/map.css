@@ -633,3 +633,24 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   height: fit-content;
   min-height: 0;
 }
+
+
+/* Independently stack summary cards so a tall card cannot leave a gap
+   beneath a shorter card in the neighboring column. */
+.data-panel-cards {
+  display: block;
+  column-count: 2;
+  column-gap: 14px;
+}
+
+.data-panel-cards > .data-card {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 14px;
+  break-inside: avoid;
+  vertical-align: top;
+}
+
+@media (max-width: 600px) {
+  .data-panel-cards { column-count: 1; }
+}
