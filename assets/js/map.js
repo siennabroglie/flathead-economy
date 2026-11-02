@@ -3,6 +3,24 @@
   "use strict";
 
   const GEOJSON_URL = "data/2023/flathead_economic_2023.geojson";
+
+  function syncMapColumnHeight() {
+    const settings = document.querySelector(".control-panel");
+    const column = document.querySelector(".map-column");
+    if (!settings || !column || !window.ResizeObserver) return;
+    const updateHeight = () => {
+      if (window.matchMedia("(min-width: 901px)").matches) {
+        column.style.height = settings.getBoundingClientRect().height + "px";
+      } else {
+        column.style.height = "";
+      }
+    };
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(settings);
+    window.addEventListener("resize", updateHeight);
+    updateHeight();
+  }
+
   const LODES_PATH = (year) => "data/lodes/" + year + "/flathead_lodes_characteristics_by_block_group.csv";
   const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2023 - i);
   const ACS_FIELDS = {
@@ -81,6 +99,8 @@
     employment: ["B23025_004E", "B23025_005E"]
   };
   const COLORS = ["#f2f3ed", "#d4e2d7", "#a9c9b3", "#76a489", "#477b61", "#24513c"];
+  syncMapColumnHeight();
+
   const els = {
     lodesYear: document.querySelector("#lodes-year"),
     lodesMeasures: document.querySelector("#lodes-measures"),
