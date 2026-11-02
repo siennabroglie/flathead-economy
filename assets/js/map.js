@@ -98,7 +98,16 @@
     education: ["B15003_017E", "B15003_018E", "B15003_019E", "B15003_020E", "B15003_021E", "B15003_022E", "B15003_023E", "B15003_024E"],
     employment: ["B23025_004E", "B23025_005E"]
   };
-  const COLORS = ["#f2f3ed", "#d4e2d7", "#a9c9b3", "#76a489", "#477b61", "#24513c"];
+  // Multihue sequential scale for map intensity, from low to high.
+  const COLORS = ["#f3f4f6", "#3288bd", "#99d594", "#fee08b", "#fc8d59", "#d53e4f"];
+  // Distinct categorical colors shared by the written lists and charts.
+  const CATEGORY_COLORS = [
+    "#377eb8", "#e41a1c", "#4daf4a", "#984ea3", "#ff7f00",
+    "#a65628", "#f781bf", "#17becf", "#bcbd22", "#6a3d9a",
+    "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e",
+    "#e6ab02", "#a6761d", "#1f78b4", "#b2df8a", "#fb9a99"
+  ];
+  const categoryColor = (index) => CATEGORY_COLORS[index % CATEGORY_COLORS.length];
   syncMapColumnHeight();
 
   const els = {
@@ -384,14 +393,18 @@
     });
     return { value: count ? sum : null, count };
   }
-  function appendValueLine(container, label, value, format) {
+  function appendValueLine(container, label, value, format, color) {
     const line = document.createElement("div");
     line.className = "data-card-value";
+    const swatch = document.createElement("span");
+    swatch.className = "data-card-value-swatch";
+    swatch.style.backgroundColor = color || "transparent";
     const name = document.createElement("span");
+    name.className = "data-card-value-name";
     name.textContent = label;
     const amount = document.createElement("strong");
     amount.textContent = formatValue(value, format || "number");
-    line.append(name, amount);
+    line.append(swatch, name, amount);
     container.appendChild(line);
   }
   function addChart(card, entries, chartKey) {
@@ -411,7 +424,7 @@
         const max = Math.max(...valid.flatMap((entry) => [entry.countyValue ?? entry.value, ...(hasComparison ? [entry.selectedValue] : [])]).filter((value) => value !== null),1);
         valid.forEach((entry, index) => {
           const group = document.createElement("div"); group.className = "data-bar-group";
-          const color = COLORS[(index % (COLORS.length - 1)) + 1];
+          const color = categoryColor(index);
           const values = [{label:"County",value:entry.countyValue ?? entry.value,kind:"county"}];
           if (hasComparison) values.push({label:"Block group",value:entry.selectedValue,kind:"selected"});
           values.forEach((item) => {
@@ -433,14 +446,14 @@
         const total = pieValues.reduce((sum,entry)=>sum+entry.value,0);
         if (!total) { visual.textContent = "No values available for this chart."; return; }
         let cursor=0;
-        const stops=pieValues.map((entry,index)=>{const from=cursor;cursor+=entry.value/total*100;return COLORS[(index%(COLORS.length-1))+1]+" "+from+"% "+cursor+"%";});
+        const stops=pieValues.map((entry,index)=>{const from=cursor;cursor+=entry.value/total*100;return categoryColor(index)+" "+from+"% "+cursor+"%";});
         const layout=document.createElement("div");layout.className="data-pie-layout";
         const pie=document.createElement("div");pie.className="data-pie";pie.style.setProperty("--pie-gradient","conic-gradient("+stops.join(",")+")");
         const legend=document.createElement("div");legend.className="data-pie-legend";
         pieValues.forEach((entry,index)=>{
           const item=document.createElement("div");item.className="data-pie-legend-item";
           const swatch=document.createElement("span");swatch.className="data-pie-legend-swatch";
-          swatch.style.backgroundColor=COLORS[(index%(COLORS.length-1))+1];
+          swatch.style.backgroundColor=categoryColor(index);
           const label=document.createElement("span");label.textContent=entry.label+" · "+formatValue(entry.value);
           item.append(swatch,label);item.title=label.textContent;legend.appendChild(item);
         });
@@ -484,14 +497,15 @@
         const fields = category === "total" ? ["jobs"] :
           (selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]')).map((input) => input.value) : []);
         const basis = selectedBasis();
-        fields.forEach((field) => {
+        fields.forEach((field, index) => {
+          const color = categoryColor(index);
           const result = countyLodesValue(field);
           const label = category === "total" ? "Total jobs" :
             (DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field));
           const row = selectedFeature ? selectedYearData.get(selectedId) : null;
           const selectedValue = row ? numeric(row[basis + "_" + field]) : undefined;
-          appendValueLine(card, label, result.value);
-          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue);
+          appendValueLine(card, label, result.value, "number", color);
+          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, "number", color);
           entries.push({label, countyValue:result.value, selectedValue, value:result.value});
         });
         const expected = baseFeatures.length;
@@ -512,12 +526,13 @@
         card.appendChild(note);
       } else {
         const fields = ACS_CATEGORY_FIELDS[category] || [];
-        fields.forEach((field) => {
+        fields.forEach((field, index) => {
+          const color = categoryColor(index);
           const value = numeric(countyAcsData[field]);
           const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
           const selectedValue = selectedFeature ? numeric(selectedFeature.properties[field]) : undefined;
-          appendValueLine(card, label, value, (ACS_FIELDS[field] || {}).format);
-          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, (ACS_FIELDS[field] || {}).format);
+          appendValueLine(card, label, value, (ACS_FIELDS[field] || {}).format, color);
+          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, (ACS_FIELDS[field] || {}).format, color);
           entries.push({label, countyValue:value, selectedValue, value});
         });
         if (fields.length > 1) addChart(card, entries, "acs-" + category);
