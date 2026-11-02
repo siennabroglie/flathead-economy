@@ -517,7 +517,7 @@
     });
     const compare = Boolean(selectedFeature);
     const props = selectedFeature ? selectedFeature.properties : {};
-    const match = String(props.NAMELSAD || props.NAME || "").match(/Block Group\\s+(\\d+)/i);
+    const match = String(props.NAMELSAD || props.NAME || "").match(/Block Group\s+(\d+)/i);
     els.dataTitle.textContent = compare ? (match ? "Block Group " + match[1] : "Selected block group") : "Flathead County totals";
     els.dataPeriod.textContent = "LODES " + els.lodesYear.value + " · ACS " + els.acsYear.value;
     els.dataPanel.replaceChildren();
@@ -534,7 +534,7 @@
           const row = compare ? selectedYearData.get(String(props.GEOID || "")) : null;
           value = compare ? numeric(row && row[selectedBasis() + "_" + field]) : 0;
           if (!compare) selectedYearData.forEach((record) => { const n = numeric(record[selectedBasis() + "_" + field]); if (n !== null) value += n; });
-          county = compare ? value : null;
+          county = compare ? Array.from(selectedYearData.values()).reduce((sum,record) => sum + (numeric(record[selectedBasis() + "_" + field]) || 0),0) : null;
         }
         const selector = document.querySelector((group.source === "acs" ? '[data-acs-selector="' : '[data-selector="') + group.category + '"]');
         const input = selector && Array.from(selector.querySelectorAll("input")).find((item) => item.value === code);
