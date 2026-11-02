@@ -409,16 +409,19 @@
       visual.replaceChildren();
       if (mode === "bar") {
         const max = Math.max(...valid.flatMap((entry) => [entry.countyValue ?? entry.value, ...(hasComparison ? [entry.selectedValue] : [])]).filter((value) => value !== null),1);
-        valid.forEach((entry) => {
+        valid.forEach((entry, index) => {
           const row = document.createElement("div"); row.className = "data-bar-group";
-          const label = document.createElement("span"); label.className = "data-bar-label"; label.textContent = entry.label; label.title = entry.label; row.appendChild(label);
+          const color = COLORS[(index % (COLORS.length - 1)) + 1];
           const values = [{label:"County",value:entry.countyValue ?? entry.value,kind:"county"}];
           if (hasComparison) values.push({label:"Block group",value:entry.selectedValue,kind:"selected"});
           values.forEach((item) => {
             const line = document.createElement("div"); line.className = "data-bar-line";
             const tag = document.createElement("span"); tag.className = "data-bar-tag"; tag.textContent = item.label;
             const track = document.createElement("span"); track.className = "data-bar-track";
-            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind; fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%"; fill.style.width = "100%"; track.appendChild(fill);
+            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind;
+            fill.style.backgroundColor = color;
+            fill.style.opacity = item.kind === "selected" ? "0.58" : "1";
+            fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%"; fill.style.width = "100%"; track.appendChild(fill);
             const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(item.value);
             line.append(tag,track,value); row.appendChild(line);
           });
@@ -433,7 +436,13 @@
         const layout=document.createElement("div");layout.className="data-pie-layout";
         const pie=document.createElement("div");pie.className="data-pie";pie.style.setProperty("--pie-gradient","conic-gradient("+stops.join(",")+")");
         const legend=document.createElement("div");legend.className="data-pie-legend";
-        pieValues.forEach((entry)=>{const item=document.createElement("span");item.textContent=entry.label+" · "+formatValue(entry.value);item.title=item.textContent;legend.appendChild(item);});
+        pieValues.forEach((entry,index)=>{
+          const item=document.createElement("div");item.className="data-pie-legend-item";
+          const swatch=document.createElement("span");swatch.className="data-pie-legend-swatch";
+          swatch.style.backgroundColor=COLORS[(index%(COLORS.length-1))+1];
+          const label=document.createElement("span");label.textContent=entry.label+" · "+formatValue(entry.value);
+          item.append(swatch,label);item.title=label.textContent;legend.appendChild(item);
+        });
         layout.append(pie,legend);visual.appendChild(layout);
         if(hasComparison){const note=document.createElement("p");note.className="data-panel-note";note.textContent="Pie shows the selected block group's distribution; use Bar to compare it with county values.";visual.appendChild(note);}
       }
