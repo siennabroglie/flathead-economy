@@ -421,6 +421,7 @@
   function renderDataPanel() {
     const host = document.querySelector("#data-panel-cards");
     const selection = document.querySelector("#data-panel-selection");
+    const meta = document.querySelector("#data-panel-meta");
     if (!host || !selection) return;
     host.replaceChildren();
     if (!baseFeatures.length || !countyAcsData) {
@@ -429,83 +430,69 @@
     }
     const selectedId = selectedFeature ? selectedFeatureId(selectedFeature) : "";
     selection.textContent = selectedFeature
-      ? "Comparing Flathead County with " + (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1))) + ". Click the selected area again to clear."
-      : "County totals. Click a block group on the map to compare its values.";
-    const cards = [];
-    els.lodesMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
-      if (!input.disabled) cards.push({ source:"jobs", category:input.dataset.category });
-    });
-    els.acsMeasures.querySelectorAll('input[data-category]:checked').forEach((input) => {
-      if (!input.disabled) cards.push({ source:"acs", category:input.dataset.category });
-    });
-    if (!cards.length) {
-      const empty = document.createElement("p"); empty.className = "data-panel-empty";
-      empty.textContent = "Select one or more measures in the settings panel to see county totals and breakdowns here.";
-      host.appendChild(empty); return;
-    }
+      ? "Comparing Flathead County with " + (selectedFeature.properties.NAMELSAD || ("Block Group " + selectedId.slice(-1))) + "."
+      : "Showing Flathead County totals.";
+    if (meta) meta.textContent = "LODES " + els.lodesYear.value + " · " +
+      (selectedBasis() === "rac" ? "Worker residence" : "Workplace") +
+      "  |  ACS " + els.acsYear.value + " five-year estimates";
+    const cards = [
+      ...Object.keys(DATA_PANEL_LABELS).map((category) => ({ source:"jobs", category })),
+      ...Object.keys(ACS_CATEGORY_LABELS).map((category) => ({ source:"acs", category }))
+    ];
     cards.forEach(({source, category}) => {
-      const card = document.createElement("article"); card.className = "data-card";
+      const card = document.createElement("article");
+      card.className = "data-card";
       const title = document.createElement("h3");
       title.textContent = source === "jobs" ? DATA_PANEL_LABELS[category] : ACS_CATEGORY_LABELS[category];
       card.appendChild(title);
-      let entries = [];
-      let note = "";
+      const entries = [];
       if (source === "jobs") {
-        const codes = category === "total" ? [] : selectedLodesCodes(category);
-        const fields = category === "total" ? ["jobs"] : codes;
-        let countyTotal = 0, countyCount = 0;
+        const selector = document.querySelector('[data-selector="' + category + '"]');
+        const fields = category === "total" ? ["jobs"] :
+          (selector ? Array.from(selector.querySelectorAll('input[type="checkbox"]')).map((input) => input.value) : []);
+        const basis = selectedBasis();
         fields.forEach((field) => {
           const result = countyLodesValue(field);
-          if (result.value !== null) { countyTotal += result.value; countyCount = Math.min(countyCount || result.count, result.count); }
-          if (category !== "total") entries.push({ label: DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field), countyValue: result.value, value: result.value });
+          const label = category === "total" ? "Total jobs" :
+            (DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field));
+          const row = selectedFeature ? selectedYearData.get(selectedId) : null;
+          const selectedValue = row ? numeric(row[basis + "_" + field]) : undefined;
+          appendValueLine(card, label, result.value);
+          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue);
+          entries.push({label, countyValue:result.value, selectedValue, value:result.value});
         });
         const expected = baseFeatures.length;
-        const coverageBasis = selectedBasis();
-        if (countyCount && countyCount < expected) note = coverageBasis === "wac"
-          ? "Workplace totals are incomplete: " + countyCount + " of " + expected + " block groups have source records. Missing records are not assumed to be zero."
-          : "Coverage: " + countyCount + " of " + expected + " block groups.";
-        appendValueLine(card, "Flathead County", countyCount ? countyTotal : null);
-        if (selectedFeature) {
-          const row = selectedYearData.get(selectedId);
-          const bgValue = !row ? null : category === "total" ? numeric(row[coverageBasis + "_jobs"]) :
-            fields.reduce((sum, field) => { const value = numeric(row[coverageBasis + "_" + field]); return value === null ? sum : sum + value; }, 0);
-          appendValueLine(card, "Selected block group", bgValue);
+        const coverage = fields.length ? Math.min(...fields.map((field) => countyLodesValue(field).count)) : 0;
+        if (coverage < expected) {
+          const note = document.createElement("p");
+          note.className = "data-panel-note data-card-warning";
+          note.textContent = (basis === "wac" ? "Workplace" : "Residence") +
+            " coverage: " + coverage + " of " + expected +
+            " block groups with records. Missing records are not assumed to be zero.";
+          card.appendChild(note);
         }
-        if (category !== "total") {
-          const row = selectedFeature ? selectedYearData.get(selectedId) : null;
-          const comparisonEntries = entries.map((entry,index) => ({
-            ...entry,
-            selectedValue: row ? numeric(row[coverageBasis + "_" + fields[index]]) : undefined
-          }));
-          addChart(card, comparisonEntries, "jobs-" + category);
-        }
-        if (category === "total" && countyCount < expected && coverageBasis === "wac") note = "Workplace county total is incomplete because one block group has no source record.";
-        if (category === "total") note = (note ? note + " " : "") + "LODES " + els.lodesYear.value + " · " + (coverageBasis === "rac" ? "worker residence" : "workplace") + ".";
+        if (category !== "total") addChart(card, entries, "jobs-" + category);
+        const note = document.createElement("p");
+        note.className = "data-panel-note";
+        note.textContent = "LODES " + els.lodesYear.value + " · " +
+          (basis === "rac" ? "worker residence" : "workplace");
+        card.appendChild(note);
       } else {
-        const fields = selectedAcsFields(category);
-        const countyValues = fields.map((field) => ({ field, value:numeric(countyAcsData[field]) }));
-        const countyTotal = countyValues.every((item) => item.value !== null) ? countyValues.reduce((sum,item)=>sum+item.value,0) : null;
-        appendValueLine(card, "Flathead County", countyTotal, (ACS_FIELDS[fields[0]] || {}).format);
-        if (selectedFeature) {
-          const props = selectedFeature.properties || {};
-          const bgValues = fields.map((field) => numeric(props[field]));
-          const bgTotal = bgValues.every((value) => value !== null) ? bgValues.reduce((sum,value)=>sum+value,0) : null;
-          appendValueLine(card, "Selected block group", bgTotal, (ACS_FIELDS[fields[0]] || {}).format);
-        }
-        if (fields.length > 1) {
-          entries = countyValues.map(({field,value}) => ({
-            label:(ACS_FIELDS[field] || {}).label || optionLabel(field),
-            countyValue:value,
-            selectedValue:selectedFeature ? numeric(selectedFeature.properties[field]) : undefined,
-            value
-          }));
-          addChart(card, entries, "acs-" + category);
-        } else if (selectedFeature) {
-          note = "Single-value comparison; no breakdown chart is needed.";
-        }
-        note = (note ? note + " " : "") + "ACS " + els.acsYear.value + " five-year estimates.";
+        const fields = ACS_CATEGORY_FIELDS[category] || [];
+        fields.forEach((field) => {
+          const value = numeric(countyAcsData[field]);
+          const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
+          const selectedValue = selectedFeature ? numeric(selectedFeature.properties[field]) : undefined;
+          appendValueLine(card, label, value, (ACS_FIELDS[field] || {}).format);
+          if (selectedFeature) appendValueLine(card, "Block group · " + label, selectedValue, (ACS_FIELDS[field] || {}).format);
+          entries.push({label, countyValue:value, selectedValue, value});
+        });
+        if (fields.length > 1) addChart(card, entries, "acs-" + category);
+        const note = document.createElement("p");
+        note.className = "data-panel-note";
+        note.textContent = "ACS " + els.acsYear.value + " five-year estimates.";
+        card.appendChild(note);
       }
-      if (note) { const p = document.createElement("p"); p.className = "data-panel-note" + (note.includes("incomplete") ? " data-card-warning" : ""); p.textContent = note; card.appendChild(p); }
       host.appendChild(card);
     });
   }
