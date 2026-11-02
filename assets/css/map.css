@@ -794,10 +794,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 
-/* Fit every category bar inside its chart without horizontal scrolling. */
+/* Keep small category sets compact while allowing larger sets to shrink to fit. */
 .data-bars {
   display: flex;
   flex-wrap: nowrap;
+  justify-content: center;
   gap: 3px;
   width: 100%;
   min-width: 0;
@@ -806,9 +807,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 .data-bar-group {
-  flex: 1 1 0;
+  flex: 0 1 42px;
+  width: 42px;
   min-width: 0;
-  max-width: none;
+  max-width: 42px;
 }
 
 .data-bar-line {
