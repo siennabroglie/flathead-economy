@@ -372,53 +372,51 @@
     container.appendChild(line);
   }
   function addChart(card, entries, chartKey) {
-    const valid = entries.filter((entry) => entry.value !== null && entry.value >= 0);
-    if (valid.length < 2 || valid.every((entry) => entry.value === 0)) return;
-    const chart = document.createElement("div");
-    chart.className = "data-card-chart";
-    const controls = document.createElement("div");
-    controls.className = "data-chart-controls";
-    const barsButton = document.createElement("button");
-    const pieButton = document.createElement("button");
-    barsButton.type = pieButton.type = "button";
-    barsButton.textContent = "Bar";
-    pieButton.textContent = "Pie";
-    barsButton.setAttribute("aria-pressed", "true");
-    pieButton.setAttribute("aria-pressed", "false");
-    const visual = document.createElement("div");
-    visual.className = "data-bars";
+    const valid = entries.filter((entry) => (entry.countyValue ?? entry.value) !== null && (entry.countyValue ?? entry.value) >= 0);
+    if (valid.length < 2 || valid.every((entry) => (entry.countyValue ?? entry.value) === 0)) return;
+    const chart = document.createElement("div"); chart.className = "data-card-chart";
+    const controls = document.createElement("div"); controls.className = "data-chart-controls";
+    const barsButton = document.createElement("button"), pieButton = document.createElement("button");
+    barsButton.type = pieButton.type = "button"; barsButton.textContent = "Bar"; pieButton.textContent = "Pie";
+    barsButton.setAttribute("aria-pressed","true"); pieButton.setAttribute("aria-pressed","false");
+    const visual = document.createElement("div"); visual.className = "data-bars";
+    const hasComparison = selectedFeature && valid.some((entry) => entry.selectedValue !== undefined);
     const render = (mode) => {
-      barsButton.setAttribute("aria-pressed", String(mode === "bar"));
-      pieButton.setAttribute("aria-pressed", String(mode === "pie"));
+      barsButton.setAttribute("aria-pressed",String(mode === "bar")); pieButton.setAttribute("aria-pressed",String(mode === "pie"));
       visual.replaceChildren();
       if (mode === "bar") {
-        const max = Math.max(...valid.map((entry) => entry.value), 1);
+        const max = Math.max(...valid.flatMap((entry) => [entry.countyValue ?? entry.value, ...(hasComparison ? [entry.selectedValue] : [])]).filter((value) => value !== null),1);
         valid.forEach((entry) => {
-          const row = document.createElement("div"); row.className = "data-bar-row";
-          const label = document.createElement("span"); label.className = "data-bar-label"; label.textContent = entry.label; label.title = entry.label;
-          const track = document.createElement("span"); track.className = "data-bar-track";
-          const fill = document.createElement("span"); fill.className = "data-bar-fill"; fill.style.width = (entry.value / max * 100) + "%"; track.appendChild(fill);
-          const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(entry.value);
-          row.append(label, track, value); visual.appendChild(row);
+          const row = document.createElement("div"); row.className = "data-bar-group";
+          const label = document.createElement("span"); label.className = "data-bar-label"; label.textContent = entry.label; label.title = entry.label; row.appendChild(label);
+          const values = [{label:"County",value:entry.countyValue ?? entry.value,kind:"county"}];
+          if (hasComparison) values.push({label:"Block group",value:entry.selectedValue,kind:"selected"});
+          values.forEach((item) => {
+            const line = document.createElement("div"); line.className = "data-bar-line";
+            const tag = document.createElement("span"); tag.className = "data-bar-tag"; tag.textContent = item.label;
+            const track = document.createElement("span"); track.className = "data-bar-track";
+            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind; fill.style.width = (item.value === null ? 0 : item.value / max * 100) + "%"; track.appendChild(fill);
+            const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(item.value);
+            line.append(tag,track,value); row.appendChild(line);
+          });
+          visual.appendChild(row);
         });
       } else {
-        const total = valid.reduce((sum, entry) => sum + entry.value, 0);
-        let cursor = 0;
-        const stops = valid.map((entry, index) => {
-          const start = cursor; cursor += entry.value / total * 100;
-          return COLORS[(index % (COLORS.length - 1)) + 1] + " " + start + "% " + cursor + "%";
-        });
-        const layout = document.createElement("div"); layout.className = "data-pie-layout";
-        const pie = document.createElement("div"); pie.className = "data-pie"; pie.style.setProperty("--pie-gradient", "conic-gradient(" + stops.join(",") + ")");
-        const legend = document.createElement("div"); legend.className = "data-pie-legend";
-        valid.forEach((entry) => { const item = document.createElement("span"); item.textContent = entry.label + " · " + formatValue(entry.value); item.title = item.textContent; legend.appendChild(item); });
-        layout.append(pie, legend); visual.appendChild(layout);
+        const pieValues = valid.map((entry) => ({label:entry.label,value:hasComparison ? entry.selectedValue : (entry.countyValue ?? entry.value)})).filter((entry) => entry.value !== null && entry.value >= 0);
+        const total = pieValues.reduce((sum,entry)=>sum+entry.value,0);
+        if (!total) { visual.textContent = "No values available for this chart."; return; }
+        let cursor=0;
+        const stops=pieValues.map((entry,index)=>{const from=cursor;cursor+=entry.value/total*100;return COLORS[(index%(COLORS.length-1))+1]+" "+from+"% "+cursor+"%";});
+        const layout=document.createElement("div");layout.className="data-pie-layout";
+        const pie=document.createElement("div");pie.className="data-pie";pie.style.setProperty("--pie-gradient","conic-gradient("+stops.join(",")+")");
+        const legend=document.createElement("div");legend.className="data-pie-legend";
+        pieValues.forEach((entry)=>{const item=document.createElement("span");item.textContent=entry.label+" · "+formatValue(entry.value);item.title=item.textContent;legend.appendChild(item);});
+        layout.append(pie,legend);visual.appendChild(layout);
+        if(hasComparison){const note=document.createElement("p");note.className="data-panel-note";note.textContent="Pie shows the selected block group's distribution; use Bar to compare it with county values.";visual.appendChild(note);}
       }
     };
-    barsButton.addEventListener("click", () => render("bar"));
-    pieButton.addEventListener("click", () => render("pie"));
-    controls.append(barsButton, pieButton); chart.append(controls, visual); card.appendChild(chart);
-    render("bar");
+    barsButton.addEventListener("click",()=>render("bar"));pieButton.addEventListener("click",()=>render("pie"));
+    controls.append(barsButton,pieButton);chart.append(controls,visual);card.appendChild(chart);render("bar");
   }
   function renderDataPanel() {
     const host = document.querySelector("#data-panel-cards");
@@ -459,7 +457,7 @@
         fields.forEach((field) => {
           const result = countyLodesValue(field);
           if (result.value !== null) { countyTotal += result.value; countyCount = Math.min(countyCount || result.count, result.count); }
-          if (category !== "total") entries.push({ label: DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field), value: result.value });
+          if (category !== "total") entries.push({ label: DETAIL_LABELS[field] || INDUSTRY_LABELS[field] || optionLabel(field), countyValue: result.value, value: result.value });
         });
         const expected = baseFeatures.length;
         const coverageBasis = selectedBasis();
@@ -474,12 +472,12 @@
           appendValueLine(card, "Selected block group", bgValue);
         }
         if (category !== "total") {
-          const bgEntries = selectedFeature ? entries.map((entry, index) => {
-            const row = selectedYearData.get(selectedId);
-            const value = row ? numeric(row[coverageBasis + "_" + fields[index]]) : null;
-            return { label: entry.label, value };
-          }) : entries;
-          addChart(card, selectedFeature ? bgEntries : entries, "jobs-" + category);
+          const row = selectedFeature ? selectedYearData.get(selectedId) : null;
+          const comparisonEntries = entries.map((entry,index) => ({
+            ...entry,
+            selectedValue: row ? numeric(row[coverageBasis + "_" + fields[index]]) : undefined
+          }));
+          addChart(card, comparisonEntries, "jobs-" + category);
         }
         if (category === "total" && countyCount < expected && coverageBasis === "wac") note = "Workplace county total is incomplete because one block group has no source record.";
         if (category === "total") note = (note ? note + " " : "") + "LODES " + els.lodesYear.value + " · " + (coverageBasis === "rac" ? "worker residence" : "workplace") + ".";
@@ -495,8 +493,12 @@
           appendValueLine(card, "Selected block group", bgTotal, (ACS_FIELDS[fields[0]] || {}).format);
         }
         if (fields.length > 1) {
-          entries = countyValues.map(({field,value}) => ({ label:(ACS_FIELDS[field] || {}).label || optionLabel(field), value }));
-          if (selectedFeature) entries = fields.map((field) => ({ label:(ACS_FIELDS[field] || {}).label || optionLabel(field), value:numeric(selectedFeature.properties[field]) }));
+          entries = countyValues.map(({field,value}) => ({
+            label:(ACS_FIELDS[field] || {}).label || optionLabel(field),
+            countyValue:value,
+            selectedValue:selectedFeature ? numeric(selectedFeature.properties[field]) : undefined,
+            value
+          }));
           addChart(card, entries, "acs-" + category);
         } else if (selectedFeature) {
           note = "Single-value comparison; no breakdown chart is needed.";
