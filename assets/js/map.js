@@ -395,7 +395,7 @@
             const line = document.createElement("div"); line.className = "data-bar-line";
             const tag = document.createElement("span"); tag.className = "data-bar-tag"; tag.textContent = item.label;
             const track = document.createElement("span"); track.className = "data-bar-track";
-            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind; fill.style.width = (item.value === null ? 0 : item.value / max * 100) + "%"; track.appendChild(fill);
+            const fill = document.createElement("span"); fill.className = "data-bar-fill " + item.kind; fill.style.height = (item.value === null ? 0 : item.value / max * 100) + "%"; fill.style.width = "100%"; track.appendChild(fill);
             const value = document.createElement("strong"); value.className = "data-bar-value"; value.textContent = formatValue(item.value);
             line.append(tag,track,value); row.appendChild(line);
           });
