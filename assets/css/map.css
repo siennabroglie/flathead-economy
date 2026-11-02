@@ -620,3 +620,16 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     height: auto;
   }
 }
+
+/* Let each data card use only the height its own content requires. */
+.data-panel-cards {
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+}
+
+.data-card {
+  align-self: start;
+  height: fit-content;
+  min-height: 0;
+}
