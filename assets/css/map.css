@@ -837,3 +837,43 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   .data-bar-track { max-width: 10px; }
   .data-bar-value { font-size: 6px; }
 }
+
+
+/* Keep the map key and usage notes inside the map window, directly below the map. */
+.map-support {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  border-top: 1px solid var(--border);
+}
+.map-support .legend-section,
+.map-support .about-section {
+  min-width: 0;
+  margin: 0;
+  padding: 18px 22px;
+  border: 0;
+}
+.map-support .legend-section {
+  border-right: 1px solid var(--border);
+}
+.map-support .legend-section h2 {
+  margin: 3px 0 14px;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -.025em;
+}
+.map-support .about-section h3 {
+  margin: 3px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.map-support .about-section p {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+@media (max-width: 600px) {
+  .map-support { grid-template-columns: 1fr; }
+  .map-support .legend-section { border-right: 0; border-bottom: 1px solid var(--border); }
+}
