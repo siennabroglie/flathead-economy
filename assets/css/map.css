@@ -678,3 +678,30 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* Group county and selected block-group bars side by side per category. */
+.data-bar-group {
+  display: flex;
+  flex: 1 0 76px;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  min-width: 76px;
+}
+
+.data-bar-line {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.data-bar-track {
+  width: 100%;
+  max-width: 25px;
+}
