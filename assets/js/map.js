@@ -144,6 +144,7 @@
   let compositeError = "";
   let currentBreaks = [];
   let selectedFeature = null;
+  let ignoreNextMapClick = false;
   let dataPanelView = "block";
   let countyAcsData = null;
 
@@ -568,7 +569,8 @@
           else appendValueLine(card, label, blockValue, format, color);
           entries.push({label, value:selectedFeature ? blockValue : countyValue, countyValue});
         });
-        if (!compareMode && fields.length > 1) addChart(card, entries, "acs-" + category);
+        const chartEntries = entries.filter((entry) => !entry.label.toLowerCase().startsWith("total "));
+        if (!compareMode && chartEntries.length > 1) addChart(card, chartEntries, "acs-" + category);
         const note = document.createElement("p");
         note.className = "data-panel-note";
         note.textContent = "ACS " + els.acsYear.value + " five-year estimates.";
@@ -590,6 +592,7 @@
   function onEachFeature(feature, layer) {
     layer.bindPopup(() => popupContent(feature));
     layer.on("click", () => {
+      ignoreNextMapClick = true;
       const id = selectedFeatureId(feature);
       selectedFeature = selectedFeature && selectedFeatureId(selectedFeature) === id ? null : feature;
       renderDataPanel();
@@ -600,6 +603,17 @@
       mouseout: (event) => { if (geojsonLayer) geojsonLayer.resetStyle(event.target); }
     });
   }
+  map.on("click", () => {
+    if (ignoreNextMapClick) {
+      ignoreNextMapClick = false;
+      return;
+    }
+    if (!selectedFeature) return;
+    selectedFeature = null;
+    dataPanelView = "block";
+    renderDataPanel();
+  });
+
   function updateLegend() {
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
