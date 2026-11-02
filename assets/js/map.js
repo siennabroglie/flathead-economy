@@ -457,7 +457,7 @@
           const bar = document.createElement("div"); bar.className = "data-bar-line";
           const track = document.createElement("span"); track.className = "data-bar-track";
           const fill = document.createElement("span"); fill.className = "data-bar-fill";
-          fill.style.backgroundColor = categoryColor(index);
+          fill.style.backgroundColor = entry.color || categoryColor(index);
           const value = entry.value ?? entry.countyValue;
           fill.style.height = (value === null ? 0 : value / max * 100) + "%";
           track.appendChild(fill);
@@ -465,18 +465,18 @@
           bar.append(track,amount); group.appendChild(bar); visual.appendChild(group);
         });
       } else {
-        const pieValues = valid.map((entry) => ({label:entry.label,value:entry.value ?? entry.countyValue})).filter((entry) => entry.value !== null && entry.value >= 0);
+        const pieValues = valid.map((entry) => ({label:entry.label,value:entry.value ?? entry.countyValue,color:entry.color || categoryColor(valid.indexOf(entry))})).filter((entry) => entry.value !== null && entry.value >= 0);
         const total = pieValues.reduce((sum,entry)=>sum+entry.value,0);
         if (!total) { visual.textContent = "No values available for this chart."; return; }
         let cursor=0;
-        const stops=pieValues.map((entry,index)=>{const from=cursor;cursor+=entry.value/total*100;return categoryColor(index)+" "+from+"% "+cursor+"%";});
+        const stops=pieValues.map((entry)=>{const from=cursor;cursor+=entry.value/total*100;return entry.color+" "+from+"% "+cursor+"%";});
         const layout=document.createElement("div");layout.className="data-pie-layout";
         const pie=document.createElement("div");pie.className="data-pie";pie.style.setProperty("--pie-gradient","conic-gradient("+stops.join(",")+")");
         const legend=document.createElement("div");legend.className="data-pie-legend";
         pieValues.forEach((entry,index)=>{
           const item=document.createElement("div");item.className="data-pie-legend-item";
           const swatch=document.createElement("span");swatch.className="data-pie-legend-swatch";
-          swatch.style.backgroundColor=categoryColor(index);
+          swatch.style.backgroundColor=entry.color;
           const label=document.createElement("span");label.textContent=entry.label+" · "+formatValue(entry.value);
           item.append(swatch,label);item.title=label.textContent;legend.appendChild(item);
         });
@@ -545,7 +545,7 @@
           if (!selectedFeature) appendValueLine(card, label, countyResult.value, "number", color);
           else if (compareMode) appendComparisonLine(card, label, countyResult.value, blockValue, "number", color);
           else appendValueLine(card, label, blockValue, "number", color);
-          entries.push({label, value:selectedFeature ? blockValue : countyResult.value, countyValue:countyResult.value});
+          entries.push({label, value:selectedFeature ? blockValue : countyResult.value, countyValue:countyResult.value, color});
         });
         const expected = baseFeatures.length;
         const coverage = fields.length ? Math.min(...fields.map((field) => countyLodesValue(field).count)) : 0;
@@ -584,7 +584,7 @@
           if (!selectedFeature) appendValueLine(card, label, countyValue, format, color);
           else if (compareMode) appendComparisonLine(card, label, countyValue, blockValue, format, color);
           else appendValueLine(card, label, blockValue, format, color);
-          entries.push({label, value:selectedFeature ? blockValue : countyValue, countyValue});
+          entries.push({label, value:selectedFeature ? blockValue : countyValue, countyValue, color});
         });
         const chartEntries = entries.filter((entry) => !entry.label.toLowerCase().startsWith("total "));
         if (!compareMode && chartEntries.length > 1) addChart(card, chartEntries, "acs-" + category);
