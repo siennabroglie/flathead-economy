@@ -99,7 +99,7 @@
     employment: ["B23025_004E", "B23025_005E"]
   };
   // Muted sequential scale for map intensity, from low to high.
-  const COLORS = ["#f7cf62", "#f5a04e", "#ed765b", "#d85d8c", "#a45bb5", "#5577c8"];
+  const COLORS = ["#dce8f4", "#c1d5e9", "#91b4d8", "#5e8fbe", "#32699d", "#173f68"];
   // Muted, varied categorical colors shared by the written lists and charts.
   const CATEGORY_COLORS = [
     "#3185d8", "#ed7655", "#35a66f", "#9563c7", "#e5a52f",
