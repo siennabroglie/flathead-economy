@@ -807,6 +807,7 @@
   syncLodesSelectors();
   setupBulkSelectionControls();
 
+  loadCountyAcs(els.acsYear.value).then(() => { if (geojsonLayer) refreshMap(); }).catch(showError);
   fetch(GEOJSON_URL)
     .then((response) => {
       if (!response.ok) throw new Error("Could not load block-group GeoJSON (HTTP " + response.status + ").");
