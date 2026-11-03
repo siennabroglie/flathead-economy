@@ -129,6 +129,21 @@
   };
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([48.25, -114.25], 9);
+
+  // Keep Leaflet's renderer dimensions synchronized with the map container.
+  // The container can resize when the settings column changes height, even
+  // when the browser window itself has not been resized.
+  const mapContainer = map.getContainer();
+  if (window.ResizeObserver) {
+    const mapResizeObserver = new ResizeObserver(() => {
+      map.invalidateSize({ pan: false });
+    });
+    mapResizeObserver.observe(mapContainer);
+  } else {
+    window.addEventListener("resize", () => map.invalidateSize({ pan: false }));
+  }
+  map.invalidateSize({ pan: false });
+
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
