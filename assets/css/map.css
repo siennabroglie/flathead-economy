@@ -1249,3 +1249,79 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   }
 }
 
+
+
+/* Present each selectable data category as a compact card. */
+@media (min-width: 601px) {
+  .data-group > .measure-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .data-group > .measure-list > .measure-option {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 9px;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 12px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+  }
+
+  .data-group > .measure-list > .measure-option:not(.with-select) {
+    flex-direction: row;
+    align-items: center;
+    min-height: 58px;
+  }
+
+  .data-group > .measure-list > .measure-option > label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .data-group > .measure-list > .measure-option > label input {
+    flex: 0 0 auto;
+    margin: 1px 0 0;
+  }
+
+  .data-group > .measure-list > .measure-option > .subcategory-list {
+    width: 100%;
+    max-height: 112px;
+    margin: 0;
+    background: var(--surface);
+  }
+}
+
+@media (max-width: 600px) {
+  .data-group > .measure-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .data-group > .measure-list > .measure-option {
+    margin: 0;
+    padding: 11px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+  }
+
+  .data-group > .measure-list > .measure-option > .subcategory-list {
+    margin-top: 8px;
+    background: var(--surface);
+  }
+}
