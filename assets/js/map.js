@@ -888,9 +888,11 @@
     currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
-    els.period.textContent = mapMode === "combined"
-      ? "Combined index · LODES " + els.lodesYear.value + " + ACS " + els.acsYear.value
-      : (activeMode === "jobs" ? "LODES · " + els.lodesYear.value : "ACS · " + els.acsYear.value + " five-year");
+    if (els.period) {
+      els.period.textContent = mapMode === "combined"
+        ? "Combined index · LODES " + els.lodesYear.value + " + ACS " + els.acsYear.value
+        : (activeMode === "jobs" ? "LODES · " + els.lodesYear.value : "ACS · " + els.acsYear.value + " five-year");
+    }
     const selectedRaceCodes = selectedLodesCodes("raceethnicity");
     const raceEthnicityConflict = mapMode === "single" && activeMode === "jobs" &&
       activeLodesCategory === "raceethnicity" &&
