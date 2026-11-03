@@ -512,7 +512,6 @@
   function renderDataPanel() {
     const host = document.querySelector("#data-panel-cards");
     const selection = document.querySelector("#data-panel-selection");
-    const meta = document.querySelector("#data-panel-meta");
     const viewSwitch = document.querySelector("#data-panel-view-switch");
     if (!host || !selection) return;
     host.replaceChildren();
@@ -540,9 +539,6 @@
     } else {
       selection.textContent = "Showing Flathead County totals.";
     }
-    if (meta) meta.textContent = "LODES " + els.lodesYear.value + " · " +
-      (selectedBasis() === "rac" ? "Worker residence" : "Workplace") +
-      "  |  ACS " + (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value + " five-year estimates";
     const appendSectionHeading = (label, className) => {
       const heading = document.createElement("h3");
       heading.className = "data-panel-group-heading " + className;
@@ -631,9 +627,9 @@
         host.appendChild(card);
       });
     };
-    appendSectionHeading("LODES · Employment data", "lodes");
+    appendSectionHeading("Employment Data - Source: LODES " + els.lodesYear.value, "lodes");
     appendCards("jobs", Object.keys(DATA_PANEL_LABELS));
-    appendSectionHeading("ACS · Population data", "acs");
+    appendSectionHeading("Population Data - Source: ACS " + (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value, "acs");
     appendCards("acs", Object.keys(ACS_CATEGORY_LABELS));
   }
   const dataPanelViewSwitch = document.querySelector("#data-panel-view-switch");
