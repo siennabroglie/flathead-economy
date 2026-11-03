@@ -1111,12 +1111,15 @@
     .then((geojson) => {
       baseFeatures = geojson.features || [];
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
-      return fetch("data/2023/flathead_outside_county_mask.geojson")
-        .then((response) => {
-          if (!response.ok) throw new Error("Could not load the outside-county mask (HTTP " + response.status + ").");
-          return response.json();
-        })
+      geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
+      map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
+
+      // The outside mask is an optional visual layer. Its absence must not
+      // prevent the block-group map or the data summary from loading.
+      fetch("data/2023/flathead_outside_county_mask.geojson")
+        .then((response) => response.ok ? response.json() : null)
         .then((mask) => {
+          if (!mask) return;
           L.geoJSON(mask, {
             style: {
               stroke: false,
@@ -1125,15 +1128,21 @@
             },
             interactive: false
           }).addTo(map);
-          geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
-          map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
-          return Promise.all([
+        })
+        .catch((error) => console.warn("Outside-county mask unavailable:", error));
+
+      return Promise.all([
         loadLodesYear(els.lodesYear.value),
         fetch("data/county/acs5_" + els.acsYear.value + "_flathead_county.csv")
-          .then((response) => { if (!response.ok) throw new Error("Could not load county ACS estimates (HTTP " + response.status + ")."); return response.text(); })
-          .then((text) => { countyAcsData = parseCsv(text)[0] || null; if (!countyAcsData) throw new Error("County ACS file contains no data row."); })
-          ]).then(() => renderDataPanel());
-        });
+          .then((response) => {
+            if (!response.ok) throw new Error("Could not load county ACS estimates (HTTP " + response.status + ").");
+            return response.text();
+          })
+          .then((text) => {
+            countyAcsData = parseCsv(text)[0] || null;
+            if (!countyAcsData) throw new Error("County ACS file contains no data row.");
+          })
+      ]).then(() => renderDataPanel());
     })
     .catch(showError);
 })();
