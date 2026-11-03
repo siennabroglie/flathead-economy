@@ -1113,3 +1113,29 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (max-width: 600px) {
   .data-panel-cards { grid-template-columns: 1fr; }
 }
+
+
+/* Use a real three-column grid for the Data Summary; override the older
+   two-column newspaper layout above. */
+.data-panel-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-count: initial;
+  column-gap: 14px;
+  row-gap: 14px;
+}
+.data-panel-cards > .data-card {
+  display: block;
+  width: auto;
+  margin: 0;
+  break-inside: auto;
+}
+.data-panel-cards > .data-panel-group-heading {
+  grid-column: 1 / -1;
+}
+@media (max-width: 900px) {
+  .data-panel-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .data-panel-cards { grid-template-columns: 1fr; }
+}
