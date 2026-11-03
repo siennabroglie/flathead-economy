@@ -1139,3 +1139,27 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (max-width: 600px) {
   .data-panel-cards { grid-template-columns: 1fr; }
 }
+
+
+/* Tighten the two settings columns and remove the offset above ACS.
+   Keep the vertical separator without introducing a second top rule. */
+@media (min-width: 901px) {
+  .control-section { column-gap: 32px; }
+  .data-group,
+  .data-group + .data-group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .data-group + .data-group::before {
+    top: 0;
+    bottom: 0;
+    height: auto;
+  }
+  .measure-list {
+    gap: 7px;
+    margin-top: 10px;
+  }
+  .measure-option.with-select { gap: 4px; }
+  .basis-toggle { margin: 10px 0 8px; }
+}
