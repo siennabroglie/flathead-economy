@@ -509,7 +509,16 @@
     barsButton.addEventListener("click",()=>render("bar"));pieButton.addEventListener("click",()=>render("pie"));
     controls.append(barsButton,pieButton);chart.append(controls,visual);card.appendChild(chart);render("bar");
   }
+  function updateSourceHeadings() {
+    const employmentHeading = document.querySelector("#employment-heading");
+    const populationHeading = document.querySelector("#population-heading");
+    if (employmentHeading) employmentHeading.textContent = "Employment Data - Source: LODES " + els.lodesYear.value;
+    if (populationHeading) populationHeading.textContent = "Population Data - Source: ACS " +
+      (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value;
+  }
+
   function renderDataPanel() {
+    updateSourceHeadings();
     const host = document.querySelector("#data-panel-cards");
     const selection = document.querySelector("#data-panel-selection");
     const viewSwitch = document.querySelector("#data-panel-view-switch");
