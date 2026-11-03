@@ -30,13 +30,11 @@
   <main class="app-shell">
     <aside class="control-panel" aria-label="Map controls">
       <section class="control-section">
-        <p class="section-kicker">EXPLORE THE DATA</p>
-        <h2>Map settings</h2>
+        <h2>Map Data</h2>
 
         <section class="data-group" aria-labelledby="employment-heading">
           <div class="group-heading">
-            <h3 id="employment-heading">Employment Data</h3>
-            <span class="source-tag">LODES</span>
+            <h3 id="employment-heading">Employment Data - Source: LODES 2023</h3>
           </div>
           <label for="lodes-year">Employment year</label>
           <select id="lodes-year"></select>
@@ -130,8 +128,7 @@
 
         <section class="data-group" aria-labelledby="population-heading">
           <div class="group-heading">
-            <h3 id="population-heading">Population Data</h3>
-            <span class="source-tag">ACS</span>
+            <h3 id="population-heading">Population Data - Source: ACS 2020–2024</h3>
           </div>
           <label for="acs-year">ACS estimate period</label>
           <select id="acs-year">
@@ -213,8 +210,7 @@
     <section class="map-panel" aria-label="Interactive map">
       <div class="map-toolbar">
         <div>
-          <p class="map-overline">GEOGRAPHIC VIEW</p>
-          <h2>Flathead County block groups</h2>
+          <h2>Map - Flathead County, MT Block Groups</h2>
         </div>
         <span id="map-period" class="period-chip">LODES · 2023</span>
       </div>
@@ -252,7 +248,7 @@
     </div>
     <section id="data-panel" class="data-panel" aria-label="Selected data summary">
       <div class="data-panel-heading">
-        <div class="data-panel-heading-title"><p class="section-kicker">DATA SUMMARY</p><h2>Data Summary</h2><p id="data-panel-meta" class="data-panel-meta">LODES 2023 · Worker residence | ACS 2020–2024 five-year estimates</p></div>
+        <div class="data-panel-heading-title"><h2>Data Summary</h2></div>
         <div class="data-panel-heading-actions"><p id="data-panel-selection" class="data-panel-selection">Showing Flathead County totals.</p><div id="data-panel-view-switch" class="data-panel-view-switch" role="group" aria-label="Data summary view" hidden><button type="button" data-view="block" aria-pressed="true">Block group</button><button type="button" data-view="compare" aria-pressed="false">Compare to county</button></div></div>
       </div>
       <div id="data-panel-cards" class="data-panel-cards" aria-live="polite">
