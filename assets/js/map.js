@@ -1128,6 +1128,7 @@
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
       geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
       map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
+      map.zoomIn();
 
       // The outside mask is an optional visual layer. Its absence must not
       // prevent the block-group map or the data summary from loading.
