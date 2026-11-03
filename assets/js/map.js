@@ -353,6 +353,8 @@
     // while extending the grey mask well beyond the Flathead County map view.
     const regionalBounds = [[20, -160], [20, -60], [70, -60], [70, -160]];
     L.polygon([regionalBounds, ...countyHoles], {
+      renderer: L.svg(),
+      noClip: true,
       stroke: false,
       fillColor: "#777b7b",
       fillOpacity: 0.48,
