@@ -308,61 +308,6 @@
   function refreshSelectionStyles() {
     if (geojsonLayer) geojsonLayer.eachLayer((layer) => geojsonLayer.resetStyle(layer));
   }
-  function addOutsideCountyMask(features) {
-    const edges = new Map();
-    const pointKey = (point) => point.map((value) => Number(value).toFixed(6)).join(",");
-    const addRingEdges = (ring) => {
-      for (let i = 0; i < ring.length - 1; i += 1) {
-        const start = ring[i], end = ring[i + 1];
-        const a = pointKey(start), b = pointKey(end);
-        const key = a < b ? a + "|" + b : b + "|" + a;
-        if (edges.has(key)) edges.delete(key);
-        else edges.set(key, { start, end, startKey: a, endKey: b });
-      }
-    };
-    features.forEach((feature) => {
-      const geometry = feature.geometry || {};
-      const polygons = geometry.type === "Polygon" ? [geometry.coordinates]
-        : geometry.type === "MultiPolygon" ? geometry.coordinates : [];
-      polygons.forEach((polygon) => (polygon || []).forEach(addRingEdges));
-    });
-    const byStart = new Map();
-    edges.forEach((edge) => {
-      if (!byStart.has(edge.startKey)) byStart.set(edge.startKey, []);
-      byStart.get(edge.startKey).push(edge);
-    });
-    const unused = new Set(edges.values());
-    const rings = [];
-    while (unused.size) {
-      const first = unused.values().next().value;
-      const ring = [first.start];
-      let edge = first;
-      let guard = 0;
-      while (edge && unused.has(edge) && guard < edges.size + 1) {
-        unused.delete(edge);
-        ring.push(edge.end);
-        if (edge.endKey === first.startKey) break;
-        edge = (byStart.get(edge.endKey) || []).find((candidate) => unused.has(candidate));
-        guard += 1;
-      }
-      if (ring.length >= 4 && pointKey(ring[0]) === pointKey(ring[ring.length - 1])) rings.push(ring);
-    }
-    if (!rings.length) return;
-    const countyHoles = rings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude]));
-    // A fixed regional outer ring avoids invalid/off-screen corner coordinates
-    // while extending the grey mask well beyond the Flathead County map view.
-    const regionalBounds = [[20, -160], [20, -60], [70, -60], [70, -160]];
-    L.polygon([regionalBounds, ...countyHoles], {
-      renderer: L.svg(),
-      noClip: true,
-      stroke: false,
-      fillColor: "#777b7b",
-      fillOpacity: 0.48,
-      fillRule: "evenodd",
-      interactive: false
-    }).addTo(map);
-  }
-
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -1166,15 +1111,29 @@
     .then((geojson) => {
       baseFeatures = geojson.features || [];
       if (!baseFeatures.length) throw new Error("The GeoJSON file contains no map features.");
-      addOutsideCountyMask(baseFeatures);
-      geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
-      map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
-      return Promise.all([
+      return fetch("data/2023/flathead_outside_county_mask.geojson")
+        .then((response) => {
+          if (!response.ok) throw new Error("Could not load the outside-county mask (HTTP " + response.status + ").");
+          return response.json();
+        })
+        .then((mask) => {
+          L.geoJSON(mask, {
+            style: {
+              stroke: false,
+              fillColor: "#777b7b",
+              fillOpacity: 0.48
+            },
+            interactive: false
+          }).addTo(map);
+          geojsonLayer = L.geoJSON(geojson, { style: styleFeature, onEachFeature }).addTo(map);
+          map.fitBounds(geojsonLayer.getBounds(), { padding: [18, 18] });
+          return Promise.all([
         loadLodesYear(els.lodesYear.value),
         fetch("data/county/acs5_" + els.acsYear.value + "_flathead_county.csv")
           .then((response) => { if (!response.ok) throw new Error("Could not load county ACS estimates (HTTP " + response.status + ")."); return response.text(); })
           .then((text) => { countyAcsData = parseCsv(text)[0] || null; if (!countyAcsData) throw new Error("County ACS file contains no data row."); })
-      ]).then(() => renderDataPanel());
+          ]).then(() => renderDataPanel());
+        });
     })
     .catch(showError);
 })();
