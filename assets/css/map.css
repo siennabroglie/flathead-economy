@@ -985,3 +985,94 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 @media (max-width: 600px) {
   .data-group + .data-group::before { display: none; }
 }
+
+
+/* Desktop layout: settings and map share the first row; summary spans below. */
+@media (min-width: 901px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: stretch;
+  }
+
+  .control-panel {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .control-section {
+    display: block;
+  }
+
+  .data-group {
+    width: 100%;
+  }
+
+  .data-group + .data-group {
+    margin-top: 24px;
+    padding-top: 22px;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .data-group + .data-group::before {
+    display: none;
+  }
+
+  .map-column {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    align-self: stretch;
+  }
+
+  .map-column > .map-panel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .map-column .map-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .map-column #map {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .map-column .map-support {
+    flex: 0 0 auto;
+  }
+
+  .data-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+}
+
+/* Stack the two source groups in reading order at every desktop width. */
+@media (min-width: 601px) {
+  .control-section { display: block; }
+  .data-group + .data-group {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .data-group + .data-group::before { display: none; }
+}
