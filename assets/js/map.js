@@ -125,7 +125,10 @@
     legendDescription: document.querySelector("#legend-description"),
     legend: document.querySelector("#legend"),
     status: document.querySelector("#map-status"),
-    period: document.querySelector("#map-period")
+    period: document.querySelector("#map-period"),
+    graphSection: document.querySelector("#map-graph-section"),
+    graphSelect: document.querySelector("#map-graph-select"),
+    graph: document.querySelector("#map-graph")
   };
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([48.25, -114.25], 9);
@@ -673,6 +676,7 @@
       if (!selectedFeatureIds.size) dataPanelView = "block";
       refreshSelectionStyles();
       renderDataPanel();
+      renderMapGraph();
       if (selectedFeature) layer.openPopup();
       else map.closePopup();
     });
@@ -697,6 +701,7 @@
     refreshSelectionStyles();
     map.closePopup();
     renderDataPanel();
+    renderMapGraph();
   });
 
   function combinedVariableDescriptions(keys) {
@@ -881,6 +886,153 @@
         values.reduce((sum, value) => sum + value, 0) / values.length);
     });
   }
+
+  const GRAPH_OPTIONS = {
+    single: [
+      ["distribution", "Distribution histogram"],
+      ["benchmark", "County benchmark chart"]
+    ],
+    combined: [
+      ["contribution", "Component contribution chart"],
+      ["comparison", "Variable comparison chart"],
+      ["index-distribution", "Index distribution histogram"],
+      ["correlation", "Component correlation matrix"]
+    ]
+  };
+  function graphElement(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function graphRows() {
+    return baseFeatures.map((feature) => ({ feature, value: getValue(feature) }))
+      .filter((item) => item.value !== null && Number.isFinite(item.value));
+  }
+  function graphFeatureLabel(feature) {
+    const p = feature.properties || {};
+    return p.NAMELSAD || ("Block Group " + selectedFeatureId(feature).slice(-1));
+  }
+  function graphBar(container, label, value, max, detail, color) {
+    const row = graphElement("div", "map-graph-bar-row");
+    const name = graphElement("span", "map-graph-label", label);
+    const track = graphElement("span", "map-graph-track");
+    const fill = graphElement("span", "map-graph-fill");
+    fill.style.width = (max > 0 ? Math.max(0, value / max * 100) : 0) + "%";
+    fill.style.backgroundColor = color || "var(--accent)";
+    track.appendChild(fill);
+    row.append(name, track, graphElement("strong", "map-graph-value", detail));
+    container.appendChild(row);
+  }
+  function renderHistogram(host, rows, selectedValue, label) {
+    if (rows.length < 2) return false;
+    const min = Math.min(...rows.map((r) => r.value)), max = Math.max(...rows.map((r) => r.value));
+    const bins = Array.from({length:8}, (_,i)=>({label:"",count:0,low:min+(max-min)*i/8,high:min+(max-min)*(i+1)/8}));
+    rows.forEach(({value}) => {
+      const index = max === min ? 0 : Math.min(7, Math.floor((value-min)/(max-min)*8));
+      bins[index].count += 1;
+    });
+    const chart = graphElement("div","map-histogram");
+    const peak = Math.max(...bins.map((b)=>b.count),1);
+    bins.forEach((bin,i)=>{
+      const col=graphElement("div","map-histogram-bin");
+      const count=graphElement("strong","",String(bin.count));
+      const bar=graphElement("span","map-histogram-bar");
+      bar.style.height=(bin.count/peak*100)+"%";
+      if(selectedValue!==null && selectedValue>=bin.low && (selectedValue<bin.high || i===7)) bar.classList.add("is-selected");
+      const range=graphElement("small","",formatValue(bin.low)+"–"+formatValue(bin.high));
+      col.append(count,bar,range); chart.appendChild(col);
+    });
+    host.appendChild(chart);
+    host.appendChild(graphElement("p","map-graph-note",label + (selectedValue===null ? "" : " · Selected block group is highlighted")));
+    return true;
+  }
+  function normalizedColumns(keys) {
+    return keys.map((key)=>{
+      const values=baseFeatures.map((feature)=>measureValueForKey(feature,key));
+      const valid=values.filter((v)=>v!==null);
+      if(!valid.length) return {key,values,normalized:values.map(()=>null)};
+      const min=Math.min(...valid), max=Math.max(...valid);
+      return {key,values,normalized:values.map(v=>v===null?null:(max===min?0.5:(v-min)/(max-min)))};
+    });
+  }
+  function correlation(a,b) {
+    const pairs=a.map((v,i)=>[v,b[i]]).filter(p=>p[0]!==null&&p[1]!==null);
+    if(pairs.length<3) return null;
+    const mx=pairs.reduce((s,p)=>s+p[0],0)/pairs.length, my=pairs.reduce((s,p)=>s+p[1],0)/pairs.length;
+    const cov=pairs.reduce((s,p)=>s+(p[0]-mx)*(p[1]-my),0);
+    const dx=Math.sqrt(pairs.reduce((s,p)=>s+(p[0]-mx)**2,0)), dy=Math.sqrt(pairs.reduce((s,p)=>s+(p[1]-my)**2,0));
+    return dx&&dy?cov/(dx*dy):null;
+  }
+  function renderMapGraph() {
+    if (!els.graphSection || !els.graphSelect || !els.graph) return;
+    const options=GRAPH_OPTIONS[mapMode];
+    const previous=els.graphSelect.value;
+    els.graphSelect.replaceChildren();
+    options.forEach(([value,label])=>els.graphSelect.add(new Option(label,value)));
+    const applicable=options.filter(([key])=>key!=="benchmark" || Boolean(selectedFeature));
+    if (!applicable.length) { els.graphSection.hidden=true; return; }
+    els.graphSection.hidden=false;
+    if (applicable.some(([key])=>key===previous)) els.graphSelect.value=previous;
+    else els.graphSelect.value=applicable[0][0];
+    Array.from(els.graphSelect.options).forEach(option=>{
+      option.hidden=!applicable.some(([key])=>key===option.value);
+    });
+    const type=els.graphSelect.value;
+    const host=els.graph; host.replaceChildren();
+    const selectedValue=selectedFeature?getValue(selectedFeature):null;
+    if (type==="distribution" || type==="index-distribution") {
+      const rows=graphRows();
+      const title=type==="distribution"?"Block-group distribution":"Combined index distribution";
+      host.appendChild(graphElement("p","map-graph-subtitle",title+" · "+rows.length+" block groups"));
+      if(!renderHistogram(host,rows,selectedValue,"Countywide distribution")) host.textContent="Not enough valid block-group values to plot this distribution.";
+    } else if(type==="benchmark") {
+      if(!selectedFeature) { host.textContent="Select one block group to compare it with the countywide block-group average."; return; }
+      const rows=graphRows(), avg=rows.length?rows.reduce((s,r)=>s+r.value,0)/rows.length:null;
+      const value=selectedValue, max=Math.max(value||0,avg||0,1);
+      host.appendChild(graphElement("p","map-graph-subtitle",graphFeatureLabel(selectedFeature)+" compared with the mean across block groups"));
+      graphBar(host,"Selected block group",value||0,max,formatValue(value),"#b58a4b");
+      graphBar(host,"Countywide BG mean",avg||0,max,formatValue(avg));
+      host.appendChild(graphElement("p","map-graph-note","The benchmark is the arithmetic mean of available block-group values, not a separately published county estimate."));
+    } else {
+      const keys=selectedMeasureKeys(), cols=normalizedColumns(keys);
+      if(!cols.length || compositeError) { host.textContent=compositeError||"Select measures to calculate this graph."; return; }
+      const featureIndex=selectedFeature?baseFeatures.findIndex(f=>selectedFeatureId(f)===selectedFeatureId(selectedFeature)):-1;
+      const averages=cols.map(col=>{const v=col.normalized.filter(x=>x!==null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;});
+      if(type==="contribution" || type==="comparison") {
+        const title=selectedFeature?graphFeatureLabel(selectedFeature):"Countywide block-group mean";
+        host.appendChild(graphElement("p","map-graph-subtitle",title+" · normalized component scores"));
+        cols.forEach((col,i)=>{
+          const value=selectedFeature?col.normalized[featureIndex]:averages[i];
+          if(value===null) return;
+          const avg=averages[i]??0;
+          graphBar(host,measureLabel(col.key),value,1,Math.round(value*100)+"%",type==="contribution"?"#b58a4b":undefined);
+          if(type==="comparison") host.appendChild(graphElement("p","map-graph-note","Countywide mean: "+formatValue(avg*100)+"%"));
+        });
+        host.appendChild(graphElement("p","map-graph-note",type==="contribution"?"Each component has equal weight in the index; bars show its normalized score, not a different weighting.":"Values are min–max normalized across block groups; countywide mean is shown below each component."));
+      } else if(type==="correlation") {
+        if(cols.length<2) { host.textContent="Select at least two measures to calculate component correlations."; return; }
+        const table=graphElement("table","map-correlation-table");
+        const head=graphElement("tr"); head.appendChild(graphElement("th","", "Component"));
+        cols.forEach(col=>head.appendChild(graphElement("th","",measureLabel(col.key))));
+        const thead=graphElement("thead"); thead.appendChild(head); table.appendChild(thead);
+        const body=graphElement("tbody");
+        cols.forEach((col,i)=>{
+          const tr=graphElement("tr"); tr.appendChild(graphElement("th","",measureLabel(col.key)));
+          cols.forEach((other,j)=>{
+            const r=correlation(col.values,other.values);
+            const td=graphElement("td",r===null?"is-missing":r>=0.6?"is-positive":r<=-0.6?"is-negative":"",r===null?"—":r.toFixed(2));
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+        table.appendChild(body); host.appendChild(table);
+        host.appendChild(graphElement("p","map-graph-note","Pearson correlation across block groups; association does not imply causation."));
+      }
+    }
+  }
+  els.graphSelect?.addEventListener("change",renderMapGraph);
+
   function refreshMap() {
     if (!geojsonLayer) return;
     if (mapMode === "combined") calculateCompositeValues();
@@ -906,6 +1058,7 @@
       if (layer.isPopupOpen()) layer.setPopupContent(popupContent(layer.feature));
     });
     renderDataPanel();
+    renderMapGraph();
   }
   async function loadLodesYear(year) {
     els.status.textContent = "Loading employment data for " + year + "…";
