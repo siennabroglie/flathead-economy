@@ -989,10 +989,12 @@
     } else if(type==="benchmark") {
       if(!selectedFeature) { host.textContent="Select one block group to compare it with the countywide block-group average."; return; }
       const rows=graphRows(), avg=rows.length?rows.reduce((s,r)=>s+r.value,0)/rows.length:null;
-      const value=selectedValue, max=Math.max(value||0,avg||0,1);
+      const value=selectedValue;
       host.appendChild(graphElement("p","map-graph-subtitle",graphFeatureLabel(selectedFeature)+" compared with the mean across block groups"));
-      graphBar(host,"Selected block group",value||0,max,formatValue(value),"#b58a4b");
-      graphBar(host,"Countywide BG mean",avg||0,max,formatValue(avg));
+      if(value===null || avg===null) { host.textContent="The selected block group does not have a usable value for this measure."; return; }
+      const max=Math.max(value,avg,1);
+      graphBar(host,"Selected block group",value,max,formatValue(value),"#b58a4b");
+      graphBar(host,"Countywide BG mean",avg,max,formatValue(avg));
       host.appendChild(graphElement("p","map-graph-note","The benchmark is the arithmetic mean of available block-group values, not a separately published county estimate."));
     } else {
       const keys=selectedMeasureKeys(), cols=normalizedColumns(keys);
