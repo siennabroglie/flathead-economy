@@ -348,11 +348,22 @@
       if (ring.length >= 4 && pointKey(ring[0]) === pointKey(ring[ring.length - 1])) rings.push(ring);
     }
     if (!rings.length) return;
-    const world = [[-90, -540], [-90, 540], [90, 540], [90, -540]];
     const countyHoles = rings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude]));
-    L.polygon([world, ...countyHoles], {
+    const paddedMapBounds = () => {
+      const size = map.getSize();
+      const corners = [
+        map.containerPointToLatLng([-80, -80]),
+        map.containerPointToLatLng([size.x + 80, -80]),
+        map.containerPointToLatLng([size.x + 80, size.y + 80]),
+        map.containerPointToLatLng([-80, size.y + 80])
+      ];
+      return corners.map((point) => [point.lat, point.lng]);
+    };
+    const mask = L.polygon([paddedMapBounds(), ...countyHoles], {
       stroke: false, fillColor: "#777b7b", fillOpacity: 0.48, interactive: false
     }).addTo(map);
+    const updateMaskBounds = () => mask.setLatLngs([paddedMapBounds(), ...countyHoles]);
+    map.on("moveend zoomend resize", updateMaskBounds);
   }
 
   function escapeHtml(value) {
