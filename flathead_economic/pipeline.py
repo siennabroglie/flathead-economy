@@ -760,9 +760,22 @@ class Pipeline:
 
         result.drop(columns="geometry").to_csv(csv_path, index=False)
         result.to_file(gpkg_path, layer="block_groups", driver="GPKG")
-        result.to_crs("EPSG:4326").to_file(
-            geojson_path, driver="GeoJSON"
+        geographic_result = result.to_crs("EPSG:4326")
+        geographic_result.to_file(geojson_path, driver="GeoJSON")
+
+        # Dissolve block groups, then subtract the county from a regional
+        # rectangle. GeoPandas/Shapely handles the polygon topology.
+        from shapely.geometry import box
+
+        county_geometry = geographic_result.geometry.union_all()
+        regional_extent = box(-160, 20, -60, 70)
+        outside_mask = gpd.GeoDataFrame(
+            {"name": ["Outside Flathead County"]},
+            geometry=[regional_extent.difference(county_geometry)],
+            crs="EPSG:4326",
         )
+        mask_path = out_dir / "flathead_outside_county_mask.geojson"
+        outside_mask.to_file(mask_path, driver="GeoJSON")
 
         summary_path = out_dir / "build_summary.json"
         summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
