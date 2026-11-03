@@ -349,21 +349,16 @@
     }
     if (!rings.length) return;
     const countyHoles = rings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude]));
-    const paddedMapBounds = () => {
-      const size = map.getSize();
-      const corners = [
-        map.containerPointToLatLng([-80, -80]),
-        map.containerPointToLatLng([size.x + 80, -80]),
-        map.containerPointToLatLng([size.x + 80, size.y + 80]),
-        map.containerPointToLatLng([-80, size.y + 80])
-      ];
-      return corners.map((point) => [point.lat, point.lng]);
-    };
-    const mask = L.polygon([paddedMapBounds(), ...countyHoles], {
-      stroke: false, fillColor: "#777b7b", fillOpacity: 0.48, interactive: false
+    // A fixed regional outer ring avoids invalid/off-screen corner coordinates
+    // while extending the grey mask well beyond the Flathead County map view.
+    const regionalBounds = [[20, -160], [20, -60], [70, -60], [70, -160]];
+    L.polygon([regionalBounds, ...countyHoles], {
+      stroke: false,
+      fillColor: "#777b7b",
+      fillOpacity: 0.48,
+      fillRule: "evenodd",
+      interactive: false
     }).addTo(map);
-    const updateMaskBounds = () => mask.setLatLngs([paddedMapBounds(), ...countyHoles]);
-    map.on("moveend zoomend resize", updateMaskBounds);
   }
 
   function escapeHtml(value) {
