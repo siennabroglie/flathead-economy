@@ -970,8 +970,13 @@
     const previous=els.graphSelect.value;
     els.graphSelect.replaceChildren();
     options.forEach(([value,label])=>els.graphSelect.add(new Option(label,value)));
-    const applicable=options.filter(([key])=>key!=="benchmark" || Boolean(selectedFeature));
-    if (!applicable.length) { els.graphSection.hidden=true; return; }
+    const selectedKeys=selectedMeasureKeys();
+    const applicable=options.filter(([key])=>{
+      if(key==="benchmark") return Boolean(selectedFeature);
+      if(key==="correlation") return selectedKeys.length>=2;
+      return true;
+    });
+    if (!applicable.length || (mapMode==="combined" && compositeError)) { els.graphSection.hidden=true; return; }
     els.graphSection.hidden=false;
     if (applicable.some(([key])=>key===previous)) els.graphSelect.value=previous;
     else els.graphSelect.value=applicable[0][0];
