@@ -348,7 +348,7 @@
       if (ring.length >= 4 && pointKey(ring[0]) === pointKey(ring[ring.length - 1])) rings.push(ring);
     }
     if (!rings.length) return;
-    const world = [[-89.9, -180], [-89.9, 180], [89.9, 180], [89.9, -180]];
+    const world = [[-90, -540], [-90, 540], [90, 540], [90, -540]];
     const countyHoles = rings.map((ring) => ring.map(([longitude, latitude]) => [latitude, longitude]));
     L.polygon([world, ...countyHoles], {
       stroke: false, fillColor: "#777b7b", fillOpacity: 0.48, interactive: false
