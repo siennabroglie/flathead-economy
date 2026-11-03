@@ -319,7 +319,6 @@
     const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
     return { ...winner, share: winner.count / denominator, rank: ordered.indexOf(winner.code), ordered };
   }
-  const isDominantMode = () => isOrdinalMode() || (isNominalMode() && (nominalSelection(selectedFeature || baseFeatures[0]) || {}).selected?.length > 1);
   function activeMeta() {
     if (mapMode === "combined") {
       return { label: "Combined index · equal-weight normalized score", format: "number" };
@@ -847,7 +846,12 @@
       formula.textContent = "Formula: For each selected variable, min–max normalize its block-group values to 0–1: (value − minimum) ÷ (maximum − minimum). Then calculate the arithmetic mean of the normalized variables, giving each variable equal weight. If a variable has the same value in every block group, its normalized value is 0.5.";
       els.legendDescription.append(variablesTitle, variables, formula);
     } else if (isOrdinalMode()) {
-      els.legendDescription.textContent = "Each block group's score is the weighted average of the selected category scores. Category scores are earnings: 1–3, education: 1–4, and age: 1–3; each category's score is weighted by its job count. The index is ordinal, not a dollar amount, age, or education average.";
+      const scoreLabels = activeLodesCategory === "earnings"
+        ? "Earnings: $1,250/month or less = 1; $1,251–$3,333 = 2; more than $3,333 = 3."
+        : activeLodesCategory === "education"
+          ? "Education: less than high school = 1; high school or equivalent = 2; some college or associate degree = 3; bachelor's degree or advanced degree = 4."
+          : "Age: youngest group = 1; ages 30–54 = 2; oldest group = 3.";
+      els.legendDescription.textContent = "Weighted average of the selected category scores, with each score weighted by its job count. " + scoreLabels + " This is an ordinal index, not a dollar amount, age, or education average.";
     } else if (isNominalMode()) {
       const selected = nominalSelectedCodes();
       els.legendDescription.textContent = selected.length > 1
