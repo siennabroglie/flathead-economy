@@ -1164,3 +1164,88 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   .measure-option.with-select { gap: 4px; }
   .basis-toggle { margin: 10px 0 8px; }
 }
+
+/* Stack the two data sources vertically while keeping each source in two columns. */
+@media (min-width: 601px) {
+  .control-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+
+  .control-section > .section-kicker,
+  .control-section > h2,
+  .control-section > .data-group {
+    grid-column: 1;
+  }
+
+  .data-group,
+  .data-group:first-of-type,
+  .data-group + .data-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+    grid-column: 1;
+    grid-row: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .data-group + .data-group {
+    position: relative;
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .data-group + .data-group::before {
+    display: none;
+  }
+
+  .data-group > .group-heading,
+  .data-group > .measure-list,
+  .data-group > .field-note,
+  .data-group > #acs-detail {
+    grid-column: 1 / -1;
+  }
+
+  .data-group > .group-heading {
+    margin-bottom: 12px;
+  }
+
+  .data-group > label[for],
+  .data-group > select {
+    grid-column: 1;
+  }
+
+  .data-group > .basis-toggle {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: start;
+    margin: 0;
+  }
+
+  .data-group > .measure-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    column-gap: 28px;
+    row-gap: 12px;
+    margin-top: 16px;
+  }
+
+  .data-group .measure-option {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .data-group + .data-group {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+}
+
