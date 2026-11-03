@@ -987,10 +987,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 
-/* Desktop layout: settings and map share the first row; summary spans below. */
+/* Desktop: retain the compact split settings panel beside the map,
+   with the Data Summary spanning beneath both. */
 @media (min-width: 901px) {
   .app-shell {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(430px, 0.95fr) minmax(0, 1.65fr);
     grid-template-rows: auto auto;
     align-items: stretch;
   }
@@ -999,27 +1000,39 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     grid-column: 1;
     grid-row: 1;
     align-self: stretch;
-    min-height: 0;
   }
 
   .control-section {
-    display: block;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 40px;
   }
 
-  .data-group {
-    width: 100%;
+  .data-group:first-of-type {
+    grid-column: 1;
+    grid-row: 3;
   }
 
   .data-group + .data-group {
-    margin-top: 24px;
-    padding-top: 22px;
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 22px;
+    padding-top: 20px;
     padding-left: 0;
-    border-left: 0;
     border-top: 1px solid var(--border);
+    border-left: 0;
   }
 
   .data-group + .data-group::before {
-    display: none;
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    left: -20px;
+    width: 1px;
+    height: 100%;
+    background: var(--border);
+    content: "";
   }
 
   .map-column {
@@ -1066,13 +1079,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   }
 }
 
-/* Stack the two source groups in reading order at every desktop width. */
-@media (min-width: 601px) {
+@media (max-width: 900px) {
   .control-section { display: block; }
-  .data-group + .data-group {
-    border-left: 0;
-    padding-left: 0;
-    border-top: 1px solid var(--border);
-  }
+  .data-group:first-of-type,
+  .data-group + .data-group { grid-column: auto; grid-row: auto; }
+  .data-group + .data-group { border-left: 0; padding-left: 0; }
   .data-group + .data-group::before { display: none; }
 }
