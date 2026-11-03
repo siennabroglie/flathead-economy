@@ -1115,29 +1115,30 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 }
 
 
-/* Use a real three-column grid for the Data Summary; override the older
-   two-column newspaper layout above. */
+/* Pack Data Summary cards vertically so short cards do not leave
+   large blank areas beside taller cards. */
 .data-panel-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  column-count: initial;
+  display: block;
+  column-count: 3;
   column-gap: 14px;
-  row-gap: 14px;
+  column-fill: balance;
 }
 .data-panel-cards > .data-card {
-  display: block;
-  width: auto;
-  margin: 0;
-  break-inside: auto;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 14px;
+  vertical-align: top;
+  break-inside: avoid;
 }
 .data-panel-cards > .data-panel-group-heading {
-  grid-column: 1 / -1;
+  column-span: all;
+  break-after: avoid;
 }
 @media (max-width: 900px) {
-  .data-panel-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .data-panel-cards { column-count: 2; }
 }
 @media (max-width: 600px) {
-  .data-panel-cards { grid-template-columns: 1fr; }
+  .data-panel-cards { column-count: 1; }
 }
 
 
