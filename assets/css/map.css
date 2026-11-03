@@ -1485,3 +1485,29 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   line-height: 1.5;
 }
 
+
+
+/* Graph selector and visualizations beneath the map legend. */
+.map-graph-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.map-graph-section > label { display:block; margin:0 0 6px; font-size:11px; font-weight:650; }
+.map-graph-section select { min-height:34px; padding:6px 9px; font-size:11px; }
+.map-graph { margin-top:12px; min-width:0; }
+.map-graph-subtitle { margin:0 0 10px; color:var(--text-muted); font-size:10px; }
+.map-graph-note { margin:8px 0 0; color:var(--text-muted); font-size:9px; line-height:1.45; }
+.map-graph-bar-row { display:grid; grid-template-columns:minmax(90px,1fr) minmax(70px,2fr) auto; align-items:center; gap:8px; margin:8px 0; font-size:10px; }
+.map-graph-label { overflow-wrap:anywhere; color:var(--text-muted); }
+.map-graph-track { display:block; height:9px; overflow:hidden; border-radius:99px; background:var(--surface-muted); }
+.map-graph-fill { display:block; height:100%; border-radius:99px; background:var(--accent); }
+.map-graph-value { font-size:10px; font-variant-numeric:tabular-nums; }
+.map-histogram { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); align-items:end; gap:5px; height:132px; padding:8px 0 0; border-bottom:1px solid var(--border); }
+.map-histogram-bin { display:flex; height:100%; min-width:0; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; }
+.map-histogram-bin strong { font-size:9px; font-weight:600; }
+.map-histogram-bar { display:block; width:75%; min-height:2px; background:#7898b5; border-radius:3px 3px 0 0; }
+.map-histogram-bar.is-selected { background:#b58a4b; outline:1px solid var(--text); }
+.map-histogram-bin small { width:100%; overflow:hidden; color:var(--text-muted); font-size:7px; text-align:center; white-space:nowrap; }
+.map-correlation-table { width:100%; border-collapse:collapse; font-size:9px; }
+.map-correlation-table th,.map-correlation-table td { padding:5px 3px; border:1px solid var(--border); text-align:center; overflow-wrap:anywhere; }
+.map-correlation-table th { background:var(--surface-muted); font-weight:650; }
+.map-correlation-table td.is-positive { background:#e5eee8; }
+.map-correlation-table td.is-negative { background:#f3e7e3; }
+.map-correlation-table td.is-missing { color:var(--text-muted); }
