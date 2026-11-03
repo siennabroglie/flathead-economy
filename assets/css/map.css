@@ -1511,3 +1511,52 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .map-correlation-table td.is-positive { background:#e5eee8; }
 .map-correlation-table td.is-negative { background:#f3e7e3; }
 .map-correlation-table td.is-missing { color:var(--text-muted); }
+
+
+/* Improve readability of graphs beneath the map legend. */
+.map-graph-section > label {
+  font-size: 13px;
+}
+.map-graph-section select {
+  font-size: 13px;
+}
+.map-graph-subtitle {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.map-graph-note {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.map-graph-bar-row {
+  font-size: 12px;
+  gap: 10px;
+  margin: 10px 0;
+}
+.map-graph-value {
+  font-size: 12px;
+}
+.map-graph-track {
+  height: 12px;
+}
+.map-histogram {
+  height: 150px;
+  gap: 7px;
+}
+.map-histogram-bin strong {
+  font-size: 11px;
+}
+.map-histogram-bin small {
+  font-size: 10px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.map-correlation-table {
+  font-size: 11px;
+}
+.map-correlation-table th,
+.map-correlation-table td {
+  padding: 7px 5px;
+  line-height: 1.3;
+}
