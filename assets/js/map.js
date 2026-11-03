@@ -319,6 +319,15 @@
     if (mapMode === "combined") {
       return { label: "Combined index · equal-weight normalized score", format: "number" };
     }
+    if (isNominalMode()) {
+      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      if (selected.length > 1) return { label: "Dominant selected category", format: "number", categorical: true };
+      const label = activeMode === "jobs"
+        ? (activeLodesCategory === "industry" ? "Industry share of all jobs" :
+          activeLodesCategory === "sex" ? "Worker sex share of all jobs" : "Selected race or ethnicity share of all jobs")
+        : (activeAcsCategory === "households" ? "Household composition share" : "Employment status share of civilian labor force");
+      return { label, format: "percent", percentage: true };
+    }
     if (activeMode === "acs") {
       const fields = selectedAcsFields(activeAcsCategory);
       if (fields.length > 1) return { label: "Combined selected ACS subcategories", format: "number" };
@@ -345,6 +354,11 @@
     if (activeMode === "acs") {
       const fields = selectedAcsFields(activeAcsCategory);
       if (!fields.length) return null;
+      if (isNominalMode()) {
+        const selection = nominalSelection(feature);
+        if (!selection) return null;
+        return selection.selected.length > 1 ? selection.winner.count : selection.share;
+      }
       const values = fields.map((field) => numeric(p[field]));
       if (values.some((value) => value === null)) return null;
       return values.reduce((sum, value) => sum + value, 0);
@@ -822,7 +836,7 @@
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legendDescription.replaceChildren();
-    els.legendDescription.hidden = mapMode !== "combined";
+    els.legendDescription.hidden = false;
     if (mapMode === "combined") {
       const variablesTitle = document.createElement("strong");
       variablesTitle.textContent = "Variables";
@@ -836,6 +850,13 @@
       formula.className = "legend-formula";
       formula.textContent = "Formula: For each selected variable, min–max normalize its block-group values to 0–1: (value − minimum) ÷ (maximum − minimum). Then calculate the arithmetic mean of the normalized variables, giving each variable equal weight. If a variable has the same value in every block group, its normalized value is 0.5.";
       els.legendDescription.append(variablesTitle, variables, formula);
+    } else if (isOrdinalMode()) {
+      els.legendDescription.textContent = "Each block group's score is the weighted average of the selected category scores. Category scores are earnings: 1–3, education: 1–4, and age: 1–3; each category's score is weighted by its job count. The index is ordinal, not a dollar amount, age, or education average.";
+    } else if (isNominalMode()) {
+      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      els.legendDescription.textContent = selected.length > 1
+        ? "Each block group is colored by the selected subcategory with the greatest count. Colors identify categories; they do not represent category percentages."
+        : "The map shows the selected subcategory as a percentage of the relevant total in each block group.";
     }
     els.legend.replaceChildren();
     if (meta.categorical) {
