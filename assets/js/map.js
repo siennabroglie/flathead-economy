@@ -226,6 +226,67 @@
     sex: ["CS01", "CS02"],
     raceethnicity: ["CR01", "CR02", "CR03", "CR04", "CR05", "CR07", "CT01", "CT02"]
   };
+  const ORDINAL_SCORES = {
+    earnings: { CE01: 1, CE02: 2, CE03: 3 },
+    education: { CD01: 1, CD02: 2, CD03: 3, CD04: 4 },
+    age: { CA01: 1, CA02: 2, CA03: 3 }
+  };
+  const isOrdinalMode = () => mapMode === "single" && activeMode === "jobs" &&
+    Object.prototype.hasOwnProperty.call(ORDINAL_SCORES, activeLodesCategory);
+  const isNominalCategory = (mode, category) =>
+    (mode === "jobs" && ["industry", "raceethnicity", "sex"].includes(category)) ||
+    (mode === "acs" && ["households", "employment"].includes(category));
+  const isNominalMode = () => mapMode === "single" && isNominalCategory(activeMode,
+    activeMode === "jobs" ? activeLodesCategory : activeAcsCategory);
+  function nominalSelection(feature) {
+    const p = feature.properties || {};
+    let selected = [], counts = [], denominator = null;
+    if (activeMode === "jobs") {
+      const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
+      if (!row) return null;
+      selected = selectedLodesCodes();
+      if (activeLodesCategory === "raceethnicity") {
+        const race = selected.filter((code) => code.startsWith("CR"));
+        const ethnicity = selected.filter((code) => code.startsWith("CT"));
+        if (race.length && ethnicity.length) return null;
+        selected = race.length ? race : ethnicity;
+      }
+      const prefix = selectedBasis() + "_";
+      counts = selected.map((code) => ({ code, count: numeric(row[prefix + code]) }));
+      denominator = numeric(row[prefix + "_jobs"]);
+    } else {
+      selected = selectedAcsFields();
+      counts = selected.map((field) => ({ code: field, count: numeric(p[field]) }));
+      const denominatorField = activeAcsCategory === "households" ? "B11001_001E" : "B23025_003E";
+      denominator = numeric(p[denominatorField]);
+    }
+    if (!selected.length || counts.some((item) => item.count === null)) return null;
+    const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
+    return { selected, counts, winner, denominator,
+      share: denominator > 0 ? winner.count / denominator : null };
+  }
+  function ordinalWeightedValue(feature) {
+    const p = feature.properties || {};
+    const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
+    if (!row) return null;
+    const scores = ORDINAL_SCORES[activeLodesCategory] || {};
+    const codes = selectedLodesCodes().filter((code) => scores[code] !== undefined);
+    if (!codes.length) return null;
+    const values = codes.map((code) => ({ code, count: numeric(row[selectedBasis() + "_" + code]), score: scores[code] }));
+    if (values.some((item) => item.count === null)) return null;
+    const total = values.reduce((sum, item) => sum + item.count, 0);
+    return total > 0 ? values.reduce((sum, item) => sum + item.score * item.count, 0) / total : null;
+  }
+  function nominalCategoryColor(code) {
+    let order = [];
+    if (activeMode === "jobs") {
+      order = activeLodesCategory === "industry" ? Object.keys(INDUSTRY_LABELS) :
+        activeLodesCategory === "sex" ? DOMINANT_ORDER.sex : DOMINANT_ORDER.raceethnicity;
+    } else {
+      order = ACS_CATEGORY_FIELDS[activeAcsCategory] || [];
+    }
+    return categoryColor(Math.max(0, order.indexOf(code)));
+  }
   function dominantCategory(feature, category = activeLodesCategory) {
     const row = selectedYearData.get(String((feature.properties || {}).GEOID ?? (feature.properties || {}).GEOIDFQ ?? ""));
     if (!row) return null;
@@ -253,8 +314,7 @@
     const winner = counts.reduce((best, item) => item.count > best.count ? item : best);
     return { ...winner, share: winner.count / denominator, rank: ordered.indexOf(winner.code), ordered };
   }
-  const isDominantMode = () => mapMode === "single" && activeMode === "jobs" &&
-    !["total", "industry", "raceethnicity"].includes(activeLodesCategory);
+  const isDominantMode = () => isOrdinalMode() || (isNominalMode() && (nominalSelection(selectedFeature || baseFeatures[0]) || {}).selected?.length > 1);
   function activeMeta() {
     if (mapMode === "combined") {
       return { label: "Combined index · equal-weight normalized score", format: "number" };
@@ -265,15 +325,19 @@
       const field = fields[0] || "B01001_001E";
       return ACS_FIELDS[field] || { label: "ACS measure", format: "number" };
     }
-    if (activeLodesCategory === "industry") {
-      return { label: "Combined jobs in selected industries", format: "number" };
+    if (isOrdinalMode()) {
+      return { label: "Ordinal weighted distribution index", format: "number", ordinal: true };
     }
-    if (isDominantMode()) {
-      return { label: "Dominant worker-category share", format: "percent", dominant: true };
+    if (isNominalMode()) {
+      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      if (selected.length > 1) return { label: "Dominant selected category", format: "number", categorical: true };
+      const label = activeMode === "jobs"
+        ? (activeLodesCategory === "industry" ? "Industry share of all jobs" :
+          activeLodesCategory === "sex" ? "Worker sex share of all jobs" : "Selected race or ethnicity share of all jobs")
+        : (activeAcsCategory === "households" ? "Household composition share" : "Employment status share of civilian labor force");
+      return { label, format: "percent", percentage: true };
     }
-    if (activeMode === "jobs" && activeLodesCategory === "raceethnicity") {
-      return { label: "Selected race or ethnicity share", format: "percent", dominant: true };
-    }
+    if (activeLodesCategory === "industry") return { label: "Combined jobs in selected industries", format: "number" };
     return LODES_META.total;
   }
   function getSingleValue(feature) {
@@ -287,6 +351,12 @@
     }
     const row = selectedYearData.get(String(p.GEOID ?? p.GEOIDFQ ?? ""));
     if (!row) return null;
+    if (isOrdinalMode()) return ordinalWeightedValue(feature);
+    if (isNominalMode()) {
+      const selection = nominalSelection(feature);
+      if (!selection) return null;
+      return selection.selected.length > 1 ? selection.winner.count : selection.share;
+    }
     if (activeLodesCategory === "total") return numeric(row[selectedBasis() + "_jobs"]);
     if (activeLodesCategory === "industry") {
       const codes = selectedLodesCodes();
@@ -317,7 +387,13 @@
     return COLORS[index < 0 ? COLORS.length - 1 : index + 1];
   };
   function styleFeature(feature) {
-    const fillColor = colorFor(getValue(feature), currentBreaks);
+    let fillColor;
+    if (isNominalMode() && ((activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields()).length > 1)) {
+      const selection = nominalSelection(feature);
+      fillColor = selection ? nominalCategoryColor(selection.winner.code) : "#d8dcd8";
+    } else {
+      fillColor = colorFor(getValue(feature), currentBreaks);
+    }
     const selected = selectedFeatureIds.has(selectedFeatureId(feature));
     return selected
       ? { fillColor, weight: 4, opacity: 1, color: "#ffb000", dashArray: "5 3", fillOpacity: 0.9 }
@@ -348,22 +424,34 @@
     } else if (activeMode === "jobs") {
       const row = selectedYearData.get(String(p.GEOID || p.GEOIDFQ || ""));
       if (row) {
-        if (isDominantMode()) {
-          const dominant = dominantCategory(feature);
+        if (isOrdinalMode()) {
+          const codes = selectedLodesCodes();
+          const scores = ORDINAL_SCORES[activeLodesCategory];
+          const total = codes.reduce((sum, code) => sum + (numeric(row[selectedBasis() + "_" + code]) || 0), 0);
+          lines.push(["Ordinal weighted distribution index", formatValue(getValue(feature), "number")]);
+          lines.push(["Total jobs in block group", formatValue(numeric(row[selectedBasis() + "_jobs"]))]);
+          lines.push(["Selected subcategory counts and scores", ""]);
+          codes.forEach((code) => {
+            lines.push([(DETAIL_LABELS[code] || code) + " · score " + scores[code], formatValue(numeric(row[selectedBasis() + "_" + code]))]);
+          });
+          lines.push(["Index method", "Sum of (category score × jobs) ÷ jobs across selected subcategories"]);
+          lines.push(["Jobs in selected subcategories", formatValue(total)]);
+        } else if (isNominalMode()) {
+          const selection = nominalSelection(feature);
+          const codes = selectedLodesCodes();
+          const selected = activeMode === "jobs" ? codes : selectedAcsFields();
           const totalJobs = numeric(row[selectedBasis() + "_jobs"]);
-          const selectedGroupTotal = selectedLodesCodes().reduce((sum, code) => {
-            const value = numeric(row[selectedBasis() + "_" + code]);
-            return sum + (value === null ? 0 : value);
-          }, 0);
           lines.push(["Total jobs in block group", formatValue(totalJobs)]);
-          lines.push(["Jobs across selected subcategories", formatValue(selectedGroupTotal)]);
-          lines.push(["Dominant category", dominant ? (DETAIL_LABELS[dominant.code] || dominant.code) : "No data"]);
-          lines.push([activeLodesCategory === "raceethnicity" ? "Dominant category share of all jobs" : "Dominant category share of selected subcategories", dominant ? formatValue(dominant.share, "percent") : "No data"]);
-          lines.push(["Jobs in dominant category", dominant ? formatValue(dominant.count) : "No data"]);
+          if (selected.length === 1) {
+            lines.push([meta.label, selection ? formatValue(selection.share, "percent") : "No data"]);
+            lines.push(["Jobs in selected category", selection ? formatValue(selection.winner.count) : "No data"]);
+          } else {
+            lines.push(["Dominant selected category", selection ? (DETAIL_LABELS[selection.winner.code] || optionLabel(selection.winner.code)) : "No data"]);
+            lines.push(["Jobs in dominant category", selection ? formatValue(selection.winner.count) : "No data"]);
+          }
           lines.push(["Selected subcategory counts", ""]);
-          selectedLodesCodes().forEach((code) => {
-            const count = numeric(row[selectedBasis() + "_" + code]);
-            lines.push([DETAIL_LABELS[code] || optionLabel(code), formatValue(count)]);
+          selection && selection.counts.forEach((item) => {
+            lines.push([DETAIL_LABELS[item.code] || optionLabel(item.code), formatValue(item.count)]);
           });
         } else if (activeLodesCategory === "industry") {
           const total = getValue(feature);
@@ -387,6 +475,11 @@
       const fields = selectedAcsFields(activeAcsCategory);
       const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
       lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
+      if (isNominalMode() && fields.length === 1) {
+        const selection = nominalSelection(feature);
+        lines.push(["Selected category count", selection ? formatValue(selection.winner.count) : "No data"]);
+        lines.push(["Denominator", formatValue(selection && selection.denominator)]);
+      }
       if (values.length > 1) lines.push(["Selected subcategory counts", ""]);
       values.forEach(({ field, value }) => {
         const label = (ACS_FIELDS[field] || {}).label || optionLabel(field);
@@ -745,6 +838,30 @@
       els.legendDescription.append(variablesTitle, variables, formula);
     }
     els.legend.replaceChildren();
+    if (meta.categorical) {
+      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      selected.forEach((code) => {
+        const row = document.createElement("div");
+        row.className = "legend-row";
+        const swatch = document.createElement("span");
+        swatch.className = "legend-swatch";
+        swatch.style.backgroundColor = nominalCategoryColor(code);
+        const label = document.createElement("span");
+        label.textContent = DETAIL_LABELS[code] || optionLabel(code);
+        row.append(swatch, label);
+        els.legend.appendChild(row);
+      });
+      const missing = document.createElement("div");
+      missing.className = "legend-row";
+      const swatch = document.createElement("span");
+      swatch.className = "legend-swatch";
+      swatch.style.backgroundColor = "#d8dcd8";
+      const label = document.createElement("span");
+      label.textContent = "No data / unmatched";
+      missing.append(swatch, label);
+      els.legend.appendChild(missing);
+      return;
+    }
     if (!currentBreaks.length) {
       els.legend.textContent = "No values available for this selection.";
       return;
@@ -1044,7 +1161,10 @@
     if (!geojsonLayer) return;
     if (mapMode === "combined") calculateCompositeValues();
     else { compositeValues = new Map(); compositeError = ""; }
-    currentBreaks = quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
+    const categoricalMode = isNominalMode() &&
+      (activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields()).length > 1;
+    currentBreaks = categoricalMode ? [] :
+      quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
     if (els.period) {
