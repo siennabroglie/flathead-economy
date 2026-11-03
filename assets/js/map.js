@@ -484,10 +484,18 @@
       const fields = isNominalMode() ? nominalSelectedCodes() : selectedAcsFields(activeAcsCategory);
       const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
       lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
-      if (isNominalMode() && fields.length === 1) {
+      if (isNominalMode()) {
         const selection = nominalSelection(feature);
-        lines.push(["Selected category count", selection ? formatValue(selection.winner.count) : "No data"]);
-        lines.push(["Denominator", formatValue(selection && selection.denominator)]);
+        if (fields.length > 1) {
+          const winnerLabel = selection
+            ? ((ACS_FIELDS[selection.winner.code] || {}).label || optionLabel(selection.winner.code))
+            : "No data";
+          lines.push(["Dominant selected category", winnerLabel]);
+          lines.push(["Count in dominant category", selection ? formatValue(selection.winner.count) : "No data"]);
+        } else {
+          lines.push(["Selected category count", selection ? formatValue(selection.winner.count) : "No data"]);
+          lines.push(["Denominator", formatValue(selection && selection.denominator)]);
+        }
       }
       if (values.length > 1) lines.push(["Selected subcategory counts", ""]);
       values.forEach(({ field, value }) => {
@@ -831,8 +839,9 @@
     const meta = activeMeta();
     els.legendTitle.textContent = meta.label;
     els.legendDescription.replaceChildren();
-    els.legendDescription.hidden = false;
+    els.legendDescription.hidden = true;
     if (mapMode === "combined") {
+      els.legendDescription.hidden = false;
       const variablesTitle = document.createElement("strong");
       variablesTitle.textContent = "Variables";
       const variables = document.createElement("ul");
@@ -846,6 +855,7 @@
       formula.textContent = "Formula: For each selected variable, min–max normalize its block-group values to 0–1: (value − minimum) ÷ (maximum − minimum). Then calculate the arithmetic mean of the normalized variables, giving each variable equal weight. If a variable has the same value in every block group, its normalized value is 0.5.";
       els.legendDescription.append(variablesTitle, variables, formula);
     } else if (isOrdinalMode()) {
+      els.legendDescription.hidden = false;
       const scoreLabels = activeLodesCategory === "earnings"
         ? "Earnings: $1,250/month or less = 1; $1,251–$3,333 = 2; more than $3,333 = 3."
         : activeLodesCategory === "education"
@@ -853,6 +863,7 @@
           : "Age: youngest group = 1; ages 30–54 = 2; oldest group = 3.";
       els.legendDescription.textContent = "Weighted average of the selected category scores, with each score weighted by its job count. " + scoreLabels + " This is an ordinal index, not a dollar amount, age, or education average.";
     } else if (isNominalMode()) {
+      els.legendDescription.hidden = false;
       const selected = nominalSelectedCodes();
       els.legendDescription.textContent = selected.length > 1
         ? "Each block group is colored by the selected subcategory with the greatest count. Colors identify categories; they do not represent category percentages."
