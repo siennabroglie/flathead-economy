@@ -238,6 +238,11 @@
     (mode === "acs" && ["households", "employment"].includes(category));
   const isNominalMode = () => mapMode === "single" && isNominalCategory(activeMode,
     activeMode === "jobs" ? activeLodesCategory : activeAcsCategory);
+  function nominalSelectedCodes() {
+    if (activeMode === "jobs") return selectedLodesCodes();
+    const denominator = activeAcsCategory === "households" ? "B11001_001E" : "B23025_003E";
+    return selectedAcsFields().filter((field) => field !== denominator);
+  }
   function nominalSelection(feature) {
     const p = feature.properties || {};
     let selected = [], counts = [], denominator = null;
@@ -255,7 +260,7 @@
       counts = selected.map((code) => ({ code, count: numeric(row[prefix + code]) }));
       denominator = numeric(row[prefix + "_jobs"]);
     } else {
-      selected = selectedAcsFields();
+      selected = nominalSelectedCodes();
       counts = selected.map((field) => ({ code: field, count: numeric(p[field]) }));
       const denominatorField = activeAcsCategory === "households" ? "B11001_001E" : "B23025_003E";
       denominator = numeric(p[denominatorField]);
@@ -320,7 +325,7 @@
       return { label: "Combined index · equal-weight normalized score", format: "number" };
     }
     if (isNominalMode()) {
-      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      const selected = nominalSelectedCodes();
       if (selected.length > 1) return { label: "Dominant selected category", format: "number", categorical: true };
       const label = activeMode === "jobs"
         ? (activeLodesCategory === "industry" ? "Industry share of all jobs" :
@@ -336,15 +341,6 @@
     }
     if (isOrdinalMode()) {
       return { label: "Ordinal weighted distribution index", format: "number", ordinal: true };
-    }
-    if (isNominalMode()) {
-      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
-      if (selected.length > 1) return { label: "Dominant selected category", format: "number", categorical: true };
-      const label = activeMode === "jobs"
-        ? (activeLodesCategory === "industry" ? "Industry share of all jobs" :
-          activeLodesCategory === "sex" ? "Worker sex share of all jobs" : "Selected race or ethnicity share of all jobs")
-        : (activeAcsCategory === "households" ? "Household composition share" : "Employment status share of civilian labor force");
-      return { label, format: "percent", percentage: true };
     }
     if (activeLodesCategory === "industry") return { label: "Combined jobs in selected industries", format: "number" };
     return LODES_META.total;
@@ -402,7 +398,7 @@
   };
   function styleFeature(feature) {
     let fillColor;
-    if (isNominalMode() && ((activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields()).length > 1)) {
+    if (isNominalMode() && nominalSelectedCodes().length > 1) {
       const selection = nominalSelection(feature);
       fillColor = selection ? nominalCategoryColor(selection.winner.code) : "#d8dcd8";
     } else {
@@ -486,7 +482,7 @@
         lines.push(["Availability", "Not published for this year"]);
       }
     } else {
-      const fields = selectedAcsFields(activeAcsCategory);
+      const fields = isNominalMode() ? nominalSelectedCodes() : selectedAcsFields(activeAcsCategory);
       const values = fields.map((field) => ({ field, value: numeric(p[field]) }));
       lines.push([meta.label, formatValue(getValue(feature), meta.format)]);
       if (isNominalMode() && fields.length === 1) {
@@ -853,14 +849,14 @@
     } else if (isOrdinalMode()) {
       els.legendDescription.textContent = "Each block group's score is the weighted average of the selected category scores. Category scores are earnings: 1–3, education: 1–4, and age: 1–3; each category's score is weighted by its job count. The index is ordinal, not a dollar amount, age, or education average.";
     } else if (isNominalMode()) {
-      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      const selected = nominalSelectedCodes();
       els.legendDescription.textContent = selected.length > 1
         ? "Each block group is colored by the selected subcategory with the greatest count. Colors identify categories; they do not represent category percentages."
         : "The map shows the selected subcategory as a percentage of the relevant total in each block group.";
     }
     els.legend.replaceChildren();
     if (meta.categorical) {
-      const selected = activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields();
+      const selected = nominalSelectedCodes();
       selected.forEach((code) => {
         const row = document.createElement("div");
         row.className = "legend-row";
@@ -1182,8 +1178,7 @@
     if (!geojsonLayer) return;
     if (mapMode === "combined") calculateCompositeValues();
     else { compositeValues = new Map(); compositeError = ""; }
-    const categoricalMode = isNominalMode() &&
-      (activeMode === "jobs" ? selectedLodesCodes() : selectedAcsFields()).length > 1;
+    const categoricalMode = isNominalMode() && nominalSelectedCodes().length > 1;
     currentBreaks = categoricalMode ? [] :
       quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
     geojsonLayer.setStyle(styleFeature);
