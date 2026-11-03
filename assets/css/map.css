@@ -1359,3 +1359,40 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     break-inside: avoid;
   }
 }
+
+/* Separate Employment Data from the Map Data window heading. */
+@media (min-width: 601px) {
+  .control-section > .data-group[aria-labelledby="employment-heading"] {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Give Data Summary source titles a clear divider and enough vertical
+   breathing room to prevent their text from being clipped. */
+.data-panel-group-heading {
+  box-sizing: border-box;
+  min-height: 30px;
+  margin: 0 0 6px;
+  padding: 7px 0 5px;
+  line-height: 1.5;
+  overflow: visible;
+}
+
+.data-panel-group-heading.lodes {
+  border-top: 1px solid var(--border);
+}
+
+.data-panel-group-heading.acs {
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.data-card > h3 {
+  margin: 0 0 12px;
+  padding-block: 2px;
+  line-height: 1.45;
+  overflow: visible;
+}
+
