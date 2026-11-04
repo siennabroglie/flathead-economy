@@ -1819,3 +1819,52 @@ h1, h2, h3, h4, h5, h6 {
   flex: 0 0 auto;
 }
 #primary-year[hidden], .map-mode-controls label[hidden] { display: none !important; }
+
+/* Keep the desktop data windows within the visible area below the page header.
+   The settings and map share the first row; Data Summary scrolls independently
+   in the second row. Existing control, card, and chart dimensions are retained. */
+@media (min-width: 901px) {
+  :root {
+    --desktop-window-max-height: calc(100dvh - 180px);
+  }
+
+  .app-shell {
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+
+  .control-panel,
+  .map-column,
+  .map-column > .map-panel,
+  .data-panel {
+    max-height: var(--desktop-window-max-height);
+    min-height: 0;
+  }
+
+  .control-panel,
+  .data-panel {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .map-column {
+    height: var(--desktop-window-max-height);
+    overflow: hidden;
+  }
+
+  .map-column > .map-panel {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .map-column .map-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .map-column #map {
+    height: 100%;
+    min-height: 0;
+  }
+}
