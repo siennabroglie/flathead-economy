@@ -55,7 +55,7 @@ def fetch(year: int, geography: str, fields: list[str]) -> list[list[str]]:
     if geography == "block group":
         params.update({
             "for": "block group:*",
-            "in": f"state:{STATE} county:{COUNTY}",
+            "in": f"state:{STATE} county:{COUNTY} tract:*",
         })
     else:
         params.update({"for": f"county:{COUNTY}", "in": f"state:{STATE}"})
