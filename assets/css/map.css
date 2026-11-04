@@ -1489,6 +1489,16 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
 /* Graph selector and visualizations beneath the map legend. */
 .map-graph-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.map-graph-toggle {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:34px; padding:6px 12px; border:1px solid var(--border);
+  border-radius:6px; background:var(--surface); color:var(--text);
+  font:inherit; font-size:calc(11px + 2pt); font-weight:650; cursor:pointer;
+}
+.map-graph-toggle:hover { background:var(--surface-muted); }
+.map-graph-toggle:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#map-graph-content { margin-top:12px; }
+#map-graph-content[hidden] { display:none; }
 .map-graph-section > label { display:block; margin:0 0 6px; font-size: calc(11px + 2pt); font-weight:650; }
 .map-graph-section select { min-height:34px; padding:6px 9px; font-size: calc(11px + 2pt); }
 .map-graph { margin-top:12px; min-width:0; }
