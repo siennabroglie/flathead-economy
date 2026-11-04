@@ -21,7 +21,7 @@
   --radius-panel: 14px;
   --radius-control: 8px;
   --font-body: "Caudex", Georgia, serif;
-  --font-heading: "Caudex", Georgia, serif;
+  --font-heading: "Alegreya Sans", Arial, sans-serif;
   --content-gap: 20px;
   --panel-padding: 24px;
   --map-height: min(72vh, 820px);
@@ -1594,4 +1594,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 *::before,
 *::after {
   border-radius: 0 !important;
+}
+
+/* Use Alegreya Sans consistently for all semantic headings. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
 }
