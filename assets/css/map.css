@@ -1588,3 +1588,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   --map-stroke: #edf1f4;
   --map-stroke-hover: #263e4d;
 }
+
+/* Global square-corner override. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
