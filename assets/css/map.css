@@ -20,8 +20,8 @@
   --shadow: 0 8px 28px rgb(31 48 37 / 7%);
   --radius-panel: 14px;
   --radius-control: 8px;
-  --font-body: "Bembo", "Bembo Std", "Adobe Bembo", Georgia, serif;
-  --font-heading: "Bembo", "Bembo Std", "Adobe Bembo", Georgia, serif;
+  --font-body: "Goudy Bookletter 1911", Georgia, serif;
+  --font-heading: "Goudy Bookletter 1911", Georgia, serif;
   --content-gap: 20px;
   --panel-padding: 24px;
   --map-height: min(72vh, 820px);
