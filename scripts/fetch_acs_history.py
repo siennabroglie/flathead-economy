@@ -113,7 +113,7 @@ def write_csv(path: Path, payload: list[list[str]], geography: str, fields: list
 
 
 def main() -> None:
-    print("Backfilling ACS five-year vintages 2009–2024 for Flathead County")
+    print("Backfilling ACS five-year vintages 2009–2013 through 2020–2024 for Flathead County")
     OUT.mkdir(parents=True, exist_ok=True)
     RAW.mkdir(parents=True, exist_ok=True)
     for year in YEARS:
