@@ -210,8 +210,8 @@
   els.lodesYear.multiple = true;
   els.lodesYear.size = 4;
   Array.from(els.lodesYear.options).forEach((option) => { option.selected = option.value === "2023"; });
+  els.acsYear.replaceChildren();
   ACS_YEARS.forEach((year) => els.acsYear.add(new Option(year + " (" + (year - 4) + "–" + year + ")", String(year))));
-  els.acsYear.replaceChildren(...Array.from(els.acsYear.options).filter((option) => option.value));
   els.acsYear.multiple = true;
   els.acsYear.size = 4;
   Array.from(els.acsYear.options).forEach((option) => { option.selected = option.value === "2024"; });
@@ -1446,9 +1446,11 @@
         if (isAcs) {
           activeMode = "acs";
           activeAcsCategory = category;
+          activeDisplayYear = ensureDisplayYear(els.acsYear, activeDisplayYear);
           acsSelections[category] = items().filter((item) => item.checked).map((item) => item.value);
           items().forEach((item) => { item.disabled = false; });
           setAcsFields(category, acsSelections[category]);
+          loadAcsYears(selectedYears(els.acsYear)).then(() => applyAcsYear(activeDisplayYear)).then(refreshMap).catch(showError);
         } else {
           activeMode = "jobs";
           activeLodesCategory = category;
