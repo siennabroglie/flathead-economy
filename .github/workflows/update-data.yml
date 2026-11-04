@@ -2,6 +2,9 @@ name: Update Flathead County Economic Data
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - scripts/fetch_acs_history.py
   schedule:
     - cron: "17 12 1 * *"
 
