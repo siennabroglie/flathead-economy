@@ -254,9 +254,12 @@
         <div id="legend" class="legend" aria-live="polite"></div>
         <p id="map-status" class="map-status" role="status">Loading block-group geography…</p>
         <section id="map-graph-section" class="map-graph-section" hidden aria-label="Map graphs">
-          <label for="map-graph-select">Graph</label>
-          <select id="map-graph-select"></select>
-          <div id="map-graph" class="map-graph" aria-live="polite"></div>
+          <button id="map-graph-toggle" class="map-graph-toggle" type="button" aria-expanded="false" aria-controls="map-graph-content">Show graph</button>
+          <div id="map-graph-content" hidden>
+            <label for="map-graph-select">Graph</label>
+            <select id="map-graph-select"></select>
+            <div id="map-graph" class="map-graph" aria-live="polite"></div>
+          </div>
         </section>
       </section>
 
