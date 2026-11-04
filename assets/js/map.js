@@ -1539,9 +1539,11 @@
     refreshMap();
   }));
   els.lodesYear.addEventListener("change", () => {
-    activeDisplayYear = ensureDisplayYear(els.lodesYear, activeDisplayYear);
-    Promise.all(selectedYears(els.lodesYear).map(loadLodesYear)).then(() => {
-      selectedYearData = lodesDataByYear.get(activeDisplayYear) || new Map();
+    const years = selectedYears(els.lodesYear);
+    const displayYear = ensureDisplayYear(els.lodesYear, years.includes(activeDisplayYear) ? activeDisplayYear : null);
+    Promise.all(years.map(loadLodesYear)).then(() => {
+      selectedYearData = lodesDataByYear.get(displayYear) || new Map();
+      if (activeMode === "jobs") activeDisplayYear = displayYear;
       updatePrimaryYearOptions(); refreshMap();
     }).catch(showError);
   });
