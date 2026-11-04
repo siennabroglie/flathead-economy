@@ -35,6 +35,11 @@ jobs:
         env:
           CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
 
+      - name: Fetch historical ACS five-year estimates
+        run: python scripts/fetch_acs_history.py
+        env:
+          CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+
       - name: Validate source data
         run: python -m flathead_economic.cli validate
 
@@ -46,7 +51,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add data/2023/ data/county/
+          git add data/2023/ data/county/ data/acs/
+          git add raw/acs/history/
           git add metadata/metadata.json metadata/validation_report.json metadata/build_data_dictionary.csv
 
           if git diff --cached --quiet; then
@@ -65,6 +71,8 @@ jobs:
           path: |
             data/2023/
             data/county/
+            data/acs/
+            raw/acs/history/
             raw/acs/*.json
             metadata/metadata.json
             metadata/validation_report.json
