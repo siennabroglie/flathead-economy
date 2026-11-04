@@ -23,6 +23,9 @@
 
   const LODES_PATH = (year) => "data/lodes/" + year + "/flathead_lodes_characteristics_by_block_group.csv";
   const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2023 - i);
+  const ACS_YEARS = Array.from({ length: 16 }, (_, i) => 2024 - i);
+  const ACS_BG_PATH = (year) => "data/acs/acs5_" + year + "_flathead_block_groups.csv";
+  const ACS_COUNTY_PATH = (year) => "data/acs/acs5_" + year + "_flathead_county.csv";
   const ACS_FIELDS = {
     B01001_001E: { label: "Total population", format: "number" },
     B01001_003E: { label: "Male population under 5", format: "number" },
@@ -115,6 +118,7 @@
     lodesMeasures: document.querySelector("#lodes-measures"),
     mapMode: document.querySelector("#map-mode"),
     primaryMeasure: document.querySelector("#primary-measure"),
+    primaryYear: document.querySelector("#primary-year"),
     basis: Array.from(document.querySelectorAll('input[name="lodes-basis"]')),
     lodesNote: document.querySelector("#lodes-availability-note"),
     acsYear: document.querySelector("#acs-year"),
@@ -186,6 +190,9 @@
   let geojsonLayer = null;
   let baseFeatures = [];
   let selectedYearData = new Map();
+  const lodesDataByYear = new Map();
+  const acsDataByYear = new Map();
+  let activeDisplayYear = "2023";
   let activeMode = "jobs";
   let activeLodesCategory = "total";
   let activeAcsCategory = "population";
@@ -199,13 +206,39 @@
   let dataPanelView = "block";
   let countyAcsData = null;
 
-  LODES_YEARS.forEach((year) => {
-    const option = document.createElement("option");
-    option.value = String(year);
-    option.textContent = String(year);
-    els.lodesYear.appendChild(option);
-  });
-  els.lodesYear.value = "2023";
+  LODES_YEARS.forEach((year) => els.lodesYear.add(new Option(String(year), String(year))));
+  els.lodesYear.multiple = true;
+  els.lodesYear.size = 4;
+  Array.from(els.lodesYear.options).forEach((option) => { option.selected = option.value === "2023"; });
+  ACS_YEARS.forEach((year) => els.acsYear.add(new Option(year + " (" + (year - 4) + "–" + year + ")", String(year))));
+  els.acsYear.replaceChildren(...Array.from(els.acsYear.options).filter((option) => option.value));
+  els.acsYear.multiple = true;
+  els.acsYear.size = 4;
+  Array.from(els.acsYear.options).forEach((option) => { option.selected = option.value === "2024"; });
+  function selectedYears(select) {
+    return Array.from(select.selectedOptions).map((option) => option.value).sort((a, b) => Number(a) - Number(b));
+  }
+  function ensureDisplayYear(select, current) {
+    const years = selectedYears(select);
+    if (!years.length) {
+      const fallback = select === els.lodesYear ? "2023" : "2024";
+      const option = Array.from(select.options).find((item) => item.value === fallback) || select.options[0];
+      if (option) option.selected = true;
+      return option ? option.value : fallback;
+    }
+    return years.includes(String(current)) ? String(current) : years[years.length - 1];
+  }
+  function updatePrimaryYearOptions() {
+    if (!els.primaryYear) return;
+    const select = activeMode === "jobs" ? els.lodesYear : els.acsYear;
+    const years = selectedYears(select);
+    activeDisplayYear = ensureDisplayYear(select, activeDisplayYear);
+    els.primaryYear.replaceChildren(...years.map((year) => new Option(year, year)));
+    els.primaryYear.value = activeDisplayYear;
+    els.primaryYear.hidden = years.length < 2;
+    const label = els.primaryYear.previousElementSibling;
+    if (label) label.hidden = years.length < 2;
+  }
 
   function parseCsv(text) {
     const rows = [];
@@ -683,9 +716,9 @@
   function updateSourceHeadings() {
     const employmentHeading = document.querySelector("#employment-heading");
     const populationHeading = document.querySelector("#population-heading");
-    if (employmentHeading) employmentHeading.textContent = "Employment Data - Source: LODES " + els.lodesYear.value;
+    if (employmentHeading) employmentHeading.textContent = "Employment Data - Source: LODES " + activeDisplayYear;
     if (populationHeading) populationHeading.textContent = "Population Data - Source: ACS " +
-      (Number(els.acsYear.value) - 4) + "–" + els.acsYear.value;
+      (Number(activeDisplayYear) - 4) + "–" + activeDisplayYear;
   }
 
   function renderDataPanel() {
@@ -1250,19 +1283,50 @@
   }
   els.graphSelect?.addEventListener("change",renderMapGraph);
 
+  function sharedScaleValues() {
+    if (mapMode !== "single") return baseFeatures.map(getValue).filter((value) => value !== null);
+    const years = selectedYears(activeMode === "jobs" ? els.lodesYear : els.acsYear);
+    if (years.length < 2) return baseFeatures.map(getValue).filter((value) => value !== null);
+    const values = [];
+    if (activeMode === "jobs") {
+      const original = selectedYearData;
+      years.forEach((year) => {
+        const data = lodesDataByYear.get(year);
+        if (!data) return;
+        selectedYearData = data;
+        baseFeatures.forEach((feature) => { const value = getSingleValue(feature); if (value !== null) values.push(value); });
+      });
+      selectedYearData = original;
+    } else {
+      const originals = baseFeatures.map((feature) => feature.properties);
+      years.forEach((year) => {
+        const data = acsDataByYear.get(year);
+        if (!data) return;
+        baseFeatures.forEach((feature) => {
+          const id = String((feature.properties || {}).GEOID || "");
+          const row = data.get(id);
+          if (row) feature.properties = { ...feature.properties, ...row };
+          const value = getSingleValue(feature);
+          if (value !== null) values.push(value);
+        });
+        baseFeatures.forEach((feature, index) => { feature.properties = originals[index]; });
+      });
+    }
+    return values;
+  }
   function refreshMap() {
     if (!geojsonLayer) return;
     if (mapMode === "combined") calculateCompositeValues();
     else { compositeValues = new Map(); compositeError = ""; }
+    updatePrimaryYearOptions();
     const categoricalMode = isNominalMode() && nominalSelectedCodes().length > 1;
-    currentBreaks = categoricalMode ? [] :
-      quantileBreaks(baseFeatures.map(getValue).filter((value) => value !== null));
+    currentBreaks = categoricalMode ? [] : quantileBreaks(sharedScaleValues());
     geojsonLayer.setStyle(styleFeature);
     updateLegend();
     if (els.period) {
       els.period.textContent = mapMode === "combined"
         ? "Combined index · LODES " + els.lodesYear.value + " + ACS " + els.acsYear.value
-        : (activeMode === "jobs" ? "LODES · " + els.lodesYear.value : "ACS · " + els.acsYear.value + " five-year");
+        : (activeMode === "jobs" ? "LODES · " + activeDisplayYear : "ACS · " + activeDisplayYear + " five-year");
     }
     const selectedRaceCodes = selectedLodesCodes("raceethnicity");
     const raceEthnicityConflict = mapMode === "single" && activeMode === "jobs" &&
@@ -1280,30 +1344,61 @@
     renderMapGraph();
   }
   async function loadLodesYear(year) {
+    const key = String(year);
+    if (lodesDataByYear.has(key)) return lodesDataByYear.get(key);
     els.status.textContent = "Loading employment data for " + year + "…";
     const response = await fetch(LODES_PATH(year));
     if (!response.ok) throw new Error("Could not load LODES characteristics for " + year + " (HTTP " + response.status + ").");
     const rows = parseCsv(await response.text());
-    selectedYearData = new Map(rows.map((row) => [String(row.GEOID), row]));
+    const yearData = new Map(rows.map((row) => [String(row.GEOID), row]));
+    lodesDataByYear.set(key, yearData);
     const unavailable = Number(year) < 2009;
-    els.lodesMeasures.querySelectorAll('[data-category="raceethnicity"], [data-category="education"], [data-category="sex"]').forEach((input) => {
-      input.disabled = unavailable;
-      const category = input.dataset.category;
-      const selector = document.querySelector('[data-selector="' + category + '"]');
-      if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = unavailable || !input.checked; });
-      if (unavailable && input.checked) input.checked = false;
-    });
-    if (unavailable && ["raceethnicity", "education", "sex"].includes(activeLodesCategory)) {
-      activeLodesCategory = "total";
-      document.querySelector('[data-category="total"]').checked = true;
+    if (key === activeDisplayYear) {
+      selectedYearData = yearData;
+      els.lodesMeasures.querySelectorAll('[data-category="raceethnicity"], [data-category="education"], [data-category="sex"]').forEach((input) => {
+        input.disabled = unavailable;
+        const category = input.dataset.category;
+        const selector = document.querySelector('[data-selector="' + category + '"]');
+        if (selector) selector.querySelectorAll('input[type="checkbox"]').forEach((item) => { item.disabled = unavailable || !input.checked; });
+        if (unavailable && input.checked) input.checked = false;
+      });
+      if (unavailable && ["raceethnicity", "education", "sex"].includes(activeLodesCategory)) {
+        activeLodesCategory = "total";
+        document.querySelector('[data-category="total"]').checked = true;
+      }
+      els.lodesNote.textContent = unavailable
+        ? "Race, ethnicity, education and sex are unavailable before 2009; these controls are disabled for this year."
+        : "Worker education describes jobs for workers age 30 and older. Age group labels reflect published LODES definitions.";
+      syncLodesSelectors();
+      updatePrimaryOptions();
+      setPrimaryContext(els.primaryMeasure.value);
     }
-    els.lodesNote.textContent = unavailable
-      ? "Race, ethnicity, education and sex are unavailable before 2009; these controls are disabled for this year."
-      : "Worker education describes jobs for workers age 30 and older. Age group labels reflect published LODES definitions.";
-    syncLodesSelectors();
-    updatePrimaryOptions();
-    setPrimaryContext(els.primaryMeasure.value);
-    refreshMap();
+    return yearData;
+  }
+  async function loadAcsYears(years) {
+    await Promise.all(years.map(async (year) => {
+      const key = String(year);
+      if (acsDataByYear.has(key)) return;
+      const response = await fetch(ACS_BG_PATH(key));
+      if (!response.ok) throw new Error("Could not load ACS block-group estimates for " + key + " (HTTP " + response.status + ").");
+      const rows = parseCsv(await response.text());
+      acsDataByYear.set(key, new Map(rows.map((row) => [String(row.GEOID), row])));
+    }));
+  }
+  async function applyAcsYear(year) {
+    const key = String(year);
+    const data = acsDataByYear.get(key);
+    if (!data) throw new Error("ACS " + key + " has not been loaded.");
+    baseFeatures.forEach((feature) => {
+      const id = String((feature.properties || {}).GEOID || "");
+      const row = data.get(id);
+      if (row) feature.properties = { ...feature.properties, ...row };
+    });
+    const response = await fetch(ACS_COUNTY_PATH(key));
+    if (!response.ok) throw new Error("Could not load county ACS estimates for " + key + " (HTTP " + response.status + ").");
+    countyAcsData = parseCsv(await response.text())[0] || null;
+    if (!countyAcsData) throw new Error("County ACS " + key + " file contains no data row.");
+    activeDisplayYear = key;
   }
   function setupBulkSelectionControls() {
     const selectors = [
@@ -1437,7 +1532,13 @@
   els.basis.forEach((radio) => radio.addEventListener("change", () => {
     refreshMap();
   }));
-  els.lodesYear.addEventListener("change", () => loadLodesYear(els.lodesYear.value).catch(showError));
+  els.lodesYear.addEventListener("change", () => {
+    activeDisplayYear = ensureDisplayYear(els.lodesYear, activeDisplayYear);
+    Promise.all(selectedYears(els.lodesYear).map(loadLodesYear)).then(() => {
+      selectedYearData = lodesDataByYear.get(activeDisplayYear) || new Map();
+      updatePrimaryYearOptions(); refreshMap();
+    }).catch(showError);
+  });
   els.acsMeasures.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.addEventListener("change", () => {
       const category = input.dataset.category;
@@ -1475,7 +1576,19 @@
     });
   });
   els.acsYear.addEventListener("change", () => {
-    refreshMap();
+    activeDisplayYear = ensureDisplayYear(els.acsYear, activeDisplayYear);
+    loadAcsYears(selectedYears(els.acsYear)).then(() => applyAcsYear(activeDisplayYear)).then(() => {
+      updatePrimaryYearOptions(); refreshMap();
+    }).catch(showError);
+  });
+  els.primaryYear?.addEventListener("change", () => {
+    activeDisplayYear = els.primaryYear.value;
+    if (activeMode === "jobs") {
+      selectedYearData = lodesDataByYear.get(activeDisplayYear) || new Map();
+      refreshMap();
+    } else {
+      applyAcsYear(activeDisplayYear).then(refreshMap).catch(showError);
+    }
   });
   els.mapMode.addEventListener("change", () => {
     mapMode = els.mapMode.value;
@@ -1527,17 +1640,16 @@
         .catch((error) => console.warn("Outside-county mask unavailable:", error));
 
       return Promise.all([
-        loadLodesYear(els.lodesYear.value),
-        fetch("data/county/acs5_" + els.acsYear.value + "_flathead_county.csv")
-          .then((response) => {
-            if (!response.ok) throw new Error("Could not load county ACS estimates (HTTP " + response.status + ").");
-            return response.text();
-          })
-          .then((text) => {
-            countyAcsData = parseCsv(text)[0] || null;
-            if (!countyAcsData) throw new Error("County ACS file contains no data row.");
-          })
-      ]).then(() => renderDataPanel());
+        Promise.all(selectedYears(els.lodesYear).map(loadLodesYear)),
+        loadAcsYears(selectedYears(els.acsYear))
+      ]).then(async () => {
+        activeDisplayYear = "2023";
+        selectedYearData = lodesDataByYear.get(activeDisplayYear) || new Map();
+        await applyAcsYear("2024");
+        updatePrimaryYearOptions();
+        refreshMap();
+        renderDataPanel();
+      });
     })
     .catch(showError);
 })();
