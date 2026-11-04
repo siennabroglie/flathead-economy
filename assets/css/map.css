@@ -1669,3 +1669,72 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.4;
   letter-spacing: normal;
 }
+
+
+/* Desktop Map Settings collapse control. The map column takes the released
+   horizontal space while the settings panel becomes a narrow vertical rail. */
+.settings-collapse-toggle {
+  display: none;
+}
+@media (min-width: 901px) {
+  .control-panel {
+    position: relative;
+  }
+
+  .settings-collapse-toggle {
+    display: block;
+    position: absolute;
+    z-index: 5;
+    top: 12px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--surface-muted);
+    color: var(--accent-strong);
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .settings-collapse-toggle:hover {
+    background: var(--accent-soft);
+  }
+
+  .app-shell.settings-collapsed {
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+  }
+
+  .app-shell.settings-collapsed > .control-panel {
+    min-width: 0;
+    padding: 8px;
+  }
+
+  .app-shell.settings-collapsed > .control-panel > .control-section {
+    display: none !important;
+  }
+
+  .app-shell.settings-collapsed .settings-collapse-toggle {
+    top: 10px;
+    right: 9px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .app-shell.settings-collapsed > .control-panel::after {
+    position: absolute;
+    top: 52px;
+    left: 50%;
+    color: var(--text-muted);
+    content: "MAP SETTINGS";
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%) rotate(180deg);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
