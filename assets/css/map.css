@@ -1611,3 +1611,53 @@ h1, h2, h3, h4, h5, h6 {
 :root {
   --text-muted: #56636d;
 }
+
+/* Per-card count/percentage switch and circular pie presentation. */
+.data-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.data-card-heading > h3 {
+  min-width: 0;
+  margin: 0;
+}
+.data-card-format-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0;
+  margin: 0 0 0 auto;
+}
+.data-card-format-toggle button {
+  min-width: 30px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: calc(10px + 2pt);
+  line-height: 1.2;
+  cursor: pointer;
+}
+.data-card-format-toggle button + button { border-left: 0; }
+.data-card-format-toggle button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+.data-pie-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 124px;
+}
+.data-pie {
+  width: 112px;
+  height: 112px;
+  flex: 0 0 112px;
+  aspect-ratio: 1;
+  border-radius: 50% !important;
+}
