@@ -1,7 +1,7 @@
 """Fetch historical ACS 5-year estimates for Flathead County.
 
 Creates compact block-group and county CSVs for each available vintage
-(2009–2024). Fields absent from an older vintage are written as blank.
+(2009–2013 through 2020–2024). Fields absent from an older vintage are written as blank.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ RAW = ROOT / "raw" / "acs" / "history"
 API = "https://api.census.gov/data"
 STATE = "30"
 COUNTY = "029"
-YEARS = range(2009, 2025)
+YEARS = range(2013, 2025)
 FIELDS = [
     "B01001_001E", "B01001_003E", "B01001_020E", "B01001_027E",
     "B01001_044E", "B19013_001E", "B19025_001E", "B11001_001E",
