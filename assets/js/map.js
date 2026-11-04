@@ -1484,7 +1484,11 @@
     activeAcsCategory = category;
     const fields = acsSelections[category] || selectedAcsFields(category) || ACS_CATEGORY_FIELDS[category] || [ACS_CATEGORY_DEFAULTS[category]];
     setAcsFields(category, fields);
-    refreshMap();
+    activeDisplayYear = ensureDisplayYear(els.acsYear, activeDisplayYear);
+    loadAcsYears(selectedYears(els.acsYear))
+      .then(() => applyAcsYear(activeDisplayYear))
+      .then(refreshMap)
+      .catch(showError);
   }
   function categoryForAcsField(field) {
     const groups = {
@@ -1567,6 +1571,8 @@
       }
       activeMode = "acs";
       activeAcsCategory = category;
+      activeDisplayYear = ensureDisplayYear(els.acsYear, activeDisplayYear);
+      loadAcsYears(selectedYears(els.acsYear)).then(() => applyAcsYear(activeDisplayYear)).then(refreshMap).catch(showError);
       syncAcsActiveCategory(category);
       const categoryInput = document.querySelector('[data-category="' + category + '"]');
       if (categoryInput && !categoryInput.checked) categoryInput.checked = true;
