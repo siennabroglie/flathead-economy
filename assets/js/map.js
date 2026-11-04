@@ -131,6 +131,8 @@
     status: document.querySelector("#map-status"),
     period: document.querySelector("#map-period"),
     graphSection: document.querySelector("#map-graph-section"),
+    graphToggle: document.querySelector("#map-graph-toggle"),
+    graphContent: document.querySelector("#map-graph-content"),
     graphSelect: document.querySelector("#map-graph-select"),
     graph: document.querySelector("#map-graph")
   };
@@ -1271,6 +1273,15 @@
     const dx=Math.sqrt(pairs.reduce((s,p)=>s+(p[0]-mx)**2,0)), dy=Math.sqrt(pairs.reduce((s,p)=>s+(p[1]-my)**2,0));
     return dx&&dy?cov/(dx*dy):null;
   }
+  let graphExpanded = false;
+  function setGraphExpanded(expanded) {
+    graphExpanded = expanded;
+    if (els.graphContent) els.graphContent.hidden = !expanded;
+    if (els.graphToggle) {
+      els.graphToggle.textContent = expanded ? "Hide graph" : "Show graph";
+      els.graphToggle.setAttribute("aria-expanded", String(expanded));
+    }
+  }
   function renderMapGraph() {
     if (!els.graphSection || !els.graphSelect || !els.graph) return;
     const options=GRAPH_OPTIONS[mapMode];
@@ -1285,6 +1296,12 @@
     });
     if (!applicable.length || (mapMode==="combined" && compositeError)) { els.graphSection.hidden=true; return; }
     els.graphSection.hidden=false;
+    if (mapMode === "single") {
+      setGraphExpanded(false);
+      els.graphSection.hidden = true;
+      return;
+    }
+    setGraphExpanded(graphExpanded);
     if (applicable.some(([key])=>key===previous)) els.graphSelect.value=previous;
     else els.graphSelect.value=applicable[0][0];
     Array.from(els.graphSelect.options).forEach(option=>{
@@ -1345,6 +1362,7 @@
       }
     }
   }
+  els.graphToggle?.addEventListener("click", () => setGraphExpanded(!graphExpanded));
   els.graphSelect?.addEventListener("change",renderMapGraph);
 
   function sharedScaleValues() {
@@ -1666,6 +1684,7 @@
   });
   els.mapMode.addEventListener("change", () => {
     mapMode = els.mapMode.value;
+    setGraphExpanded(false);
     els.primaryMeasure.disabled = mapMode === "combined" || !selectedMeasureKeys().length;
     refreshMap();
   });
