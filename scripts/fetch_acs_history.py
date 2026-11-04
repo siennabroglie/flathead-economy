@@ -93,8 +93,12 @@ def main() -> None:
         print(f"Fetching ACS {year} five-year estimates")
         bg = fetch(year, "block group")
         county = fetch(year, "county")
-        if len(bg) != 86:
-            raise RuntimeError(f"ACS {year}: expected 85 block groups, received {len(bg)-1}")
+        if len(bg) < 2:
+            raise RuntimeError(f"ACS {year}: Census returned no block-group rows")
+        bg_header = bg[0]
+        bg_positions = {name: i for i, name in enumerate(bg_header)}
+        if any(row[bg_positions["state"]] != STATE or row[bg_positions["county"]] != COUNTY for row in bg[1:]):
+            raise RuntimeError(f"ACS {year}: response contains a row outside Flathead County")
         for geography, payload in (("block_groups", bg), ("county", county)):
             raw_path = RAW / f"acs5_{year}_flathead_{geography}.json"
             raw_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
