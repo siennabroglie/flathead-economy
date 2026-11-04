@@ -23,7 +23,7 @@
 
   const LODES_PATH = (year) => "data/lodes/" + year + "/flathead_lodes_characteristics_by_block_group.csv";
   const LODES_YEARS = Array.from({ length: 22 }, (_, i) => 2023 - i);
-  const ACS_YEARS = Array.from({ length: 16 }, (_, i) => 2024 - i);
+  const ACS_YEARS = Array.from({ length: 12 }, (_, i) => 2024 - i);
   const ACS_BG_PATH = (year) => "data/acs/acs5_" + year + "_flathead_block_groups.csv";
   const ACS_COUNTY_PATH = (year) => "data/acs/acs5_" + year + "_flathead_county.csv";
   const ACS_FIELDS = {
