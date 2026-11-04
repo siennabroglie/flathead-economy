@@ -1661,3 +1661,11 @@ h1, h2, h3, h4, h5, h6 {
   aspect-ratio: 1;
   border-radius: 50% !important;
 }
+
+.data-card-heading > h3 {
+  color: var(--text);
+  font-size: calc(var(--type-card-title) + 2pt);
+  font-weight: var(--weight-card-title);
+  line-height: 1.4;
+  letter-spacing: normal;
+}
