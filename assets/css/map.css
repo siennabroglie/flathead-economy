@@ -1738,3 +1738,8 @@ h1, h2, h3, h4, h5, h6 {
     pointer-events: none;
   }
 }
+
+/* Multi-year source selectors */
+#lodes-year, #acs-year { min-height: 5.5em; max-height: 8em; }
+#lodes-year option, #acs-year option { padding: 2px 6px; }
+#primary-year[hidden], .map-mode-controls label[hidden] { display: none !important; }
