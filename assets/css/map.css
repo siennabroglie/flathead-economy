@@ -20,8 +20,8 @@
   --shadow: 0 8px 28px rgb(31 48 37 / 7%);
   --radius-panel: 14px;
   --radius-control: 8px;
-  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: var(--font-body);
+  --font-body: "Caudex", Georgia, serif;
+  --font-heading: "Caudex", Georgia, serif;
   --content-gap: 20px;
   --panel-padding: 24px;
   --map-height: min(72vh, 820px);
