@@ -133,6 +133,37 @@
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([48.25, -114.25], 9);
 
+  const settingsPanel = document.querySelector(".control-panel");
+  const settingsToggle = document.querySelector("#settings-collapse-toggle");
+  const appShell = document.querySelector(".app-shell");
+  function setSettingsCollapsed(collapsed) {
+    if (!settingsPanel || !settingsToggle || !appShell) return;
+    if (collapsed && window.matchMedia("(min-width: 901px)").matches) {
+      settingsPanel.style.minHeight = settingsPanel.getBoundingClientRect().height + "px";
+      appShell.classList.add("settings-collapsed");
+    } else {
+      appShell.classList.remove("settings-collapsed");
+      settingsPanel.style.minHeight = "";
+      collapsed = false;
+    }
+    settingsToggle.textContent = collapsed ? ">" : "<";
+    settingsToggle.setAttribute("aria-expanded", String(!collapsed));
+    settingsToggle.setAttribute("aria-label", collapsed ? "Expand Map Settings" : "Collapse Map Settings");
+    settingsToggle.title = collapsed ? "Expand Map Settings" : "Collapse Map Settings";
+    requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+  }
+  if (settingsToggle) {
+    settingsToggle.addEventListener("click", () => {
+      setSettingsCollapsed(!appShell.classList.contains("settings-collapsed"));
+    });
+    window.addEventListener("resize", () => {
+      if (!window.matchMedia("(min-width: 901px)").matches &&
+          appShell.classList.contains("settings-collapsed")) {
+        setSettingsCollapsed(false);
+      }
+    });
+  }
+
   // Keep Leaflet's renderer dimensions synchronized with the map container.
   // The container can resize when the settings column changes height, even
   // when the browser window itself has not been resized.
