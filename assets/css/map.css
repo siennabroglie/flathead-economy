@@ -1601,3 +1601,13 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   letter-spacing: 0.035em !important;
 }
+
+/* Hide numeric labels beneath Data Summary bars while preserving the bars. */
+.data-bar-value {
+  display: none !important;
+}
+
+/* Slightly darken supporting text while retaining separation from primary text. */
+:root {
+  --text-muted: #56636d;
+}
