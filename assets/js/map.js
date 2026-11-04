@@ -150,7 +150,7 @@
       settingsPanel.style.minHeight = "";
       collapsed = false;
     }
-    settingsToggle.textContent = collapsed ? ">" : "<";
+    settingsToggle.textContent = collapsed ? "›" : "‹";
     settingsToggle.setAttribute("aria-expanded", String(!collapsed));
     settingsToggle.setAttribute("aria-label", collapsed ? "Expand Map Settings" : "Collapse Map Settings");
     settingsToggle.title = collapsed ? "Expand Map Settings" : "Collapse Map Settings";
@@ -208,16 +208,80 @@
 
   LODES_YEARS.forEach((year) => els.lodesYear.add(new Option(String(year), String(year))));
   els.lodesYear.multiple = true;
-  els.lodesYear.size = 4;
   Array.from(els.lodesYear.options).forEach((option) => { option.selected = option.value === "2023"; });
   els.acsYear.replaceChildren();
   ACS_YEARS.forEach((year) => els.acsYear.add(new Option(year + " (" + (year - 4) + "–" + year + ")", String(year))));
   els.acsYear.multiple = true;
-  els.acsYear.size = 4;
   Array.from(els.acsYear.options).forEach((option) => { option.selected = option.value === "2024"; });
   function selectedYears(select) {
     return Array.from(select.selectedOptions).map((option) => option.value).sort((a, b) => Number(a) - Number(b));
   }
+
+  // Keep the native multi-select as the data source, but present years in a
+  // compact dropdown with an explicit checkbox for each available year.
+  function createYearDropdown(select, label) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "year-dropdown";
+    wrapper.dataset.yearDropdown = select.id;
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "year-dropdown-trigger";
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
+    const triggerText = document.createElement("span");
+    const caret = document.createElement("span");
+    caret.className = "year-dropdown-caret";
+    caret.setAttribute("aria-hidden", "true");
+    caret.textContent = "▾";
+    trigger.append(triggerText, caret);
+    const menu = document.createElement("div");
+    menu.className = "year-dropdown-menu";
+    menu.hidden = true;
+    menu.setAttribute("role", "group");
+    menu.setAttribute("aria-label", label + " years");
+    function sync() {
+      const selected = selectedYears(select);
+      triggerText.textContent = selected.length === 1
+        ? (Array.from(select.options).find((option) => option.value === selected[0])?.textContent || selected[0])
+        : selected.length + " years selected";
+      menu.replaceChildren();
+      Array.from(select.options).forEach((option) => {
+        const row = document.createElement("label");
+        row.className = "year-dropdown-option";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = option.value;
+        checkbox.checked = option.selected;
+        checkbox.addEventListener("change", () => {
+          option.selected = checkbox.checked;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        const text = document.createElement("span");
+        text.textContent = option.textContent;
+        row.append(checkbox, text);
+        menu.appendChild(row);
+      });
+    }
+    trigger.addEventListener("click", () => {
+      const opening = menu.hidden;
+      document.querySelectorAll(".year-dropdown-menu").forEach((other) => { other.hidden = true; });
+      document.querySelectorAll(".year-dropdown-trigger").forEach((other) => other.setAttribute("aria-expanded", "false"));
+      menu.hidden = !opening;
+      trigger.setAttribute("aria-expanded", String(opening));
+    });
+    select.addEventListener("change", sync);
+    select.classList.add("year-dropdown-native");
+    wrapper.append(trigger, menu);
+    select.insertAdjacentElement("afterend", wrapper);
+    sync();
+  }
+  createYearDropdown(els.lodesYear, "Employment");
+  createYearDropdown(els.acsYear, "Population");
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".year-dropdown")) return;
+    document.querySelectorAll(".year-dropdown-menu").forEach((menu) => { menu.hidden = true; });
+    document.querySelectorAll(".year-dropdown-trigger").forEach((trigger) => trigger.setAttribute("aria-expanded", "false"));
+  });
   function ensureDisplayYear(select, current) {
     const years = selectedYears(select);
     if (!years.length) {
