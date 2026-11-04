@@ -1596,7 +1596,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   border-radius: 0 !important;
 }
 
-/* Use Alegreya Sans consistently for all semantic headings. */
+/* Use Oswald with slightly open tracking for all semantic headings. */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
+  letter-spacing: 0.035em !important;
 }
