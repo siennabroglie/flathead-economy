@@ -531,6 +531,8 @@
     });
     return { value: count ? sum : null, count };
   }
+  const dataPanelFormatModes = new Map();
+
   function appendValueLine(container, label, value, format, color) {
     const line = document.createElement("div");
     line.className = "data-card-value";
@@ -577,6 +579,37 @@
   function addChart(card, entries, chartKey) {
     const valid = entries.filter((entry) => (entry.value ?? entry.countyValue) !== null && (entry.value ?? entry.countyValue) >= 0);
     if (valid.length < 2 || valid.every((entry) => (entry.value ?? entry.countyValue) === 0)) return;
+    const heading = card.querySelector(".data-card-heading");
+    const formatToggle = document.createElement("div"); formatToggle.className = "data-card-format-toggle";
+    formatToggle.setAttribute("role", "group"); formatToggle.setAttribute("aria-label", "Display values as counts or percentages");
+    const countButton = document.createElement("button"), percentButton = document.createElement("button");
+    countButton.type = percentButton.type = "button"; countButton.textContent = "#"; percentButton.textContent = "%";
+    countButton.setAttribute("aria-label", "Show counts"); percentButton.setAttribute("aria-label", "Show percentages");
+    formatToggle.append(countButton, percentButton);
+    if (heading) heading.appendChild(formatToggle);
+
+    const total = valid.reduce((sum, entry) => sum + (entry.value ?? entry.countyValue), 0);
+    const valuesByLabel = new Map(valid.map((entry) => [entry.label, entry.value ?? entry.countyValue]));
+    const updateCardFormat = (format) => {
+      countButton.setAttribute("aria-pressed", String(format === "count"));
+      percentButton.setAttribute("aria-pressed", String(format === "percent"));
+      card.querySelectorAll(".data-card-value").forEach((line) => {
+        const label = line.querySelector(".data-card-value-name")?.textContent;
+        const amount = line.querySelector("strong");
+        if (!amount || !valuesByLabel.has(label)) return;
+        const value = valuesByLabel.get(label);
+        amount.textContent = format === "percent"
+          ? (total > 0 ? (value / total * 100).toFixed(1) + "%" : "—")
+          : formatValue(value);
+      });
+    };
+    const setFormat = (format) => {
+      dataPanelFormatModes.set(chartKey, format);
+      updateCardFormat(format);
+    };
+    countButton.addEventListener("click", () => setFormat("count"));
+    percentButton.addEventListener("click", () => setFormat("percent"));
+
     const chart = document.createElement("div"); chart.className = "data-card-chart";
     const controls = document.createElement("div"); controls.className = "data-chart-controls";
     const barsButton = document.createElement("button"), pieButton = document.createElement("button");
@@ -602,25 +635,19 @@
         });
       } else {
         const pieValues = valid.map((entry) => ({label:entry.label,value:entry.value ?? entry.countyValue,color:entry.color || categoryColor(valid.indexOf(entry))})).filter((entry) => entry.value !== null && entry.value >= 0);
-        const total = pieValues.reduce((sum,entry)=>sum+entry.value,0);
-        if (!total) { visual.textContent = "No values available for this chart."; return; }
+        const pieTotal = pieValues.reduce((sum,entry)=>sum+entry.value,0);
+        if (!pieTotal) { visual.textContent = "No values available for this chart."; return; }
         let cursor=0;
-        const stops=pieValues.map((entry)=>{const from=cursor;cursor+=entry.value/total*100;return entry.color+" "+from+"% "+cursor+"%";});
+        const stops=pieValues.map((entry)=>{const from=cursor;cursor+=entry.value/pieTotal*100;return entry.color+" "+from+"% "+cursor+"%";});
         const layout=document.createElement("div");layout.className="data-pie-layout";
         const pie=document.createElement("div");pie.className="data-pie";pie.style.setProperty("--pie-gradient","conic-gradient("+stops.join(",")+")");
-        const legend=document.createElement("div");legend.className="data-pie-legend";
-        pieValues.forEach((entry,index)=>{
-          const item=document.createElement("div");item.className="data-pie-legend-item";
-          const swatch=document.createElement("span");swatch.className="data-pie-legend-swatch";
-          swatch.style.backgroundColor=entry.color;
-          const label=document.createElement("span");label.textContent=entry.label+" · "+formatValue(entry.value);
-          item.append(swatch,label);item.title=label.textContent;legend.appendChild(item);
-        });
-        layout.append(pie,legend);visual.appendChild(layout);
+        layout.appendChild(pie);visual.appendChild(layout);
       }
     };
     barsButton.addEventListener("click",()=>render("bar"));pieButton.addEventListener("click",()=>render("pie"));
-    controls.append(barsButton,pieButton);chart.append(controls,visual);card.appendChild(chart);render("bar");
+    controls.append(barsButton,pieButton);chart.append(controls,visual);card.appendChild(chart);
+    updateCardFormat(dataPanelFormatModes.get(chartKey) || "count");
+    render("bar");
   }
   function updateSourceHeadings() {
     const employmentHeading = document.querySelector("#employment-heading");
@@ -673,7 +700,10 @@
         card.className = "data-card";
         const title = document.createElement("h3");
         title.textContent = source === "jobs" ? DATA_PANEL_LABELS[category] : ACS_CATEGORY_LABELS[category];
-        card.appendChild(title);
+        const heading = document.createElement("div");
+        heading.className = "data-card-heading";
+        heading.appendChild(title);
+        card.appendChild(heading);
         if (compareMode) appendComparisonHeader(card);
         const entries = [];
         if (source === "jobs") {
