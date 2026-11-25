@@ -134,8 +134,22 @@
     graphToggle: document.querySelector("#map-graph-toggle"),
     graphContent: document.querySelector("#map-graph-content"),
     graphSelect: document.querySelector("#map-graph-select"),
-    graph: document.querySelector("#map-graph")
+    graph: document.querySelector("#map-graph"),
+    configurationWindow: document.querySelector(".map-equation-window"),
+    configurationContent: document.querySelector("#map-configuration-content"),
+    configurationToggle: document.querySelector("#map-configuration-collapse-toggle")
   };
+
+  if (els.configurationWindow && els.configurationContent && els.configurationToggle) {
+    els.configurationToggle.addEventListener("click", () => {
+      const collapsed = els.configurationWindow.classList.toggle("is-collapsed");
+      els.configurationContent.hidden = collapsed;
+      els.configurationToggle.textContent = collapsed ? "›" : "‹";
+      els.configurationToggle.setAttribute("aria-expanded", String(!collapsed));
+      els.configurationToggle.setAttribute("aria-label", collapsed ? "Expand Map Configuration" : "Collapse Map Configuration");
+      els.configurationToggle.title = collapsed ? "Expand Map Configuration" : "Collapse Map Configuration";
+    });
+  }
 
   const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([48.25, -114.25], 9);
 
