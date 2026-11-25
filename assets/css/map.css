@@ -291,6 +291,39 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   background: var(--surface);
   box-shadow: 0 6px 24px rgb(20 30 22 / 18%);
 }
+.equation-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+}
+.equation-window-title { margin: 0; }
+.map-configuration-collapse-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0 0 3px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-muted);
+  color: var(--accent-strong);
+  font: 24px/1 Arial, sans-serif;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.map-configuration-collapse-toggle:hover,
+.map-configuration-collapse-toggle:focus-visible {
+  background: var(--accent-soft);
+  border-color: var(--accent-strong);
+  outline: none;
+}
+.map-configuration-content { display: grid; gap: 5px; }
+.map-equation-window.is-collapsed { width: min(210px, calc(100% - 28px)); }
+.map-equation-window.is-collapsed .map-configuration-content { display: none; }
 .equation-window-title {
   margin: 0 0 3px;
   color: var(--accent);
