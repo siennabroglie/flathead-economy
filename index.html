@@ -225,8 +225,12 @@
     <div class="map-column">
     <section class="map-panel" aria-label="Interactive map">
       <div class="map-stage">
-        <div class="map-mode-controls map-equation-window" aria-label="Map equation and display mode">
-          <p class="equation-window-title">Map Configuration</p>
+        <section class="map-mode-controls map-equation-window" aria-label="Map configuration">
+          <div class="equation-window-header">
+            <p class="equation-window-title">Map Configuration</p>
+            <button id="map-configuration-collapse-toggle" class="map-configuration-collapse-toggle" type="button" aria-expanded="true" aria-controls="map-configuration-content" aria-label="Collapse Map Configuration" title="Collapse Map Configuration">‹</button>
+          </div>
+          <div id="map-configuration-content" class="map-configuration-content">
           <label for="map-mode">Map mode</label>
           <select id="map-mode">
             <option value="single" selected>Single-variable</option>
@@ -239,7 +243,8 @@
           <label for="primary-year">Year displayed</label>
           <select id="primary-year" hidden></select>
           <p id="primary-measure-note" class="field-note">Choose the measure and displayed year. Gradient breaks are shared across all selected years.</p>
-        </div>
+          </div>
+        </section>
         <div id="map" role="application" aria-label="Interactive choropleth map of Flathead County"></div>
       </div>
       <footer class="map-footer">
