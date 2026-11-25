@@ -1725,33 +1725,30 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .settings-collapse-toggle {
-    display: block;
+    display: grid;
     position: absolute;
     z-index: 5;
     top: 12px;
     right: 12px;
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    display: grid;
     place-items: center;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    padding: 0 0 3px;
     border: 1px solid var(--border);
     border-radius: 50%;
-    background: var(--surface);
+    background: var(--surface-muted);
     color: var(--accent-strong);
-    box-shadow: 0 2px 7px rgba(20, 38, 56, 0.14);
-    font-family: Arial, sans-serif;
-    font-size: 27px;
-    font-weight: 400;
-    line-height: 1;
+    font: 24px/1 Arial, sans-serif;
     cursor: pointer;
-    transition: background 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   }
 
-  .settings-collapse-toggle:hover {
+  .settings-collapse-toggle:hover,
+  .settings-collapse-toggle:focus-visible {
     background: var(--accent-soft);
-    box-shadow: 0 3px 10px rgba(20, 38, 56, 0.2);
-    transform: scale(1.05);
+    border-color: var(--accent-strong);
+    outline: none;
   }
 
   .settings-collapse-toggle:focus-visible {
